@@ -1,8 +1,21 @@
 <?php
 
+use App\Http\Controllers\Auth\SesionController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-// Ruta Principal
-Route::get('/', function () {
-    return view('welcome');
+// Ruta principal de HCEApp.
+Route::get('/', fn () => auth()->check()
+    ? redirect()->route('dashboard')
+    : redirect()->route('login')
+)->name('inicio');
+
+Route::middleware('guest')->group(function (): void {
+    Route::get('/login', [SesionController::class, 'crear'])->name('login');
+    Route::post('/login', [SesionController::class, 'guardar'])->name('login.guardar');
+});
+
+Route::middleware('auth')->group(function (): void {
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::post('/logout', [SesionController::class, 'destruir'])->name('logout');
 });
