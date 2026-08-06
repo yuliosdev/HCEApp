@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\SesionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TestTecnologiasController;
 use Illuminate\Support\Facades\Route;
 
 // Ruta principal de HCEApp.
@@ -18,4 +19,8 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/logout', [SesionController::class, 'destruir'])->name('logout');
+
+    if (app()->environment(['local', 'testing'])) {
+        Route::get('/test/tecnologias', TestTecnologiasController::class)->name('test.tecnologias');
+    }
 });

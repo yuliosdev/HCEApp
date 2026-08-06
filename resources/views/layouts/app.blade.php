@@ -8,6 +8,7 @@
         <title>{{ config('app.name', 'HCEApp') }}</title>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
     </head>
     <body class="min-h-screen bg-zinc-100 text-zinc-950 antialiased">
         <div class="min-h-screen">
@@ -47,5 +48,7 @@
                 @yield('content')
             </main>
         </div>
+
+        @livewireScripts
     </body>
 </html>

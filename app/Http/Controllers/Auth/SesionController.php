@@ -21,6 +21,8 @@ class SesionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
+        toastr()->success('Bienvenido a HCEApp.', [], 'Acceso autorizado');
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -31,6 +33,8 @@ class SesionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('estado', 'Sesion cerrada correctamente.');
+        flash()->success('Sesion cerrada correctamente.', [], 'Sesion finalizada');
+
+        return redirect()->route('login');
     }
 }
