@@ -2,9 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Mail\IntentoAccesoBloqueadoMail;
 use App\Models\User;
+use App\Notifications\RestablecerContrasenaNotification;
 use Database\Seeders\UsuarioAdministradorSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class AutenticacionTest extends TestCase
@@ -23,7 +29,8 @@ class AutenticacionTest extends TestCase
         $response = $this->get(route('login'));
 
         $response->assertOk();
-        $response->assertSee('Iniciar sesion');
+        $response->assertSee('Ingreso al sistema');
+        $response->assertDontSee('Estados de atencion');
     }
 
     public function test_usuario_administrador_puede_iniciar_sesion(): void
@@ -51,6 +58,57 @@ class AutenticacionTest extends TestCase
         $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors('email');
         $this->assertGuest();
+    }
+
+    public function test_quinto_intento_fallido_bloquea_temporalmente_y_envia_correo(): void
+    {
+        Mail::fake();
+        $this->seed(UsuarioAdministradorSeeder::class);
+
+        for ($intento = 1; $intento <= 5; $intento++) {
+            $response = $this->from(route('login'))->post(route('login.guardar'), [
+                'email' => 'admin@hceapp.test',
+                'password' => 'clave-incorrecta',
+            ]);
+        }
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+
+        Mail::assertSent(IntentoAccesoBloqueadoMail::class, function (IntentoAccesoBloqueadoMail $correo): bool {
+            return $correo->hasTo('admin@hceapp.test')
+                && $correo->minutosBloqueo === 5;
+        });
+    }
+
+    public function test_puede_solicitar_enlace_de_recuperacion_de_contrasena(): void
+    {
+        Notification::fake();
+        $usuario = User::factory()->create(['email' => 'usuario@hceapp.test']);
+
+        $response = $this->post(route('password.email'), [
+            'email' => $usuario->email,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        Notification::assertSentTo($usuario, RestablecerContrasenaNotification::class);
+    }
+
+    public function test_puede_restablecer_contrasena_con_token_valido(): void
+    {
+        $usuario = User::factory()->create(['email' => 'usuario@hceapp.test']);
+        $token = Password::createToken($usuario);
+
+        $response = $this->post(route('password.update'), [
+            'token' => $token,
+            'email' => $usuario->email,
+            'password' => 'NuevaClaveSegura123',
+            'password_confirmation' => 'NuevaClaveSegura123',
+        ]);
+
+        $response->assertRedirect(route('login'));
+        $this->assertTrue(Hash::check('NuevaClaveSegura123', $usuario->fresh()->password));
     }
 
     public function test_dashboard_requiere_autenticacion(): void

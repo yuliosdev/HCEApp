@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\IniciarSesionRequest;
+use App\Models\ConfiguracionSistema;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,7 +14,9 @@ class SesionController extends Controller
 {
     public function crear(): View
     {
-        return view('auth.login');
+        return view('auth.login', [
+            'configuracion' => ConfiguracionSistema::actual(),
+        ]);
     }
 
     public function guardar(IniciarSesionRequest $request): RedirectResponse

@@ -47,9 +47,7 @@
                         <div class="hs-dropdown relative inline-flex">
                             <button id="dropdown-notificaciones" type="button" class="hs-dropdown-toggle inline-flex items-center rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
                                 Probar notificaciones
-                                <svg class="ms-2 size-4 text-zinc-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                </svg>
+                                <iconify-icon icon="lucide:chevron-down" class="ms-2 size-4 text-zinc-500" aria-hidden="true"></iconify-icon>
                             </button>
 
                             <div class="hs-dropdown-menu z-20 mt-2 hidden min-w-56 rounded-md border border-zinc-200 bg-white p-1 shadow-lg" role="menu" aria-orientation="vertical" aria-labelledby="dropdown-notificaciones">
@@ -247,12 +245,14 @@
         </aside>
     </section>
 
-    <div id="modal-formulario-tecnologia" class="hs-overlay pointer-events-none fixed start-0 top-0 z-80 hidden size-full overflow-y-auto overflow-x-hidden" role="dialog" tabindex="-1" aria-labelledby="modal-formulario-tecnologia-label">
+    <div id="modal-formulario-tecnologia" wire:ignore.self class="hs-overlay pointer-events-none fixed start-0 top-0 z-80 hidden size-full overflow-y-auto overflow-x-hidden" role="dialog" tabindex="-1" aria-labelledby="modal-formulario-tecnologia-label">
         <div class="m-3 mt-0 opacity-0 transition-all ease-out hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 sm:mx-auto sm:w-full sm:max-w-lg">
             <div class="pointer-events-auto flex flex-col rounded-md border border-zinc-200 bg-white shadow-lg">
                 <div class="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
                     <h3 id="modal-formulario-tecnologia-label" class="font-semibold text-zinc-950">Formulario modal Preline</h3>
-                    <button type="button" class="inline-flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100" data-hs-overlay="#modal-formulario-tecnologia" aria-label="Cerrar">x</button>
+                    <button type="button" class="inline-flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100" data-hs-overlay="#modal-formulario-tecnologia" aria-label="Cerrar">
+                        <iconify-icon icon="lucide:x" aria-hidden="true"></iconify-icon>
+                    </button>
                 </div>
 
                 <form wire:submit="registrarDesdeModal" class="space-y-4 p-4">
@@ -267,11 +267,13 @@
         </div>
     </div>
 
-    <div id="drawer-formulario-tecnologia" class="hs-overlay fixed end-0 top-0 z-80 hidden h-full w-full max-w-md translate-x-full transform border-s border-zinc-200 bg-white transition-all hs-overlay-open:translate-x-0" role="dialog" tabindex="-1" aria-labelledby="drawer-formulario-tecnologia-label">
+    <div id="drawer-formulario-tecnologia" wire:ignore.self class="hs-overlay fixed end-0 top-0 z-80 hidden h-full w-full max-w-md translate-x-full transform border-s border-zinc-200 bg-white transition-all hs-overlay-open:translate-x-0" role="dialog" tabindex="-1" aria-labelledby="drawer-formulario-tecnologia-label">
         <div class="flex h-full flex-col">
             <div class="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
                 <h3 id="drawer-formulario-tecnologia-label" class="font-semibold text-zinc-950">Formulario drawer Preline</h3>
-                <button type="button" class="inline-flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100" data-hs-overlay="#drawer-formulario-tecnologia" aria-label="Cerrar">x</button>
+                <button type="button" class="inline-flex size-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100" data-hs-overlay="#drawer-formulario-tecnologia" aria-label="Cerrar">
+                    <iconify-icon icon="lucide:x" aria-hidden="true"></iconify-icon>
+                </button>
             </div>
 
             <form wire:submit="registrarDesdeDrawer" class="flex-1 space-y-4 overflow-y-auto p-4">
