@@ -19,7 +19,7 @@
             @csrf
 
             <div>
-                <label for="email" class="login-heading mb-1.5 block text-sm font-medium">Correo electronico</label>
+                <label for="email" class="login-heading mb-1.5 block text-sm font-medium">Correo electrónico</label>
                 <input
                     id="email"
                     name="email"
@@ -36,12 +36,7 @@
             </div>
 
             <div>
-                <div class="mb-1.5 flex items-center justify-between gap-3">
-                    <label for="password" class="login-heading block text-sm font-medium">Contrasena</label>
-                    <a href="{{ route('password.request') }}" class="login-link text-sm font-medium">
-                        Recupere su clave
-                    </a>
-                </div>
+                <label for="password" class="login-heading mb-1.5 block text-sm font-medium">Contraseña</label>
                 <input
                     id="password"
                     name="password"
@@ -53,6 +48,9 @@
                 @error('password')
                     <p class="mt-1.5 text-sm text-red-700">{{ $message }}</p>
                 @enderror
+                <a href="{{ route('password.request') }}" class="login-link mt-2 inline-flex text-sm font-medium">
+                    Recupere su clave
+                </a>
             </div>
 
             <div class="flex items-center justify-between gap-4">

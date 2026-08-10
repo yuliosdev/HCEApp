@@ -8,4 +8,5 @@ enum ColorTriaje: string
     case Naranja = 'Naranja';
     case Amarillo = 'Amarillo';
     case Verde = 'Verde';
+    case Azul = 'Azul';
 }

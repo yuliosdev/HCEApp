@@ -1,11 +1,10 @@
 @php
     $iconos = [
         'dashboard' => 'lucide:house',
-        'emergencias' => 'lucide:briefcase-medical',
+        'historia-clinica' => 'lucide:clipboard-list',
         'pacientes' => 'lucide:users',
-        'historias' => 'lucide:file-text',
-        'calendario' => 'lucide:calendar-days',
-        'catalogos' => 'lucide:grid-2x2',
+        'profesionales' => 'lucide:stethoscope',
+        'mantenimiento' => 'lucide:wrench',
         'reportes' => 'lucide:chart-column',
         'auditoria' => 'lucide:shield-check',
         'seguridad' => 'lucide:lock-keyhole',

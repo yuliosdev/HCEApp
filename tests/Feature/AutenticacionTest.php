@@ -111,6 +111,27 @@ class AutenticacionTest extends TestCase
         $this->assertTrue(Hash::check('NuevaClaveSegura123', $usuario->fresh()->password));
     }
 
+    public function test_validacion_de_restablecimiento_de_contrasena_se_muestra_en_espanol(): void
+    {
+        $usuario = User::factory()->create(['email' => 'usuario@hceapp.test']);
+        $token = Password::createToken($usuario);
+
+        $response = $this->from(route('password.reset', [
+            'token' => $token,
+            'email' => $usuario->email,
+        ]))->post(route('password.update'), [
+            'token' => $token,
+            'email' => $usuario->email,
+            'password' => '123',
+            'password_confirmation' => '123',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasErrors([
+            'password' => 'El campo contraseña debe tener al menos 8 caracteres.',
+        ]);
+    }
+
     public function test_dashboard_requiere_autenticacion(): void
     {
         $response = $this->get(route('dashboard'));

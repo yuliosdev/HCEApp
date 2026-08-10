@@ -40,6 +40,8 @@ class BaseDatosClinicaTest extends TestCase
         foreach ($tablas as $tabla) {
             $this->assertTrue(Schema::hasTable($tabla), "La tabla {$tabla} debe existir.");
         }
+
+        $this->assertTrue(Schema::hasColumn('hc_emergencia', 'triaje'), 'La tabla hc_emergencia debe tener el campo booleano triaje.');
     }
 
     /**
@@ -51,6 +53,9 @@ class BaseDatosClinicaTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'email' => 'admin@hceapp.test',
+        ]);
+        $this->assertDatabaseHas('users', [
+            'email' => 'yuliostch@gmail.com',
         ]);
 
         $this->assertDatabaseCount('prioridades', 4);
@@ -83,6 +88,8 @@ class BaseDatosClinicaTest extends TestCase
             'prioridad_id' => $prioridad->id,
             'registrado_por' => $administrador->id,
             'actualizado_por' => $administrador->id,
+            'color_triaje' => ColorTriaje::Azul,
+            'triaje' => true,
         ]);
 
         $this->assertTrue($episodio->paciente->is($paciente));
@@ -91,7 +98,8 @@ class BaseDatosClinicaTest extends TestCase
         $this->assertSame(EstadoAtencion::Abierta, $episodio->estado_atencion);
         $this->assertSame(TopicoAtencion::Topico, $episodio->topico);
         $this->assertSame(SiNo::No, $episodio->sin_identificacion);
-        $this->assertInstanceOf(ColorTriaje::class, $episodio->color_triaje);
+        $this->assertSame(ColorTriaje::Azul, $episodio->color_triaje);
+        $this->assertTrue($episodio->triaje);
         $this->assertInstanceOf(GrupoSanguineo::class, $paciente->grupo_sanguineo);
         $this->assertInstanceOf(FactorRh::class, $paciente->factor_rh);
     }

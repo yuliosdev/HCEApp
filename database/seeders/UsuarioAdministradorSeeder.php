@@ -21,5 +21,13 @@ class UsuarioAdministradorSeeder extends Seeder
                 'password' => Hash::make('password'),
             ],
         );
+        User::query()->updateOrCreate(
+            ['email' => 'yuliostch@gmail.com'],
+            [
+                'name' => 'Julio Távara',
+                'email_verified_at' => now(),
+                'password' => Hash::make('password'),
+            ],
+        );
     }
 }

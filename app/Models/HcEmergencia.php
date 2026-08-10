@@ -46,6 +46,7 @@ class HcEmergencia extends Model
             'sin_identificacion' => SiNo::class,
             'fuente' => FuenteAtencion::class,
             'color_triaje' => ColorTriaje::class,
+            'triaje' => 'boolean',
             'unidad_tiempo_enfermedad' => UnidadTiempoEnfermedad::class,
             'presenta_ram' => SiNoNoSabe::class,
             'presenta_alergias' => SiNoNoSabe::class,

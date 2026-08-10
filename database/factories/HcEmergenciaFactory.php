@@ -43,6 +43,7 @@ class HcEmergenciaFactory extends Factory
             'profesional_triaje_id' => ProfesionalSalud::factory(),
             'prioridad_id' => Prioridad::query()->value('id'),
             'color_triaje' => fake()->randomElement(ColorTriaje::cases()),
+            'triaje' => true,
             'estado_firma' => EstadoFirma::Pendiente,
             'estado_atencion' => EstadoAtencion::Abierta,
         ];

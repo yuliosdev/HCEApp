@@ -7,6 +7,9 @@
 
         <title>{{ $configuracion->nombre_sistema ?? config('app.name', 'HCEApp') }}</title>
 
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|montserrat:600,700,800|poppins:500,600,700&display=swap" rel="stylesheet">
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
@@ -24,8 +27,8 @@
                     <div class="mb-8 flex items-center gap-4">
                         <img src="{{ $configuracion->logo_path ?? asset('images/login/logo-default.png') }}" alt="Logotipo del sistema" class="h-16 w-16 object-contain">
                         <div>
-                            <p class="text-sm font-semibold tracking-[0.24em] text-[var(--hce-color-surface)]">{{ $configuracion->nombre_sistema ?? 'HCEApp' }}</p>
-                            <p class="mt-1 text-sm text-[var(--hce-color-soft)]">{{ $configuracion->subtitulo_login ?? 'Historia clinica electronica de emergencias' }}</p>
+                            <p class="login-brand-name text-sm font-semibold tracking-[0.24em]">{{ $configuracion->nombre_sistema ?? 'HCEApp' }}</p>
+                            <p class="login-brand-subtitle mt-1 text-sm">{{ $configuracion->subtitulo_login ?? 'Historia clinica electronica de emergencias' }}</p>
                         </div>
                     </div>
 

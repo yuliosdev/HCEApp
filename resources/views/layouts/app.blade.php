@@ -7,6 +7,9 @@
 
         <title>@yield('title', config('app.name', 'HCEApp'))</title>
 
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|montserrat:600,700,800|poppins:500,600,700&display=swap" rel="stylesheet">
+
         <script>
             (() => {
                 const temaGuardado = localStorage.getItem('hceapp.theme') || 'system';
@@ -40,87 +43,73 @@
                     ],
                 ],
                 [
-                    'titulo' => 'Gestion clinica',
+                    'titulo' => 'Gestión Clínica',
                     'items' => [
                         [
-                            'texto' => 'Emergencias',
-                            'clave' => 'emergencias',
-                            'icono' => 'emergencias',
+                            'texto' => 'Historia Clínica',
+                            'clave' => 'historia-clinica',
+                            'icono' => 'historia-clinica',
                             'subitems' => [
-                                ['texto' => 'Bandeja de emergencia', 'url' => route('dashboard')],
-                                ['texto' => 'Nueva atencion', 'url' => '#'],
-                                ['texto' => 'Seguimiento clinico', 'url' => '#'],
+                                ['texto' => 'Atenciones del Paciente', 'url' => '#'],
+                                ['texto' => 'Historias abiertas', 'url' => '#'],
                             ],
                         ],
                         [
                             'texto' => 'Pacientes',
                             'clave' => 'pacientes',
                             'icono' => 'pacientes',
-                            'subitems' => [
-                                ['texto' => 'Listado de pacientes', 'url' => '#'],
-                                ['texto' => 'Registro rapido', 'url' => '#'],
-                                ['texto' => 'Busqueda avanzada', 'url' => '#'],
-                            ],
+                            'url' => '#',
                         ],
                         [
-                            'texto' => 'Historias clinicas',
-                            'clave' => 'historias',
-                            'icono' => 'historias',
-                            'subitems' => [
-                                ['texto' => 'Historias abiertas', 'url' => '#'],
-                                ['texto' => 'Historias cerradas', 'url' => '#'],
-                                ['texto' => 'Medicamentos habituales', 'url' => '#'],
-                            ],
-                        ],
-                        [
-                            'texto' => 'Turnos y triaje',
-                            'clave' => 'triaje',
-                            'icono' => 'calendario',
-                            'subitems' => [
-                                ['texto' => 'Cola de triaje', 'url' => '#'],
-                                ['texto' => 'Asignacion de turnos', 'url' => '#'],
-                                ['texto' => 'Ambientes disponibles', 'url' => '#'],
-                            ],
+                            'texto' => 'Profesionales',
+                            'clave' => 'profesionales',
+                            'icono' => 'profesionales',
+                            'url' => '#',
                         ],
                     ],
                 ],
                 [
-                    'titulo' => 'Catalogos',
+                    'titulo' => 'Catálogos',
                     'items' => [
                         [
                             'texto' => 'Mantenimiento',
                             'clave' => 'mantenimiento',
-                            'icono' => 'catalogos',
+                            'icono' => 'mantenimiento',
                             'subitems' => [
-                                ['texto' => 'Prioridades', 'url' => '#'],
-                                ['texto' => 'Profesionales', 'url' => '#'],
+                                ['texto' => 'Procedimientos', 'url' => '#'],
+                                ['texto' => 'CIE10', 'url' => '#'],
+                                ['texto' => 'Medicamentos', 'url' => '#'],
+                                ['texto' => 'Exámenes', 'url' => '#'],
                                 ['texto' => 'Especialidades', 'url' => '#'],
-                                ['texto' => 'Condiciones de alta', 'url' => '#'],
+                                ['texto' => 'Signos Vitales', 'url' => '#'],
+                                ['texto' => 'Alergias', 'url' => '#'],
+                                ['texto' => 'Tipo de Órdenes', 'url' => '#'],
+                                ['texto' => 'Prioridades', 'url' => '#'],
+                                ['texto' => 'Ambientes', 'url' => '#'],
                             ],
                         ],
                     ],
                 ],
                 [
-                    'titulo' => 'Reportes y control',
+                    'titulo' => 'Reportes y Control',
                     'items' => [
                         [
                             'texto' => 'Reportes',
                             'clave' => 'reportes',
                             'icono' => 'reportes',
                             'subitems' => [
-                                ['texto' => 'Resumen diario', 'url' => '#'],
-                                ['texto' => 'Atenciones por prioridad', 'url' => '#'],
-                                ['texto' => 'Indicadores clinicos', 'url' => '#'],
+                                ['texto' => 'Atenciones por Prioridad', 'url' => '#'],
+                                ['texto' => 'Resumen Diario', 'url' => '#'],
+                                ['texto' => 'Indicadores Clínicos', 'url' => '#'],
                             ],
                         ],
                         [
-                            'texto' => 'Auditoria',
+                            'texto' => 'Auditoría',
                             'clave' => 'auditoria',
                             'icono' => 'auditoria',
                             'subitems' => [
                                 ['texto' => 'Trazabilidad', 'url' => '#'],
-                                ['texto' => 'Accesos al sistema', 'url' => '#'],
-                                ['texto' => 'Cambios sensibles', 'url' => '#'],
+                                ['texto' => 'Accesos al Sistema', 'url' => '#'],
                             ],
                         ],
                     ],
@@ -134,8 +123,7 @@
                             'icono' => 'seguridad',
                             'subitems' => [
                                 ['texto' => 'Usuarios', 'url' => '#'],
-                                ['texto' => 'Roles y permisos', 'url' => '#'],
-                                ['texto' => 'Politicas de acceso', 'url' => '#'],
+                                ['texto' => 'Roles y Permisos', 'url' => '#'],
                             ],
                         ],
                         [
@@ -144,27 +132,13 @@
                             'icono' => 'sistema',
                             'subitems' => [
                                 ['texto' => 'Identidad del login', 'url' => route('configuracion.login.editar'), 'activo' => request()->routeIs('configuracion.login.*')],
-                                ['texto' => 'Preferencias visuales', 'url' => '#'],
-                                ['texto' => 'Parametros generales', 'url' => '#'],
+                                ['texto' => 'Parámetros Generales', 'url' => '#'],
                             ],
                         ],
                     ],
                 ],
             ];
 
-            if (app()->environment(['local', 'testing'])) {
-                $menuSecciones[] = [
-                    'titulo' => 'Laboratorio',
-                    'items' => [
-                        [
-                            'texto' => 'Test tecnologias',
-                            'url' => route('test.tecnologias'),
-                            'activo' => request()->routeIs('test.tecnologias'),
-                            'icono' => 'test',
-                        ],
-                    ],
-                ];
-            }
         @endphp
 
         <div class="app-shell min-h-screen" data-app-shell>

@@ -200,7 +200,7 @@ return new class extends Migration
      */
     private function coloresTriaje(): array
     {
-        return ['Rojo', 'Naranja', 'Amarillo', 'Verde'];
+        return ['Rojo', 'Naranja', 'Amarillo', 'Verde', 'Azul'];
     }
 
     /**
@@ -519,6 +519,7 @@ return new class extends Migration
             $table->foreignId('profesional_triaje_id')->nullable()->constrained('profesionales_salud')->nullOnDelete();
             $table->foreignId('prioridad_id')->nullable()->constrained('prioridades')->nullOnDelete();
             $table->enum('color_triaje', $this->coloresTriaje())->nullable();
+            $table->boolean('triaje')->default(false);
             $table->string('destino_topico', 150)->nullable();
             $table->string('tiempo_espera_calculado', 50)->nullable();
             $table->dateTime('reevaluacion_programada')->nullable();
