@@ -57,6 +57,14 @@ class IniciarSesionRequest extends FormRequest
             ]);
         }
 
+        if (! Auth::user()->activo) {
+            Auth::guard('web')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'El usuario se encuentra inactivo. Comunicate con el administrador del sistema.',
+            ]);
+        }
+
         RateLimiter::clear($this->claveDeBloqueo());
     }
 

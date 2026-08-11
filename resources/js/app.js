@@ -444,11 +444,85 @@ const prepararAnimacionesDashboard = () => {
     document.querySelectorAll('[data-count-target]').forEach(animarConteo);
 };
 
+const obtenerSweetAlert = () => window.Swal || window.Sweetalert2 || window.sweetAlert || window.SweetAlert;
+
+const confirmarEliminacionCatalogo = async (boton) => {
+    const registroId = Number(boton.dataset.registroId || boton.dataset.procedimientoId || 0);
+    const registroNombre = boton.dataset.registroNombre || boton.dataset.procedimientoNombre || 'este registro';
+    const catalogoSingular = boton.dataset.catalogoSingular || 'procedimiento';
+    const componente = boton.closest('[wire\\:id]');
+    const instanciaLivewire = componente ? window.Livewire?.find(componente.getAttribute('wire:id')) : null;
+
+    if (!registroId || !instanciaLivewire) {
+        return;
+    }
+
+    const sweetAlert = obtenerSweetAlert();
+    const temaOscuro = document.documentElement.dataset.appliedTheme === 'dark';
+    let confirmado = false;
+
+    if (sweetAlert && typeof sweetAlert.fire === 'function') {
+        const resultado = await sweetAlert.fire({
+            title: `Eliminar ${catalogoSingular}`,
+            text: `Deseas eliminar ${catalogoSingular} "${registroNombre}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Si, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true,
+            focusCancel: true,
+            background: temaOscuro ? '#121214' : '#ffffff',
+            color: temaOscuro ? '#f8fafc' : '#1f2937',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#415a77',
+        });
+
+        confirmado = resultado.isConfirmed;
+    } else {
+        confirmado = window.confirm(`Deseas eliminar ${catalogoSingular} "${registroNombre}"?`);
+    }
+
+    if (!confirmado) {
+        return;
+    }
+
+    boton.disabled = true;
+
+    try {
+        await instanciaLivewire.call('eliminar', registroId);
+    } finally {
+        boton.disabled = false;
+    }
+};
+
+const prepararConfirmacionesCatalogo = () => {
+    if (document.documentElement.dataset.catalogConfirmationsReady === 'true') {
+        return;
+    }
+
+    document.documentElement.dataset.catalogConfirmationsReady = 'true';
+
+    document.addEventListener('click', (evento) => {
+        const boton = evento.target instanceof Element
+            ? evento.target.closest('[data-confirm-delete-procedimiento], [data-confirm-delete-catalogo], [data-confirm-delete-registro-clinico]')
+            : null;
+
+        if (!boton) {
+            return;
+        }
+
+        evento.preventDefault();
+        evento.stopPropagation();
+        confirmarEliminacionCatalogo(boton);
+    });
+};
+
 const inicializarAplicacion = () => {
     inicializarPreline();
     prepararTransicionSalidaLogin();
     prepararPreferenciasPanel();
     prepararAnimacionesDashboard();
+    prepararConfirmacionesCatalogo();
 };
 
 consultaTemaSistema.addEventListener('change', () => {

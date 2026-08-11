@@ -7,13 +7,16 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "livewire/livewire": ">=4.0 <5.0",
+        "openspout/openspout": "^5.10",
         "php-flasher/flasher-laravel": "^2.6",
         "php-flasher/flasher-noty-laravel": "^2.6",
         "php-flasher/flasher-sweetalert-laravel": "^2.6",
-        "php-flasher/flasher-toastr-laravel": "^2.6"
+        "php-flasher/flasher-toastr-laravel": "^2.6",
+        "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

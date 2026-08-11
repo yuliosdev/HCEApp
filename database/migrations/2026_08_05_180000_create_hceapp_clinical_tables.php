@@ -49,6 +49,7 @@ return new class extends Migration
             'tipos_ordenes',
             'examenes',
             'profesionales_salud',
+            'especialidades',
             'alergias',
             'diagnosticos_cie10',
             'signos_vitales',
@@ -373,10 +374,18 @@ return new class extends Migration
             $table->index('nombre');
         });
 
+        Schema::create('especialidades', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre', 150)->unique();
+            $table->string('descripcion')->nullable();
+            $table->enum('estado', $this->estadosCatalogo())->default('Activo');
+            $this->auditoriaBasica($table, true);
+        });
+
         Schema::create('profesionales_salud', function (Blueprint $table) {
             $table->id();
             $table->string('nombres');
-            $table->string('especialidad', 150)->nullable();
+            $table->foreignId('especialidad_id')->nullable()->constrained('especialidades')->nullOnDelete();
             $table->string('tipo_colegiatura', 100)->nullable();
             $table->string('cmp', 30)->nullable()->index();
             $table->string('rne', 30)->nullable()->index();
@@ -405,6 +414,7 @@ return new class extends Migration
             $table->string('descripcion');
             $table->string('presentacion', 150)->nullable();
             $table->string('generico')->nullable();
+            $table->unsignedInteger('stock')->default(0);
             $table->enum('estado', $this->estadosCatalogo())->default('Activo');
             $table->unsignedBigInteger('id_producto_externo')->nullable();
             $this->auditoriaBasica($table, true);
@@ -418,8 +428,10 @@ return new class extends Migration
     {
         Schema::create('pacientes', function (Blueprint $table) {
             $table->id();
+            $table->string('numero_historia', 50)->nullable()->unique();
             $table->string('nombre');
             $table->string('direccion')->nullable();
+            $table->string('telefono', 30)->nullable();
             $table->string('sexo', 30)->nullable();
             $table->date('fecha_nacimiento')->nullable();
             $table->string('tipo_documento', 30)->nullable();

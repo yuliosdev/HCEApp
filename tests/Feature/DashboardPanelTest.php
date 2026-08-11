@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RolesPermisosSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,7 +20,9 @@ class DashboardPanelTest extends TestCase
 
     public function test_usuario_autenticado_visualiza_panel_principal_con_controles_visuales(): void
     {
+        $this->seed(RolesPermisosSeeder::class);
         $usuario = User::factory()->create(['name' => 'Administrador']);
+        $usuario->assignRole('Administrador');
 
         $response = $this->actingAs($usuario)->get(route('dashboard'));
 
@@ -44,14 +47,14 @@ class DashboardPanelTest extends TestCase
         $response->assertSee('icon="lucide:clipboard-list"', false);
         $response->assertSee('icon="lucide:stethoscope"', false);
         $response->assertSee('icon="lucide:chevron-right"', false);
-        $response->assertSee('Gestión Clínica');
-        $response->assertSee('Historia Clínica');
+        $response->assertSee('Gestion Clinica');
+        $response->assertSee('Historia Clinica');
         $response->assertSee('Profesionales');
         $response->assertSee('Procedimientos');
         $response->assertSee('CIE10');
-        $response->assertSee('Exámenes');
+        $response->assertSee('Examenes');
         $response->assertSee('Atenciones por Prioridad');
-        $response->assertSee('Parámetros Generales');
+        $response->assertSee('Parametros Generales');
         $response->assertSee('data-dropdown-toggle', false);
         $response->assertSee('data-theme-current-icon="light"', false);
         $response->assertSee('data-theme-current-icon="dark"', false);

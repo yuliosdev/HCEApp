@@ -25,8 +25,10 @@ class PacienteFactory extends Factory
     public function definition(): array
     {
         return [
+            'numero_historia' => fake()->unique()->numerify('HC########'),
             'nombre' => fake()->name(),
             'direccion' => fake()->streetAddress(),
+            'telefono' => fake()->phoneNumber(),
             'sexo' => fake()->randomElement(['Masculino', 'Femenino']),
             'fecha_nacimiento' => fake()->dateTimeBetween('-90 years', '-1 year')->format('Y-m-d'),
             'tipo_documento' => 'DNI',

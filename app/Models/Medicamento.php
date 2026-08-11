@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EstadoCatalogo;
 use App\Models\Concerns\TieneAuditoriaBasica;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,17 @@ class Medicamento extends Model
     use TieneAuditoriaBasica;
 
     protected $guarded = ['id'];
+
+    /**
+     * Convierte los tipos importantes del catalogo al leerlos desde la base.
+     */
+    protected function casts(): array
+    {
+        return [
+            'estado' => EstadoCatalogo::class,
+            'stock' => 'integer',
+        ];
+    }
 
     public function prescripciones(): HasMany
     {

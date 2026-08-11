@@ -39,6 +39,18 @@ class TestTecnologiasTest extends TestCase
         $response->assertSee('Abrir drawer');
     }
 
+    public function test_usuario_autenticado_puede_ver_test_de_cards_neon(): void
+    {
+        $usuario = User::factory()->create();
+
+        $response = $this->actingAs($usuario)->get(route('test.cards-neon'));
+
+        $response->assertOk();
+        $response->assertSee('Estilo propuesto para cards metricas');
+        $response->assertSee('Usuarios Totales');
+        $response->assertSee('card-style-test-card', false);
+    }
+
     public function test_componente_livewire_filtra_pagina_y_notifica(): void
     {
         Livewire::test(PanelTecnologias::class)

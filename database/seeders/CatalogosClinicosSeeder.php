@@ -18,6 +18,8 @@ class CatalogosClinicosSeeder extends Seeder
         $this->cargarPrioridades($usuarioAdministradorId);
         $this->cargarSignosVitales($usuarioAdministradorId);
         $this->cargarTiposOrdenes($usuarioAdministradorId);
+        $this->cargarEspecialidades($usuarioAdministradorId);
+        $this->cargarAmbientes($usuarioAdministradorId);
         $this->cargarAlergias($usuarioAdministradorId);
         $this->cargarDiagnosticosCie10($usuarioAdministradorId);
         $this->cargarExamenes($usuarioAdministradorId);
@@ -58,6 +60,28 @@ class CatalogosClinicosSeeder extends Seeder
             ['descripcion' => 'Transferencia interna'],
             ['descripcion' => 'Apoyo respiratorio'],
             ['descripcion' => 'Tratamiento'],
+        ], ['descripcion'], $usuarioId);
+    }
+
+    private function cargarEspecialidades(?int $usuarioId): void
+    {
+        $this->upsertConAuditoria('especialidades', [
+            ['nombre' => 'Medicina de Emergencias', 'descripcion' => 'Atencion medica inicial de emergencias'],
+            ['nombre' => 'Cirugia General', 'descripcion' => 'Evaluacion quirurgica general'],
+            ['nombre' => 'Medicina Interna', 'descripcion' => 'Evaluacion clinica especializada'],
+            ['nombre' => 'Pediatria', 'descripcion' => 'Atencion de pacientes pediatricos'],
+            ['nombre' => 'Ginecologia y Obstetricia', 'descripcion' => 'Atencion gineco obstetrica'],
+        ], ['nombre'], $usuarioId);
+    }
+
+    private function cargarAmbientes(?int $usuarioId): void
+    {
+        $this->upsertConAuditoria('ambientes', [
+            ['descripcion' => 'Triaje', 'ubicacion' => 'Ingreso de emergencia'],
+            ['descripcion' => 'Topico de medicina', 'ubicacion' => 'Area clinica'],
+            ['descripcion' => 'Topico de cirugia', 'ubicacion' => 'Area quirurgica'],
+            ['descripcion' => 'Observacion adultos', 'ubicacion' => 'Sala de observacion'],
+            ['descripcion' => 'Shock trauma', 'ubicacion' => 'Area critica'],
         ], ['descripcion'], $usuarioId);
     }
 
@@ -108,12 +132,12 @@ class CatalogosClinicosSeeder extends Seeder
     private function cargarMedicamentos(?int $usuarioId): void
     {
         $this->upsertConAuditoria('medicamentos', [
-            ['descripcion' => 'Cloruro de sodio 0.9 %', 'presentacion' => 'Bolsa 1000 mL', 'generico' => 'Cloruro de sodio'],
-            ['descripcion' => 'Ceftriaxona', 'presentacion' => 'Vial 2 g', 'generico' => 'Ceftriaxona'],
-            ['descripcion' => 'Metronidazol', 'presentacion' => 'Frasco 500 mg/100 mL', 'generico' => 'Metronidazol'],
-            ['descripcion' => 'Paracetamol', 'presentacion' => 'Solucion 10 mg/mL', 'generico' => 'Paracetamol'],
-            ['descripcion' => 'Morfina sulfato', 'presentacion' => 'Ampolla 10 mg/mL', 'generico' => 'Morfina sulfato'],
-            ['descripcion' => 'Ondansetron', 'presentacion' => 'Ampolla 4 mg/2 mL', 'generico' => 'Ondansetron'],
+            ['descripcion' => 'Cloruro de sodio 0.9 %', 'presentacion' => 'Bolsa 1000 mL', 'generico' => 'Cloruro de sodio', 'stock' => 120],
+            ['descripcion' => 'Ceftriaxona', 'presentacion' => 'Vial 2 g', 'generico' => 'Ceftriaxona', 'stock' => 80],
+            ['descripcion' => 'Metronidazol', 'presentacion' => 'Frasco 500 mg/100 mL', 'generico' => 'Metronidazol', 'stock' => 60],
+            ['descripcion' => 'Paracetamol', 'presentacion' => 'Solucion 10 mg/mL', 'generico' => 'Paracetamol', 'stock' => 100],
+            ['descripcion' => 'Morfina sulfato', 'presentacion' => 'Ampolla 10 mg/mL', 'generico' => 'Morfina sulfato', 'stock' => 25],
+            ['descripcion' => 'Ondansetron', 'presentacion' => 'Ampolla 4 mg/2 mL', 'generico' => 'Ondansetron', 'stock' => 45],
         ], ['descripcion'], $usuarioId);
     }
 

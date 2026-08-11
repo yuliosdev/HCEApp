@@ -6,6 +6,7 @@ use App\Livewire\Forms\TestTecnologias\NotificacionTecnologiaForm;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -15,10 +16,13 @@ class PanelTecnologias extends Component
 
     public NotificacionTecnologiaForm $form;
 
+    #[Url(except: '')]
     public string $busqueda = '';
 
+    #[Url(except: 'Todas')]
     public string $filtroPrioridad = 'Todas';
 
+    #[Url(except: 4)]
     public int $porPagina = 4;
 
     public function updatingBusqueda(): void
@@ -131,10 +135,25 @@ class PanelTecnologias extends Component
             $this->porPagina,
             $pagina,
             [
-                'path' => request()->url(),
+                'path' => route('test.tecnologias'),
                 'pageName' => 'page',
+                'query' => $this->parametrosPaginacion(),
             ]
         );
+    }
+
+    /**
+     * Mantiene los filtros demostrativos disponibles en la URL.
+     *
+     * @return array<string, mixed>
+     */
+    private function parametrosPaginacion(): array
+    {
+        return collect([
+            'busqueda' => $this->busqueda !== '' ? $this->busqueda : null,
+            'filtroPrioridad' => $this->filtroPrioridad !== 'Todas' ? $this->filtroPrioridad : null,
+            'porPagina' => $this->porPagina !== 4 ? $this->porPagina : null,
+        ])->filter(fn ($valor): bool => $valor !== null)->all();
     }
 
     private function resumenTecnologias(): array

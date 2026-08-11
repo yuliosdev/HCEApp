@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Especialidad;
 use App\Models\ProfesionalSalud;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -24,7 +25,10 @@ class ProfesionalSaludFactory extends Factory
     {
         return [
             'nombres' => fake()->name(),
-            'especialidad' => fake()->randomElement(['Medicina de emergencias', 'Cirugia general', 'Enfermeria', 'Laboratorio']),
+            'especialidad_id' => Especialidad::query()->value('id') ?? Especialidad::query()->create([
+                'nombre' => 'Medicina de emergencias',
+                'descripcion' => 'Atencion medica inicial de emergencias',
+            ])->id,
             'tipo_colegiatura' => fake()->randomElement(['CMP', 'CEP', 'Otro']),
             'cmp' => fake()->unique()->numerify('######'),
             'rne' => fake()->optional()->numerify('#####'),

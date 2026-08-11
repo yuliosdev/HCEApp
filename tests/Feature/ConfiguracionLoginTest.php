@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ConfiguracionSistema;
 use App\Models\User;
+use Database\Seeders\RolesPermisosSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,7 +21,9 @@ class ConfiguracionLoginTest extends TestCase
 
     public function test_usuario_autenticado_puede_ver_configuracion_del_login(): void
     {
+        $this->seed(RolesPermisosSeeder::class);
         $usuario = User::factory()->create();
+        $usuario->assignRole('Administrador');
 
         $response = $this->actingAs($usuario)->get(route('configuracion.login.editar'));
 
@@ -30,7 +33,9 @@ class ConfiguracionLoginTest extends TestCase
 
     public function test_usuario_autenticado_puede_actualizar_textos_del_login(): void
     {
+        $this->seed(RolesPermisosSeeder::class);
         $usuario = User::factory()->create();
+        $usuario->assignRole('Administrador');
 
         $response = $this->actingAs($usuario)->put(route('configuracion.login.actualizar'), [
             'nombre_sistema' => 'HCE Emergencias',
