@@ -9,28 +9,28 @@
     </div>
 
     <div class="catalog-stats">
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:list-checks" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['total'] }}">{{ $estadisticas['total'] }}</strong>
                 <p>Total registros</p>
             </div>
         </article>
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:check-circle" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['activos'] }}">{{ $estadisticas['activos'] }}</strong>
                 <p>Activos</p>
             </div>
         </article>
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:pause-circle" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['inactivos'] }}">{{ $estadisticas['inactivos'] }}</strong>
                 <p>Inactivos</p>
             </div>
         </article>
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:trash-2" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['eliminados'] }}">{{ $estadisticas['eliminados'] }}</strong>

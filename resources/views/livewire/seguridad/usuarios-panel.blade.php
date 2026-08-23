@@ -37,6 +37,7 @@
                     <thead>
                         <tr>
                             <th>Usuario</th>
+                            <th>Tipo</th>
                             <th>Roles</th>
                             <th>Estado</th>
                             <th>Actualizado</th>
@@ -49,6 +50,12 @@
                                 <td>
                                     <strong>{{ $usuario->name }}</strong>
                                     <span>{{ $usuario->email }}</span>
+                                </td>
+                                <td>
+                                    <span class="security-type-badge">{{ $usuario->tipo_usuario }}</span>
+                                    @if ($usuario->profesionalSalud)
+                                        <em class="security-user-professional">{{ $usuario->profesionalSalud->nombres }}</em>
+                                    @endif
                                 </td>
                                 <td>
                                     <div class="security-badges">
@@ -83,7 +90,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="security-empty">No se encontraron usuarios.</td>
+                                <td colspan="6" class="security-empty">No se encontraron usuarios.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -125,6 +132,56 @@
                         <input type="password" wire:model.blur="password" autocomplete="new-password">
                         @error('password') <small>{{ $message }}</small> @enderror
                     </label>
+
+                    <label>
+                        <span>Tipo de usuario</span>
+                        <select wire:model.live="tipoUsuario">
+                            @foreach ($this->tiposUsuario() as $tipoDisponible)
+                                <option value="{{ $tipoDisponible }}">{{ $tipoDisponible }}</option>
+                            @endforeach
+                        </select>
+                        @error('tipoUsuario') <small>{{ $message }}</small> @enderror
+                    </label>
+
+                    @if ($requiereProfesionalSalud)
+                        <section class="security-professional-picker">
+                            <label class="security-professional-autocomplete">
+                                <span>Profesional medico</span>
+                                <div class="security-professional-search">
+                                    <iconify-icon icon="lucide:search" aria-hidden="true"></iconify-icon>
+                                    <input type="search" wire:model.live.debounce.300ms="busquedaProfesional" placeholder="Digite nombre, CMP, RNE o especialidad" autocomplete="off">
+                                    @if ($profesionalSaludId)
+                                        <iconify-icon icon="lucide:check-circle" class="security-professional-selected" aria-hidden="true"></iconify-icon>
+                                    @endif
+                                </div>
+
+                                @if ($mostrarSugerenciasProfesional)
+                                    <div class="security-professional-results">
+                                        @forelse ($profesionales as $profesional)
+                                            <button type="button" wire:click="seleccionarProfesional({{ $profesional->id }})">
+                                                <strong>{{ $profesional->nombres }}</strong>
+                                                <span>
+                                                    @if ($profesional->cmp)
+                                                        CMP {{ $profesional->cmp }}
+                                                    @endif
+                                                    @if ($profesional->rne)
+                                                        RNE {{ $profesional->rne }}
+                                                    @endif
+                                                    @if ($profesional->especialidad)
+                                                        {{ $profesional->especialidad->nombre }}
+                                                    @endif
+                                                </span>
+                                            </button>
+                                        @empty
+                                            <p>No se encontraron profesionales registrados.</p>
+                                        @endforelse
+                                    </div>
+                                @endif
+
+                                @error('profesionalSaludId') <small>{{ $message }}</small> @enderror
+                            </label>
+                        </section>
+                    @endif
 
                     <label class="security-check">
                         <input type="checkbox" wire:model="activo">

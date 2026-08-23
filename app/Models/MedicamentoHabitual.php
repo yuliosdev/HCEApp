@@ -16,8 +16,8 @@ class MedicamentoHabitual extends Model
 
     protected $guarded = ['id'];
 
-    public function hcEmergencia(): BelongsTo
+    public function paciente(): BelongsTo
     {
-        return $this->belongsTo(HcEmergencia::class);
+        return $this->belongsTo(Paciente::class);
     }
 }

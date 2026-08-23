@@ -1,0 +1,1962 @@
+[
+  {
+    "codigo": "030000",
+    "denominacion": "ANATOMO PATOLOGÍA / PATOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "030100",
+    "denominacion": "ANATOMO PATOLOGÍA / PATOLOGÍA-BIOPSIAS (Anatomo patología)-",
+    "estado": true
+  },
+  {
+    "codigo": "030200",
+    "denominacion": "ANATOMO PATOLOGÍA / PATOLOGÍA-CITOGENÉTICA-",
+    "estado": true
+  },
+  {
+    "codigo": "030300",
+    "denominacion": "ANATOMO PATOLOGÍA / PATOLOGÍA-CITOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "030400",
+    "denominacion": "ANATOMO PATOLOGÍA / PATOLOGÍA-CITOMETRÍA DE FLUJO-",
+    "estado": true
+  },
+  {
+    "codigo": "030500",
+    "denominacion": "ANATOMO PATOLOGÍA / PATOLOGÍA-INMUNOHISTOQUÍMICA-",
+    "estado": true
+  },
+  {
+    "codigo": "030600",
+    "denominacion": "ANATOMO PATOLOGÍA / PATOLOGÍA-NECROPSIAS-",
+    "estado": true
+  },
+  {
+    "codigo": "040000",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "040100",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA- CIRUGÍA ALTAMENTE ESPECIALIZADA Y DE ALTA COMPLEJIDAD",
+    "estado": true
+  },
+  {
+    "codigo": "040101",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA-CIRUGÍA \"A\" -\"A1\" - CIRUGÍA ALTAMENTE ESPECIALIZADA",
+    "estado": true
+  },
+  {
+    "codigo": "040102",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA-CIRUGÍA \"A\" -\"A 2\" - CIRUGÍA DE ALTA COMPLEJIDAD",
+    "estado": true
+  },
+  {
+    "codigo": "040200",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA-CIRUGÍA \"B\" (MEDIANA COMPLEJIDAD)-",
+    "estado": true
+  },
+  {
+    "codigo": "040300",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA-CIRUGÍA \"C\" (BAJA COMPLEJIDAD)-",
+    "estado": true
+  },
+  {
+    "codigo": "040400",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA-CIRUGÍA MENOR DE ALTO REQUERIMIENTO / CIRUGIA AMBULATORIA DE DIA",
+    "estado": true
+  },
+  {
+    "codigo": "040500",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA-CIRUGÍA MENOR (TÓPICO)-",
+    "estado": true
+  },
+  {
+    "codigo": "040600",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA-UNIDAD DEL DOLOR-",
+    "estado": true
+  },
+  {
+    "codigo": "040700",
+    "denominacion": "CENTRO QUIRÚRGICO Y ANESTESIOLOGÍA-UNIDAD DE RECUPERACIÓN Y REANIMACIÓN-",
+    "estado": true
+  },
+  {
+    "codigo": "050000",
+    "denominacion": "BANCO DE ÓRGANOS",
+    "estado": true
+  },
+  {
+    "codigo": "050100",
+    "denominacion": "BANCO DE ÓRGANOS-CÉLULAS MADRE DE CORDÓN UMBILICAL-",
+    "estado": true
+  },
+  {
+    "codigo": "050200",
+    "denominacion": "BANCO DE ÓRGANOS-CRÍO PRESERVACIÓN-",
+    "estado": true
+  },
+  {
+    "codigo": "050300",
+    "denominacion": "BANCO DE ÓRGANOS-HISTOCOMPATIBILIDAD-",
+    "estado": true
+  },
+  {
+    "codigo": "050400",
+    "denominacion": "BANCO DE ÓRGANOS-TEJIDOS (piel, córneas, otros)-",
+    "estado": true
+  },
+  {
+    "codigo": "050500",
+    "denominacion": "BANCO DE ÓRGANOS-TRANSPLANTES-",
+    "estado": true
+  },
+  {
+    "codigo": "060000",
+    "denominacion": "BIOLOGÍA MOLECULAR Y GENÉTICA",
+    "estado": true
+  },
+  {
+    "codigo": "060100",
+    "denominacion": "BIOLOGÍA MOLECULAR Y GENÉTICA -BIOLOGÍA MOLECULAR -",
+    "estado": true
+  },
+  {
+    "codigo": "060200",
+    "denominacion": "BIOLOGÍA MOLECULAR Y GENÉTICA -GENÉTICA -",
+    "estado": true
+  },
+  {
+    "codigo": "070000",
+    "denominacion": "CENTRO OBSTÉTRICO",
+    "estado": true
+  },
+  {
+    "codigo": "080000",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES",
+    "estado": true
+  },
+  {
+    "codigo": "080100",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -DENSITOMETRÍA ÓSEA-",
+    "estado": true
+  },
+  {
+    "codigo": "080200",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -ECO CARDIOGRAFÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "080300",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -MAMOGRAFÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "080400",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -RADIODIAGNÓSTICO / RAYOS X-",
+    "estado": true
+  },
+  {
+    "codigo": "080401",
+    "denominacion": "DIAGNOSTICO POR IMÁGENES RADIODIAGNOSTICO RAYOS X NEURORADIOLOGIA",
+    "estado": true
+  },
+  {
+    "codigo": "080500",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -RADIOLOGÍA INTERVENCIONISTA",
+    "estado": true
+  },
+  {
+    "codigo": "080501",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -RADIOLOGÍA INTERVENCIONISTA-DIAGNÓSTICA",
+    "estado": true
+  },
+  {
+    "codigo": "080502",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -RADIOLOGÍA INTERVENCIONISTA-TERAPÉUTICA",
+    "estado": true
+  },
+  {
+    "codigo": "080503",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -RADIOLOGÍA INTERVENCIONISTA-ANGIOGRAFÍAS",
+    "estado": true
+  },
+  {
+    "codigo": "080600",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -RESONANCIA MAGNÉTICA",
+    "estado": true
+  },
+  {
+    "codigo": "080601",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -RESONANCIA MAGNÉTICA-DETECCIÓN",
+    "estado": true
+  },
+  {
+    "codigo": "080602",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -RESONANCIA MAGNÉTICA-PROCEDIMIENTOS",
+    "estado": true
+  },
+  {
+    "codigo": "080700",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -RADIOLOGÍA NUCLEAR-",
+    "estado": true
+  },
+  {
+    "codigo": "080800",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -TOMOGRAFÍA COMPUTARIZADA-",
+    "estado": true
+  },
+  {
+    "codigo": "080900",
+    "denominacion": "DIAGNÓSTICO POR IMÁGENES -ULTRASONIDO/ ECOGRAFÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "090000",
+    "denominacion": "DIÁLISIS",
+    "estado": true
+  },
+  {
+    "codigo": "090100",
+    "denominacion": "DIÁLISIS-DIÁLISIS PERITONEAL-",
+    "estado": true
+  },
+  {
+    "codigo": "090200",
+    "denominacion": "DIÁLISIS-HEMODIÁLISIS-",
+    "estado": true
+  },
+  {
+    "codigo": "100000",
+    "denominacion": "ENDOSCOPIAS",
+    "estado": true
+  },
+  {
+    "codigo": "100100",
+    "denominacion": "ENDOSCOPIAS-DIAGNÓSTICAS DIGESTIVAS-",
+    "estado": true
+  },
+  {
+    "codigo": "100200",
+    "denominacion": "ENDOSCOPIAS-DIAGNÓSTICAS GINECOLÓGICAS -",
+    "estado": true
+  },
+  {
+    "codigo": "100300",
+    "denominacion": "ENDOSCOPIAS-DIAGNÓSTICAS RESPIRATORIA / BRONCOSCOPIAS-",
+    "estado": true
+  },
+  {
+    "codigo": "100400",
+    "denominacion": "ENDOSCOPIAS-DIAGNÓSTICAS REUMATO - TRAUMATOLÓGICAS-",
+    "estado": true
+  },
+  {
+    "codigo": "100500",
+    "denominacion": "ENDOSCOPIAS-DIAGNÓSTICAS UROLÓGICAS-",
+    "estado": true
+  },
+  {
+    "codigo": "100600",
+    "denominacion": "ENDOSCOPIAS-LAPAROSCOPIAS-",
+    "estado": true
+  },
+  {
+    "codigo": "100700",
+    "denominacion": "ENDOSCOPIAS-OTRAS ENDOSCOPÍAS DIAGNÓSTICAS-",
+    "estado": true
+  },
+  {
+    "codigo": "100800",
+    "denominacion": "ENDOSCOPIAS-TERAPEÚTICAS DIGESTIVAS-",
+    "estado": true
+  },
+  {
+    "codigo": "100900",
+    "denominacion": "ENDOSCOPIAS-TERAPEÚTICAS GINECOLÓGICAS-",
+    "estado": true
+  },
+  {
+    "codigo": "101000",
+    "denominacion": "ENDOSCOPIAS-OTRAS ENDOSCOPÍAS TERAPÉUTICAS-",
+    "estado": true
+  },
+  {
+    "codigo": "101100",
+    "denominacion": "ENDOSCOPIAS-TERAPEÚTICAS RESPIRATORIAS-",
+    "estado": true
+  },
+  {
+    "codigo": "101200",
+    "denominacion": "ENDOSCOPIAS-TERAPEÚTICAS REUMATO - TRAUMATOLÓGICAS-",
+    "estado": true
+  },
+  {
+    "codigo": "101300",
+    "denominacion": "ENDOSCOPIAS-TERAPEÚTICAS UROLÓGICAS-",
+    "estado": true
+  },
+  {
+    "codigo": "120000",
+    "denominacion": "HEMOTERAPIA Y BANCO DE SANGRE",
+    "estado": true
+  },
+  {
+    "codigo": "120100",
+    "denominacion": "HEMOTERAPIA Y BANCO DE SANGRE -FRACCIONAMIENTO DE HEMODERIVADOS-",
+    "estado": true
+  },
+  {
+    "codigo": "120200",
+    "denominacion": "HEMOTERAPIA Y BANCO DE SANGRE -FRACCIONAMIENTO DE SANGRE-",
+    "estado": true
+  },
+  {
+    "codigo": "120300",
+    "denominacion": "HEMOTERAPIA Y BANCO DE SANGRE -ALMACENAMIENTO Y CONTROL DE CALIDAD-",
+    "estado": true
+  },
+  {
+    "codigo": "120400",
+    "denominacion": "HEMOTERAPIA Y BANCO DE SANGRE -COMPATIBILIDAD Y GRUPOS SANGUÍNEOS-",
+    "estado": true
+  },
+  {
+    "codigo": "120500",
+    "denominacion": "HEMOTERAPIA Y BANCO DE SANGRE -EXTRACCIÓN Y SEPARACIÓN DE COMPONENTES-",
+    "estado": true
+  },
+  {
+    "codigo": "120600",
+    "denominacion": "HEMOTERAPIA Y BANCO DE SANGRE -HEMOTERAPIA-",
+    "estado": true
+  },
+  {
+    "codigo": "120700",
+    "denominacion": "HEMOTERAPIA Y BANCO DE SANGRE -SELECCIÓN Y PROMOCIÓN DE DONANTES-",
+    "estado": true
+  },
+  {
+    "codigo": "120800",
+    "denominacion": "HEMOTERAPIA Y BANCO DE SANGRE -TAMIZAJE-",
+    "estado": true
+  },
+  {
+    "codigo": "130000",
+    "denominacion": "MEDICINA DE REHABILITACIÓN / MEDICINA FÍSICA Y REHABILITACIÓN",
+    "estado": true
+  },
+  {
+    "codigo": "130100",
+    "denominacion": "MEDIC. DE REHAB. / MEDICINA FÍS.Y REHAB.-FONIATRÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "130200",
+    "denominacion": "MEDIC. DE REHAB. / MEDICINA FÍS.Y REHAB.-LOGOTERAPIA-",
+    "estado": true
+  },
+  {
+    "codigo": "130300",
+    "denominacion": "MEDIC. DE REHAB. / MEDICINA FÍS.Y REHAB.-REHABILITACIÓN FÍSICA",
+    "estado": true
+  },
+  {
+    "codigo": "130301",
+    "denominacion": "MEDIC. DE REHAB. / MEDICINA FÍS.Y REHAB.-REHABILITACIÓN FÍSICA-REHABILITACIÓN NEUROLÓGICA",
+    "estado": true
+  },
+  {
+    "codigo": "130302",
+    "denominacion": "REHABILITACIÓN FÍSICA-REHABILITACIÓN POST RESECCIÓN QUIRÚRGICA / AMPUTACIÓN",
+    "estado": true
+  },
+  {
+    "codigo": "130303",
+    "denominacion": "MEDIC. DE REHAB. / MEDICINA FÍS.Y REHAB.-REHABILITACIÓN FÍSICA-REHABILITACIÓN OFTALMOLÓGICA",
+    "estado": true
+  },
+  {
+    "codigo": "130304",
+    "denominacion": "REHABILITACIÓN FÍSICA-REHABILITACIÓN REUMATOLÓGICA Y TRAUMATOLÓGICA",
+    "estado": true
+  },
+  {
+    "codigo": "140000",
+    "denominacion": "MEDICINA NUCLEAR",
+    "estado": true
+  },
+  {
+    "codigo": "140100",
+    "denominacion": "MEDICINA NUCLEAR -GAMAGRAFÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "140200",
+    "denominacion": "MEDICINA NUCLEAR -RADIOINMUNOENSAYO-",
+    "estado": true
+  },
+  {
+    "codigo": "140300",
+    "denominacion": "MEDICINA NUCLEAR -TOMOGRAFÍA POR EMISIÓN DE FOTÓN ÚNICO (SPECT)-",
+    "estado": true
+  },
+  {
+    "codigo": "140400",
+    "denominacion": "MEDICINA NUCLEAR -TOMOGRAFÍA POR EMISIÓN DE POSITRONES (PET)-",
+    "estado": true
+  },
+  {
+    "codigo": "150000",
+    "denominacion": "PATOLOGÍA CLÍNICA (LABORATORIO CLÍNICO)",
+    "estado": true
+  },
+  {
+    "codigo": "150100",
+    "denominacion": "PATOLOGÍA CLÍNICA (LABORATORIO CLÍNICO)-BIOQUÍMICA Y URIANÁLISIS-",
+    "estado": true
+  },
+  {
+    "codigo": "150200",
+    "denominacion": "PATOLOGÍA CLÍNICA (LABORATORIO CLÍNICO)-ENDOCRINOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "150300",
+    "denominacion": "PATOLOGÍA CLÍNICA (LABORATORIO CLÍNICO)-HEMATOLOGÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "150400",
+    "denominacion": "PATOLOGÍA CLÍNICA (LABORATORIO CLÍNICO)-iINMULOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "150500",
+    "denominacion": "PATOLOGÍA CLÍNICA (LABORATORIO CLÍNICO)-INMUNOLOGÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "150600",
+    "denominacion": "PATOLOGÍA CLÍNICA (LABORATORIO CLÍNICO)-LABORATORIO DE EMERGENCIA-",
+    "estado": true
+  },
+  {
+    "codigo": "150700",
+    "denominacion": "PATOLOGÍA CLÍNICA (LABORATORIO CLÍNICO)-LABORATORIO DE INFERTILIDAD-",
+    "estado": true
+  },
+  {
+    "codigo": "150800",
+    "denominacion": "PATOLOGÍA CLÍNICA (LABORATORIO CLÍNICO)-MICROBIOLOGÍA Y PARASITOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "150900",
+    "denominacion": "PATOLOGIA CLINICA NEUROPATOLOGIA",
+    "estado": true
+  },
+  {
+    "codigo": "150901",
+    "denominacion": "PATOLOGIA CLINICA PATOLOGIA CLINICA NEUROGENETICA",
+    "estado": true
+  },
+  {
+    "codigo": "160000",
+    "denominacion": "OTROS PROCEDIMIENTOS DIAGNÓSTICOS Y TERAPÉUTICOS",
+    "estado": true
+  },
+  {
+    "codigo": "160100",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-CARDIOVASCULAR-",
+    "estado": true
+  },
+  {
+    "codigo": "160200",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-GINECOLÓGICAS -",
+    "estado": true
+  },
+  {
+    "codigo": "160300",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-NEUMOLÓGICOS-",
+    "estado": true
+  },
+  {
+    "codigo": "160400",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-NEUROLÓGICOS -",
+    "estado": true
+  },
+  {
+    "codigo": "160500",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-OFTALMOLÓGICOS (CAMPIMETRÍA, FONDO DE OJO, OTROS)-",
+    "estado": true
+  },
+  {
+    "codigo": "160600",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-OTORRINOLARINGOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "160700",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-TRAUMATOLÓGICOS-",
+    "estado": true
+  },
+  {
+    "codigo": "160800",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS- REHABILITACION EN SALUD MENTAL",
+    "estado": true
+  },
+  {
+    "codigo": "160801",
+    "denominacion": "REHAB. EN SALUD MENTAL-TERAPIA PSICOLÓGICA INDIVIDUAL NIÑO / ADOLESCENTE",
+    "estado": true
+  },
+  {
+    "codigo": "160802",
+    "denominacion": "REHAB. EN SALUD MENTAL-TERAPIA PSICOLÓGICA INDIVIDUAL ADULTO / GERONTE",
+    "estado": true
+  },
+  {
+    "codigo": "160803",
+    "denominacion": "REHAB. EN SALUD MENTAL-TERAPIA PSIQUIÁTRICA INDIVIDUAL NIÑO / ADOLESCENTE",
+    "estado": true
+  },
+  {
+    "codigo": "160804",
+    "denominacion": "REHAB. EN SALUD MENTAL-TERAPIA PSIQUIÁTRICA INDIVIDUAL ADULTO / GERONTE",
+    "estado": true
+  },
+  {
+    "codigo": "160805",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-REHAB. EN SALUD MENTAL-TERAPIA FAMILIAR",
+    "estado": true
+  },
+  {
+    "codigo": "160806",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-REHAB. EN SALUD MENTAL-PSICOLOGÍA GRUPAL",
+    "estado": true
+  },
+  {
+    "codigo": "160807",
+    "denominacion": "OTROS PROCED. DIAGNÓSTICOS Y TERAPÉUTICOS-REHAB. EN SALUD MENTAL-PSIQUIATRÍA GRUPAL",
+    "estado": true
+  },
+  {
+    "codigo": "170000",
+    "denominacion": "QUIMIOTERAPIA",
+    "estado": true
+  },
+  {
+    "codigo": "180000",
+    "denominacion": "RADIOTERAPIA",
+    "estado": true
+  },
+  {
+    "codigo": "180100",
+    "denominacion": "RADIOTERAPIA-BRAQUITERAPIA-",
+    "estado": true
+  },
+  {
+    "codigo": "180200",
+    "denominacion": "RADIOTERAPIA-RADIOTERAPIA (Cobaltoterapia y Acelerador lineal)-",
+    "estado": true
+  },
+  {
+    "codigo": "190000",
+    "denominacion": "BIENESTAR  FETAL",
+    "estado": true
+  },
+  {
+    "codigo": "190100",
+    "denominacion": "BIENESTAR FETAL-PERFIL BIOFÍSICO-",
+    "estado": true
+  },
+  {
+    "codigo": "190200",
+    "denominacion": "BIENESTAR FETAL-MONITOREO FETAL NST / ST-",
+    "estado": true
+  },
+  {
+    "codigo": "200000",
+    "denominacion": "NUTRICIÓN Y DIETÉTICA",
+    "estado": true
+  },
+  {
+    "codigo": "210000",
+    "denominacion": "TERAPIA NUTRICIONAL ESPECIALIZADA",
+    "estado": true
+  },
+  {
+    "codigo": "220000",
+    "denominacion": "CONSULTA EXTERNA",
+    "estado": true
+  },
+  {
+    "codigo": "220100",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA GENERAL-",
+    "estado": true
+  },
+  {
+    "codigo": "220200",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE CABEZA Y CUELLO / MAXILO FACIAL-",
+    "estado": true
+  },
+  {
+    "codigo": "220300",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DIGESTIVA",
+    "estado": true
+  },
+  {
+    "codigo": "220301",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DIGESTIVA-CIRUGÍA COLORECTAL",
+    "estado": true
+  },
+  {
+    "codigo": "220302",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DIGESTIVA-CIRUGÍA GASTROINTESTINAL GENERAL",
+    "estado": true
+  },
+  {
+    "codigo": "220303",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DIGESTIVA-CIRUGÍA HEPATOBILIAR",
+    "estado": true
+  },
+  {
+    "codigo": "220304",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DIGESTIVA-CIRUGÍA PANCREÁTICA",
+    "estado": true
+  },
+  {
+    "codigo": "220305",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DIGESTIVA-CIRUGÍA DE TRACTO GASTROINTESTINAL SUPERIOR",
+    "estado": true
+  },
+  {
+    "codigo": "220400",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE MAMA-",
+    "estado": true
+  },
+  {
+    "codigo": "220500",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "220503",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA PEDIÁTRICA-REPARADORA",
+    "estado": true
+  },
+  {
+    "codigo": "220600",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA PLÁSTICA",
+    "estado": true
+  },
+  {
+    "codigo": "220601",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA PLÁSTICA-ESTÉTICA",
+    "estado": true
+  },
+  {
+    "codigo": "220602",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA PLÁSTICA-QUEMADOS",
+    "estado": true
+  },
+  {
+    "codigo": "220603",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA PLÁSTICA-REPARADORA",
+    "estado": true
+  },
+  {
+    "codigo": "220700",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TÓRAX Y CARDIOVASCULAR",
+    "estado": true
+  },
+  {
+    "codigo": "220701",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TÓRAX Y CARDIOVASCULAR-CIRUGÍA CARDIACA",
+    "estado": true
+  },
+  {
+    "codigo": "220702",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TÓRAX Y CARDIOVASCULAR-CIRUGÍA DE TÓRAX",
+    "estado": true
+  },
+  {
+    "codigo": "220703",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TÓRAX Y CARDIOVASCULAR-CIRUGÍA VASCULAR",
+    "estado": true
+  },
+  {
+    "codigo": "220800",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TRANSPLANTES",
+    "estado": true
+  },
+  {
+    "codigo": "220801",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TRANSPLANTES-PROCURA DE ÓRGANOS / LOGÍSTICA",
+    "estado": true
+  },
+  {
+    "codigo": "220802",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TRANSPLANTES-TRANSPLANTE DE CÉLULAS MADRE",
+    "estado": true
+  },
+  {
+    "codigo": "220803",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TRANSPLANTES-TRANSPLANTE DE CÓRNEA",
+    "estado": true
+  },
+  {
+    "codigo": "220804",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TRANSPLANTES-TRANSPLANTE DE HÍGADO",
+    "estado": true
+  },
+  {
+    "codigo": "220805",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TRANSPLANTES-TRANSPLANTE DE MEDULA ÓSEA",
+    "estado": true
+  },
+  {
+    "codigo": "220806",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA DE TRANSPLANTES-TRANSPLANTE RENAL",
+    "estado": true
+  },
+  {
+    "codigo": "220900",
+    "denominacion": "CONSULTA EXTERNA-NEUROCIRUGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "220901",
+    "denominacion": "CONSULTA EXTERNA-NEUROCIRUGÍA-NEUROCIRUGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "220904",
+    "denominacion": "CONSULTA EXTERNA NEUROCIRUGÍA CIRUGIA DE COLUMNA VERTEBRAL Y NERVIOS PERIFERICOS",
+    "estado": true
+  },
+  {
+    "codigo": "220905",
+    "denominacion": "CONSULTA EXTERNA NEUROCIRUGÍA NEUROCIRUGIA DE BASE DE CRANEO Y ENDOCIRUGIA",
+    "estado": true
+  },
+  {
+    "codigo": "220906",
+    "denominacion": "CONSULTA EXTERNA NEUROCIRUGÍA NEUROCIRUGIA FUNCIONAL EPILEPSIA, MOVIMIENTOS INVOLUNTARIOS, DOLOR",
+    "estado": true
+  },
+  {
+    "codigo": "220907",
+    "denominacion": "CONSULTA EXTERNA NEUROCIRUGÍA CIRUGIA VASCULAR CEREBRAL",
+    "estado": true
+  },
+  {
+    "codigo": "220908",
+    "denominacion": "CONSULTA EXTERNA NEUROCIRUGÍA NEUROCIRUGIA ENDOVASCULAR",
+    "estado": true
+  },
+  {
+    "codigo": "220910",
+    "denominacion": "CONSULTA EXTERNA NEUROCIRUGÍA CIRUGIA TUMORES CEREBRALES",
+    "estado": true
+  },
+  {
+    "codigo": "220911",
+    "denominacion": "CONSULTA EXTERNA NEUROCIRUGÍA NEUROANESTESIOLOGIA",
+    "estado": true
+  },
+  {
+    "codigo": "221000",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "221001",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA-CIRUGÍA PLÁSTICA OFTALMOLÓGICA",
+    "estado": true
+  },
+  {
+    "codigo": "221002",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA-CÓRNEA",
+    "estado": true
+  },
+  {
+    "codigo": "221003",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA-ESTRABISMO",
+    "estado": true
+  },
+  {
+    "codigo": "221004",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA-GLAUCOMA",
+    "estado": true
+  },
+  {
+    "codigo": "221005",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA-NEUROFTALMOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "221006",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA-RETINA",
+    "estado": true
+  },
+  {
+    "codigo": "221007",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA-TUMORES OCULARES",
+    "estado": true
+  },
+  {
+    "codigo": "221008",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA-ÚVEA",
+    "estado": true
+  },
+  {
+    "codigo": "221100",
+    "denominacion": "CONSULTA EXTERNA-ONCOLOGÍA QUIRÚRGICA -",
+    "estado": true
+  },
+  {
+    "codigo": "221200",
+    "denominacion": "CONSULTA EXTERNA-OTORRINOLARINGOLOGÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "221300",
+    "denominacion": "CONSULTA EXTERNA-TRAUMATOLOGÍA Y ORTOPEDIA",
+    "estado": true
+  },
+  {
+    "codigo": "221301",
+    "denominacion": "CONSULTA EXTERNA-TRAUMATOLOGÍA Y ORTOPEDIA-CIRUGÍA DE MANO",
+    "estado": true
+  },
+  {
+    "codigo": "221302",
+    "denominacion": "CONSULTA EXTERNA-TRAUMATOLOGÍA Y ORTOPEDIA-ORTOPEDIA",
+    "estado": true
+  },
+  {
+    "codigo": "221303",
+    "denominacion": "CONSULTA EXTERNA-TRAUMATOLOGÍA Y ORTOPEDIA-TRAUMATOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "221400",
+    "denominacion": "CONSULTA EXTERNA-UROLOGÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "221500",
+    "denominacion": "CONSULTA EXTERNA-GINECOLOGÍA GENERAL",
+    "estado": true
+  },
+  {
+    "codigo": "221501",
+    "denominacion": "CONSULTA EXTERNA-GINECOLOGÍA GENERAL-ENDOCRINOLOGÍA GINECOLÓGICA",
+    "estado": true
+  },
+  {
+    "codigo": "221502",
+    "denominacion": "CONSULTA EXTERNA-GINECOLOGÍA GENERAL-GINECOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "221503",
+    "denominacion": "CONSULTA EXTERNA-GINECOLOGÍA GENERAL-INFERTILIDAD O REPRODUCCIÓN HUMANA",
+    "estado": true
+  },
+  {
+    "codigo": "221504",
+    "denominacion": "CONSULTA EXTERNA-GINECOLOGÍA GENERAL-ONCOLOGÍA GINECOLÓGICA",
+    "estado": true
+  },
+  {
+    "codigo": "221505",
+    "denominacion": "CONSULTA EXTERNA-GINECOLOGÍA GENERAL-PLANIFICACIÓN FAMILIAR",
+    "estado": true
+  },
+  {
+    "codigo": "221600",
+    "denominacion": "CONSULTA EXTERNA-OBSTETRICIA / ATENCIÓN DE LA MUJER",
+    "estado": true
+  },
+  {
+    "codigo": "221601",
+    "denominacion": "CONSULTA EXTERNA-OBSTETRICIA / ATENCIÓN DE LA MUJER-OBSTETRICIA",
+    "estado": true
+  },
+  {
+    "codigo": "221602",
+    "denominacion": "CONSULTA EXTERNA-OBSTETRICIA / ATENCIÓN DE LA MUJER-PSICOPROFILAXIS OBSTÉTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "221700",
+    "denominacion": "CONSULTA EXTERNA-CIRUGÍA ORAL-",
+    "estado": true
+  },
+  {
+    "codigo": "221800",
+    "denominacion": "CONSULTA EXTERNA-ODONTOLOGÍA ESPECIALIZADA",
+    "estado": true
+  },
+  {
+    "codigo": "221801",
+    "denominacion": "CONSULTA EXTERNA-ODONTOLOGÍA ESPECIALIZADA- ENDODONCIA",
+    "estado": true
+  },
+  {
+    "codigo": "221802",
+    "denominacion": "CONSULTA EXTERNA-ODONTOLOGÍA ESPECIALIZADA- PERIODONCIA",
+    "estado": true
+  },
+  {
+    "codigo": "221900",
+    "denominacion": "CONSULTA EXTERNA-ODONTOLOGÍA GENERAL-",
+    "estado": true
+  },
+  {
+    "codigo": "222000",
+    "denominacion": "CONSULTA EXTERNA-ODONTOLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "222100",
+    "denominacion": "CONSULTA EXTERNA-ORTODONCIA / ORTOPEDIA DE LOS MAXILARES-",
+    "estado": true
+  },
+  {
+    "codigo": "222200",
+    "denominacion": "CONSULTA EXTERNA-PRÓTESIS DENTAL-",
+    "estado": true
+  },
+  {
+    "codigo": "222300",
+    "denominacion": "CONSULTA EXTERNA-RADIOLOGÍA ODONTOLÓGICA -",
+    "estado": true
+  },
+  {
+    "codigo": "222400",
+    "denominacion": "CONSULTA EXTERNA-MEDICINA GENERAL / ATENCIÓN DEL ADULTO-",
+    "estado": true
+  },
+  {
+    "codigo": "222500",
+    "denominacion": "CONSULTA EXTERNA-CARDIOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "222501",
+    "denominacion": "CONSULTA EXTERNA-CARDIOLOGÍA-HIPERTENSIÓN ARTERIAL",
+    "estado": true
+  },
+  {
+    "codigo": "222600",
+    "denominacion": "CONSULTA EXTERNA-DERMATOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "222700",
+    "denominacion": "CONSULTA EXTERNA-ENDOCRINOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "222701",
+    "denominacion": "CONSULTA EXTERNA-ENDOCRINOLOGÍA-DIABETES MELLITUS I Y II",
+    "estado": true
+  },
+  {
+    "codigo": "222800",
+    "denominacion": "CONSULTA EXTERNA-GASTROENTEROLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "222900",
+    "denominacion": "CONSULTA EXTERNA-GENÉTICA",
+    "estado": true
+  },
+  {
+    "codigo": "222901",
+    "denominacion": "CONSULTA EXTERNA-GENÉTICA-CITOGENÉTICA CLÍNICA",
+    "estado": true
+  },
+  {
+    "codigo": "222902",
+    "denominacion": "CONSULTA EXTERNA-GENÉTICA-GENÉTICA CLÍNICA",
+    "estado": true
+  },
+  {
+    "codigo": "222903",
+    "denominacion": "CONSULTA EXTERNA-GENÉTICA-GENÉTICA MOLECULAR CLÍNICA",
+    "estado": true
+  },
+  {
+    "codigo": "223000",
+    "denominacion": "CONSULTA EXTERNA-GERIATRÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "223001",
+    "denominacion": "CONSULTA EXTERNA – GERIATRICA-ADULTO MAYOR-SERVICIO DIFERENCIADO",
+    "estado": true
+  },
+  {
+    "codigo": "223002",
+    "denominacion": "CONSULTA EXTERNA – GERIATRICA-ADULTO MAYOR-SERVICIO DIFERENCIADO-AMBIENTE ADAPTADO",
+    "estado": true
+  },
+  {
+    "codigo": "223100",
+    "denominacion": "CONSULTA EXTERNA-HEMATOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "223200",
+    "denominacion": "CONSULTA EXTERNA-INFECTOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "223300",
+    "denominacion": "CONSULTA EXTERNA-INMUNOLOGÍA Y ALERGIA-",
+    "estado": true
+  },
+  {
+    "codigo": "223400",
+    "denominacion": "CONSULTA EXTERNA-MEDICINA FÍSICA Y REHABILITACIÓN-",
+    "estado": true
+  },
+  {
+    "codigo": "223500",
+    "denominacion": "CONSULTA EXTERNA-MEDICINA INTERNA-",
+    "estado": true
+  },
+  {
+    "codigo": "223600",
+    "denominacion": "CONSULTA EXTERNA-MEDICINA TROPICAL E INFECTOCONTAGIOSAS-",
+    "estado": true
+  },
+  {
+    "codigo": "223700",
+    "denominacion": "CONSULTA EXTERNA-NEFROLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "223800",
+    "denominacion": "CONSULTA EXTERNA-NEUMOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "223801",
+    "denominacion": "CONSULTA EXTERNA-NEUMOLOGÍA-ASMA",
+    "estado": true
+  },
+  {
+    "codigo": "223900",
+    "denominacion": "CONSULTA EXTERNA-NEUROLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "223901",
+    "denominacion": "CONSULTA EXTERNA-NEUROLOGÍA-NEUROFISIOLOGÍA CLÍNICA",
+    "estado": true
+  },
+  {
+    "codigo": "223902",
+    "denominacion": "CONSULTA EXTERNA NEUROLOGIA NEUROLOGIA DE LA CONDUCTA",
+    "estado": true
+  },
+  {
+    "codigo": "223903",
+    "denominacion": "CONSULTA EXTERNA NEUROLOGIA ESPECIALIDADES MEDICAS (DE APOYO DIAGNOSTICO Y TERAPEUTICO AL PACIENTE)",
+    "estado": true
+  },
+  {
+    "codigo": "223906",
+    "denominacion": "CONSULTA EXTERNA NEUROLOGIA EPILEPSIA EPILEPTOLOGIA",
+    "estado": true
+  },
+  {
+    "codigo": "223907",
+    "denominacion": "CONSULTA EXTERNA NEUROLOGIA ENFERMEDADES NEURODEGENERATIVAS",
+    "estado": true
+  },
+  {
+    "codigo": "223908",
+    "denominacion": "CONSULTA EXTERNA NEUROLOGIA ENFERMEDADES NEUROVASCULARES Y METABOLICAS",
+    "estado": true
+  },
+  {
+    "codigo": "223909",
+    "denominacion": "CONSULTA EXTERNA NEUROLOGIA NEUROGENETICA",
+    "estado": true
+  },
+  {
+    "codigo": "223910",
+    "denominacion": "CONSULTA EXTERNA NEUROLOGIA ENFERMEDADES TRANSMISIBLES DEL SISTEMA NERVIOSO",
+    "estado": true
+  },
+  {
+    "codigo": "224000",
+    "denominacion": "CONSULTA EXTERNA-ONCOLOGÍA MÉDICA -",
+    "estado": true
+  },
+  {
+    "codigo": "224101",
+    "denominacion": "CONSULTA EXTERNA-PSICOLOGÍA-ADICCIONES",
+    "estado": true
+  },
+  {
+    "codigo": "224102",
+    "denominacion": "CONSULTA EXTERNA-PSICOLOGÍA-CONSEJERÍA",
+    "estado": true
+  },
+  {
+    "codigo": "224103",
+    "denominacion": "CONSULTA EXTERNA-PSICOLOGÍA-PSICOLOGÍA ADULTO Y GERONTE",
+    "estado": true
+  },
+  {
+    "codigo": "224104",
+    "denominacion": "CONSULTA EXTERNA-PSICOLOGÍA-PSICOLOGÍA FAMILIAR",
+    "estado": true
+  },
+  {
+    "codigo": "224105",
+    "denominacion": "CONSULTA EXTERNA-PSICOLOGÍA-PSICOLOGÍA NIÑO Y ADOLESCENTE",
+    "estado": true
+  },
+  {
+    "codigo": "224200",
+    "denominacion": "CONSULTA EXTERNA-PSIQUIATRÍA",
+    "estado": true
+  },
+  {
+    "codigo": "224201",
+    "denominacion": "CONSULTA EXTERNA-PSIQUIATRÍA-ADICCIONES",
+    "estado": true
+  },
+  {
+    "codigo": "224202",
+    "denominacion": "CONSULTA EXTERNA-PSIQUIATRÍA-CONSEJERIA",
+    "estado": true
+  },
+  {
+    "codigo": "224203",
+    "denominacion": "CONSULTA EXTERNA-PSIQUIATRÍA-PSIQUIATRÍA ADULTO Y GERONTE",
+    "estado": true
+  },
+  {
+    "codigo": "224204",
+    "denominacion": "CONSULTA EXTERNA-PSIQUIATRÍA-PSIQUIATRÍA FAMILIAR",
+    "estado": true
+  },
+  {
+    "codigo": "224205",
+    "denominacion": "CONSULTA EXTERNA-PSIQUIATRÍA-PSIQUIATRÍA NIÑO Y ADOLESCENTE",
+    "estado": true
+  },
+  {
+    "codigo": "224300",
+    "denominacion": "CONSULTA EXTERNA-RADIOTERAPIA -",
+    "estado": true
+  },
+  {
+    "codigo": "224400",
+    "denominacion": "CONSULTA EXTERNA-REUMATOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "224500",
+    "denominacion": "CONSULTA EXTERNA-TRATAMIENTO DEL DOLOR -",
+    "estado": true
+  },
+  {
+    "codigo": "224600",
+    "denominacion": "CONSULTA EXTERNA-ADOLESCENTES-",
+    "estado": true
+  },
+  {
+    "codigo": "224601",
+    "denominacion": "CONSULTA EXTERNA-ADOLESCENTES-SERVICIO DIFERENCIADO -HORARIO DIFERENCIADO",
+    "estado": true
+  },
+  {
+    "codigo": "224602",
+    "denominacion": "CONSULTA EXTERNA-ADOLESCENTES-SERVICIO DIFERENCIADO-AMBIENTE EXCLUSIVO",
+    "estado": true
+  },
+  {
+    "codigo": "224603",
+    "denominacion": "CONSULTA EXTERNA-ADOLESCENTES-SERVICIO DIFERENCIADO-SERVICIOS DIFERENCIADOS ESPECIALIZADOS",
+    "estado": true
+  },
+  {
+    "codigo": "224700",
+    "denominacion": "CONSULTA EXTERNA-PEDIATRÍA GENERAL-",
+    "estado": true
+  },
+  {
+    "codigo": "224800",
+    "denominacion": "CONSULTA EXTERNA-CARDIOLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "224900",
+    "denominacion": "CONSULTA EXTERNA-DERMATOLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "225000",
+    "denominacion": "CONSULTA EXTERNA-ENDOCRINOLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "225100",
+    "denominacion": "CONSULTA EXTERNA-GASTROENTEROLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "225200",
+    "denominacion": "CONSULTA EXTERNA-GINECOLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "225300",
+    "denominacion": "CONSULTA EXTERNA-NEFROLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "225400",
+    "denominacion": "CONSULTA EXTERNA-NEONATOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "225500",
+    "denominacion": "CONSULTA EXTERNA-NEUMOLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "225600",
+    "denominacion": "CONSULTA EXTERNA-NEUROLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "225700",
+    "denominacion": "CONSULTA EXTERNA-OFTALMOLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "225800",
+    "denominacion": "CONSULTA EXTERNA-ONCOLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "225900",
+    "denominacion": "CONSULTA EXTERNA-PSIQUIATRÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "226000",
+    "denominacion": "CONSULTA EXTERNA-REUMATOLOGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "226100",
+    "denominacion": "CONSULTA EXTERNA-ONCOLOGÍA PREVENTIVA-",
+    "estado": true
+  },
+  {
+    "codigo": "227000",
+    "denominacion": "CONSULTA EXTERNA-FAMILIAR/COMUNITARIA/INTEGRAL",
+    "estado": true
+  },
+  {
+    "codigo": "229000",
+    "denominacion": "CONSULTA EXTERNA- ANESTESIOLOGIA",
+    "estado": true
+  },
+  {
+    "codigo": "230000",
+    "denominacion": "EMERGENCIA",
+    "estado": true
+  },
+  {
+    "codigo": "230100",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-",
+    "estado": true
+  },
+  {
+    "codigo": "230101",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-CIRUGÍA GENERAL",
+    "estado": true
+  },
+  {
+    "codigo": "230102",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-GINECO-OBSTÉTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "230103",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-MEDICINA ADULTOS",
+    "estado": true
+  },
+  {
+    "codigo": "230104",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-OFTALMOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "230105",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-ODONTOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "230106",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-PEDIATRÍA",
+    "estado": true
+  },
+  {
+    "codigo": "230107",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-PSIQUIATRÍA",
+    "estado": true
+  },
+  {
+    "codigo": "230108",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-UROLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "230109",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-TRAUMATOLOGÍA Y ORTOPEDIA",
+    "estado": true
+  },
+  {
+    "codigo": "230110",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-NEUROCIRUGIA",
+    "estado": true
+  },
+  {
+    "codigo": "230111",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-NEONATOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "230112",
+    "denominacion": "EMERGENCIA-EMERGENCIA / PRIORIDAD 2-CIRUGIA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "230200",
+    "denominacion": "EMERGENCIA-NO EMERGENCIA / NO URGENCIA /  PRIORIDAD 4-",
+    "estado": true
+  },
+  {
+    "codigo": "230300",
+    "denominacion": "EMERGENCIA-SALA DE OBSERVACION-",
+    "estado": true
+  },
+  {
+    "codigo": "230301",
+    "denominacion": "EMERGENCIA-SALA DE OBSERVACION-SALA OBSERVACION PACIENTE CRITICO",
+    "estado": true
+  },
+  {
+    "codigo": "230400",
+    "denominacion": "EMERGENCIA-SHOCKTRAUMA / PRIORIDAD 1-",
+    "estado": true
+  },
+  {
+    "codigo": "230500",
+    "denominacion": "EMERGENCIA-URGENCIA / PRIORIDAD 3-",
+    "estado": true
+  },
+  {
+    "codigo": "240000",
+    "denominacion": "HOSPITALIZACION",
+    "estado": true
+  },
+  {
+    "codigo": "240100",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CIRUGÍA GENERAL-",
+    "estado": true
+  },
+  {
+    "codigo": "240200",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CIRUGÍA DE CABEZA Y CUELLO / MÁXILO FACIAL-",
+    "estado": true
+  },
+  {
+    "codigo": "240300",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CIRUGÍA DIGESTIVA-",
+    "estado": true
+  },
+  {
+    "codigo": "240400",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CIRUGÍA DE TÓRAX Y CARDIOVASCULAR-",
+    "estado": true
+  },
+  {
+    "codigo": "240500",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CIRUGÍA DE TRANSPLANTES-",
+    "estado": true
+  },
+  {
+    "codigo": "240600",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CIRUGÍA OFTALMOLÓGICA-",
+    "estado": true
+  },
+  {
+    "codigo": "240700",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CIRUGÍA PEDIÁTRICA-",
+    "estado": true
+  },
+  {
+    "codigo": "240800",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CIRUGÍA PLÁSTICA/RECONSTRUCTIVA/ REPARADORA-",
+    "estado": true
+  },
+  {
+    "codigo": "240801",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CIRUGÍA PLÁSTICA/RECONSTRUCTIVA/ REPARADORA-QUEMADOS",
+    "estado": true
+  },
+  {
+    "codigo": "240900",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-NEUROCIRUGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "241000",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-ONCOLOGÍA QUIRÚRGICA -",
+    "estado": true
+  },
+  {
+    "codigo": "241100",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-OTORRINOLARINGOLOGÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "241200",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-TRAUMATOLOGÍA Y ORTOPEDIA-",
+    "estado": true
+  },
+  {
+    "codigo": "241300",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-UROLOGÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "241400",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-GINECO - OBSTETRICIA-",
+    "estado": true
+  },
+  {
+    "codigo": "241500",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-GINECOLOGÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "241600",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-OBSTETRICIA  -",
+    "estado": true
+  },
+  {
+    "codigo": "241700",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-GINECOLOGÍA - GINECOLOGIA ONCOLOGiCA",
+    "estado": true
+  },
+  {
+    "codigo": "241800",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-MEDICINA GENERAL-",
+    "estado": true
+  },
+  {
+    "codigo": "241900",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-MEDICINA INTERNA-",
+    "estado": true
+  },
+  {
+    "codigo": "242000",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-MEDICINA TROPICAL E INFECCIOSAS-",
+    "estado": true
+  },
+  {
+    "codigo": "242100",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-ONCOLOGÍA MÉDICA-",
+    "estado": true
+  },
+  {
+    "codigo": "242200",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-PSIQUIATRÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "242201",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-PSIQUIATRÍA-PSIQUIATRÍA - HOSPITALIZACIÓN DE DÍA",
+    "estado": true
+  },
+  {
+    "codigo": "242202",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-PSIQUIATRÍA-PSIQUIATRÍA DEL ADULTO Y GERONTE",
+    "estado": true
+  },
+  {
+    "codigo": "242203",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-PSIQUIATRÍA-PSIQUIATRÍA DEL NIÑO Y DEL ADOLESCENTE",
+    "estado": true
+  },
+  {
+    "codigo": "242204",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-PSIQUIATRÍA-REHABILITACIÓN PSIQUIÁTRICA / REINSERCIÓN",
+    "estado": true
+  },
+  {
+    "codigo": "242205",
+    "denominacion": "HOSPITALIZACIÓN MEDICINA-PSIQUIATRÍA-PISIQUIATRIA/ SALUD MENTAL Y ADICCIONES",
+    "estado": true
+  },
+  {
+    "codigo": "242300",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA- PEDIATRÍA  GENERAL-",
+    "estado": true
+  },
+  {
+    "codigo": "242400",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-ADOLESCENTES-",
+    "estado": true
+  },
+  {
+    "codigo": "242600",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-CARDIOLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "242700",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-DERMATOLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "242800",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-ENDOCRINOLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "242900",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-GASTROENTEROLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "243000",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-GINECOLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "243100",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-NEFROLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "243200",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-NEONATOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "243300",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-NEUMOLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "243400",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-NEUROLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "243500",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-OFTALMOLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "243600",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-ONCOLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "243700",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-OTORRINOLARINGOLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "243800",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-PSIQUIATRÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "243900",
+    "denominacion": "HOSPITALIZACIÓN DE PEDIATRÍA-PEDIATRIA-REUMATOLOGÍA PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "244000",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-CARDIOLOGIA-",
+    "estado": true
+  },
+  {
+    "codigo": "244100",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-DERMATOLOGÍA   -",
+    "estado": true
+  },
+  {
+    "codigo": "244200",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-ENDOCRINOLOGIA-",
+    "estado": true
+  },
+  {
+    "codigo": "244300",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-GASTROENTEROLOGÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "244400",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-GERIATRIA-",
+    "estado": true
+  },
+  {
+    "codigo": "244500",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-HEMATOLOGÍA-",
+    "estado": true
+  },
+  {
+    "codigo": "244600",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-NEFROLOGIA-",
+    "estado": true
+  },
+  {
+    "codigo": "244700",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-NEUROLOGIA -",
+    "estado": true
+  },
+  {
+    "codigo": "244800",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-NEUROLOGIA -NEUROLOGIA DE LA CONDUCTA",
+    "estado": true
+  },
+  {
+    "codigo": "244900",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-NEUROLOGIA -NEURODEGENERATIVAS",
+    "estado": true
+  },
+  {
+    "codigo": "245000",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-NEUROLOGIA -NEUROVASCULARES Y METABOLICAS",
+    "estado": true
+  },
+  {
+    "codigo": "245100",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-NEUROLOGIA -ENFERMEDADES INFECCIOSAS/TRANSMISIBLES DEL SISTEMA NERVIOSO",
+    "estado": true
+  },
+  {
+    "codigo": "245200",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-NEUROLOGIA -EPILEPSIA/EPILEPTOLOGIA",
+    "estado": true
+  },
+  {
+    "codigo": "245300",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-NEUMOLOGÍA -",
+    "estado": true
+  },
+  {
+    "codigo": "245400",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-GINECOLOGIA-",
+    "estado": true
+  },
+  {
+    "codigo": "245500",
+    "denominacion": "HOSPITALIZACIÓN DE MEDICINA-REUMATOLOGÍA   -",
+    "estado": true
+  },
+  {
+    "codigo": "245600",
+    "denominacion": "HOSPITALIZACIÓN DE DÍA",
+    "estado": true
+  },
+  {
+    "codigo": "245700",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CARDIOLOGIA-",
+    "estado": true
+  },
+  {
+    "codigo": "245701",
+    "denominacion": "HOSPITALIZACIÓN QUIRÚRGICA-CARDIOLOGIA-CARDIOLOGIA INTERVENVIONISTA",
+    "estado": true
+  },
+  {
+    "codigo": "250000",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS",
+    "estado": true
+  },
+  {
+    "codigo": "250100",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS GENERALES (UCI)-",
+    "estado": true
+  },
+  {
+    "codigo": "250101",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS GENERALES (UCI)-CARDIOLOGIA",
+    "estado": true
+  },
+  {
+    "codigo": "250102",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS GENERALES (UCI)-GINECO-OBSTETRICIA",
+    "estado": true
+  },
+  {
+    "codigo": "250103",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS GENERALES  (UCI)-MEDICINA",
+    "estado": true
+  },
+  {
+    "codigo": "250104",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS GENERALES  (UCI)-MEDICINA TROPICAL",
+    "estado": true
+  },
+  {
+    "codigo": "250105",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS  (UCI)-NEONATOLOGÍA",
+    "estado": true
+  },
+  {
+    "codigo": "250106",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS  (UCI)-NEUROLÓGICA",
+    "estado": true
+  },
+  {
+    "codigo": "250107",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS  (UCI)-NEUROQUIRÚRGICA",
+    "estado": true
+  },
+  {
+    "codigo": "250108",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS  (UCI)-PEDIÁTRICA",
+    "estado": true
+  },
+  {
+    "codigo": "250109",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS  (UCI)-QUIRÚRGICA",
+    "estado": true
+  },
+  {
+    "codigo": "250110",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS  (UCI)-RESPIRATORIA",
+    "estado": true
+  },
+  {
+    "codigo": "250111",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD  DE CUIDADOS INTENSIVOS  (UCI)-CARDIOVASCULAR",
+    "estado": true
+  },
+  {
+    "codigo": "250200",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD DE CUIDADOS INTERMEDIOS GENERAL  (UCIN)-",
+    "estado": true
+  },
+  {
+    "codigo": "250201",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD DE CUIDADOS INTERMEDIOS  (UCIN)-NEONATAL",
+    "estado": true
+  },
+  {
+    "codigo": "250202",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD DE CUIDADOS INTERMEDIOS  (UCIN)-PEDIÁTRICOS",
+    "estado": true
+  },
+  {
+    "codigo": "250300",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD DE VIGILANCIA INTENSIVA  CLINICA (UVIC)-",
+    "estado": true
+  },
+  {
+    "codigo": "250400",
+    "denominacion": "UNIDAD DE CUIDADOS CRITICOS-UNIDAD DE QUEMADOS (GRAN QUEMADO)-",
+    "estado": true
+  },
+  {
+    "codigo": "260000",
+    "denominacion": "ESTRATEGIAS SANITARIAS NACIONALES",
+    "estado": true
+  },
+  {
+    "codigo": "260100",
+    "denominacion": "ESTRAT.SANIT. NAC.-CENTRO JUVENIL-",
+    "estado": true
+  },
+  {
+    "codigo": "260200",
+    "denominacion": "ESTRAT.SANIT. NAC.-COMPONENTES ESPECIALES",
+    "estado": true
+  },
+  {
+    "codigo": "260201",
+    "denominacion": "ESTRAT.SANIT. NAC.-COMPONENTES ESPECIALES-ACCIDENTES POR ANIMALES PONZOÑOSOS",
+    "estado": true
+  },
+  {
+    "codigo": "260202",
+    "denominacion": "ESTRAT.SANIT. NAC.-COMPONENTES ESPECIALES-NUTRICIÓN",
+    "estado": true
+  },
+  {
+    "codigo": "260203",
+    "denominacion": "ESTRAT.SANIT. NAC.-COMPONENTES ESPECIALES-PREVENCIÓN DE CISTICERCOSIS",
+    "estado": true
+  },
+  {
+    "codigo": "260204",
+    "denominacion": "ESTRAT.SANIT. NAC.-COMPONENTES ESPECIALES-SALUD BUCAL",
+    "estado": true
+  },
+  {
+    "codigo": "260205",
+    "denominacion": "ESTRAT.SANIT. NAC.-COMPONENTES ESPECIALES-ZOONOSIS HUMANA (Rabia, carbunco y otras)",
+    "estado": true
+  },
+  {
+    "codigo": "260300",
+    "denominacion": "ESTRAT.SANIT. NAC.-INMUNIZACIONES-",
+    "estado": true
+  },
+  {
+    "codigo": "260400",
+    "denominacion": "ESTRAT.SANIT. NAC.-MAMIS-",
+    "estado": true
+  },
+  {
+    "codigo": "260500",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE DAÑOS NO TRANSMISIBLES",
+    "estado": true
+  },
+  {
+    "codigo": "260501",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE DAÑOS NO TRANSMISIBLES-ADULTO MAYOR",
+    "estado": true
+  },
+  {
+    "codigo": "260502",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE DAÑOS NO TRANSMISIBLES-DIABETES MELLITUS",
+    "estado": true
+  },
+  {
+    "codigo": "260503",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE DAÑOS NO TRANSMISIBLES-HIPERTENSIÓN ARTERIAL",
+    "estado": true
+  },
+  {
+    "codigo": "260504",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE DAÑOS NO TRANSMISIBLES-MANEJO DE ALZHEIMER",
+    "estado": true
+  },
+  {
+    "codigo": "260505",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE DAÑOS NO TRANSMISIBLES-MANEJO DE ASMA",
+    "estado": true
+  },
+  {
+    "codigo": "260506",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE DAÑOS NO TRANSMISIBLES-OBESIDAD E HIPERCOLESTEROLEMIAS",
+    "estado": true
+  },
+  {
+    "codigo": "260507",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE DAÑOS NO TRANSMISIBLES-OSTEOPOROSIS",
+    "estado": true
+  },
+  {
+    "codigo": "260600",
+    "denominacion": "PREV.Y CONTROL DE ENF. METAXÉNICAS Y OTRAS TRANS. POR VECTORES",
+    "estado": true
+  },
+  {
+    "codigo": "260601",
+    "denominacion": "PREV.Y CONTROL DE ENF. METAXÉNICAS Y OTRAS TRANS. POR VECTORES-UNIDAD DE DIAG. Y TRAT. DE ENF. METAXÉNICAS",
+    "estado": true
+  },
+  {
+    "codigo": "260700",
+    "denominacion": "PREV. Y CONTROL DE INFECCIONES DE TRANSMISIÓN SEXUAL Y VIH-SIDA",
+    "estado": true
+  },
+  {
+    "codigo": "260701",
+    "denominacion": "PREV. Y CONTROL DE INFECCIONES DE TRANSMISIÓN SEXUAL Y VIH-SIDA-UNIDAD DE DIAG. Y TRATAMIENTO DE ITS",
+    "estado": true
+  },
+  {
+    "codigo": "260702",
+    "denominacion": "PREV. Y CONTROL DE INFECCIONES DE TRANSMISIÓN SEXUAL Y VIH-SIDA-UNIDAD DE DIAG. Y TRAT. DE VIH/SIDA",
+    "estado": true
+  },
+  {
+    "codigo": "260800",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE TUBERCULOSIS",
+    "estado": true
+  },
+  {
+    "codigo": "260801",
+    "denominacion": "ESTRAT.SANIT. NAC.-PREVENCIÓN Y CONTROL DE TUBERCULOSIS-UNIDAD DE DIAG. Y TRATAMIENTO CLÁSICO",
+    "estado": true
+  },
+  {
+    "codigo": "260802",
+    "denominacion": "PREVENCIÓN Y CONTROL DE TUBERCULOSIS-UNIDAD DE DIAG. Y TRATAMIENTO MULTIDROGO RESISTENTES",
+    "estado": true
+  },
+  {
+    "codigo": "260900",
+    "denominacion": "ESTRAT.SANIT. NAC.-SALUD MENTAL Y CULTURA DE PAZ",
+    "estado": true
+  },
+  {
+    "codigo": "260901",
+    "denominacion": "ESTRAT.SANIT. NAC.-SALUD MENTAL Y CULTURA DE PAZ-ADOLESCENTE",
+    "estado": true
+  },
+  {
+    "codigo": "260902",
+    "denominacion": "ESTRAT.SANIT. NAC.-SALUD MENTAL Y CULTURA DE PAZ-DEPRESIÓN",
+    "estado": true
+  },
+  {
+    "codigo": "260903",
+    "denominacion": "ESTRAT.SANIT. NAC.-SALUD MENTAL Y CULTURA DE PAZ-PREVENCIÓN DE ADICCIONES (drogas y alcohol)",
+    "estado": true
+  },
+  {
+    "codigo": "260904",
+    "denominacion": "ESTRAT.SANIT. NAC.-SALUD MENTAL Y CULTURA DE PAZ-VIOLENCIA",
+    "estado": true
+  },
+  {
+    "codigo": "260905",
+    "denominacion": "ESTRAT.SANIT. NAC.-SALUD MENTAL Y CULTURA DE PAZ-MAMIS",
+    "estado": true
+  },
+  {
+    "codigo": "261000",
+    "denominacion": "ESTRAT.SANIT. NAC.-SALUD SEXUAL Y REPRODUCTIVA",
+    "estado": true
+  },
+  {
+    "codigo": "261001",
+    "denominacion": "ESTRAT.SANIT. NAC.-SALUD SEXUAL Y REPRODUCTIVA-PLANIFICACIÓN FAMILIAR",
+    "estado": true
+  },
+  {
+    "codigo": "261002",
+    "denominacion": "ESTRAT.SANIT. NAC.-SALUD SEXUAL Y REPRODUCTIVA-SALUD MATERNA",
+    "estado": true
+  }
+]

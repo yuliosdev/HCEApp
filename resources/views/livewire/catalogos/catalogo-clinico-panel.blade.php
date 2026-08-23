@@ -8,28 +8,28 @@
     </div>
 
     <div class="catalog-stats">
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:list-checks" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['total'] }}">{{ $estadisticas['total'] }}</strong>
                 <p>Total registros</p>
             </div>
         </article>
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:check-circle" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['activos'] }}">{{ $estadisticas['activos'] }}</strong>
                 <p>Activos</p>
             </div>
         </article>
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:pause-circle" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['inactivos'] }}">{{ $estadisticas['inactivos'] }}</strong>
                 <p>Inactivos</p>
             </div>
         </article>
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:trash-2" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['eliminados'] }}">{{ $estadisticas['eliminados'] }}</strong>
@@ -109,14 +109,16 @@
                 </select>
             </label>
 
-            <label class="catalog-filter">
-                <span>Estado</span>
-                <select wire:model.live="estado">
-                    @foreach ($estados as $estadoDisponible)
-                        <option value="{{ $estadoDisponible }}">{{ $estadoDisponible }}</option>
-                    @endforeach
-                </select>
-            </label>
+            @if ($usaEstado)
+                <label class="catalog-filter">
+                    <span>Estado</span>
+                    <select wire:model.live="estado">
+                        @foreach ($estados as $estadoDisponible)
+                            <option value="{{ $estadoDisponible }}">{{ $estadoDisponible }}</option>
+                        @endforeach
+                    </select>
+                </label>
+            @endif
 
             <button type="button" class="catalog-secondary-action" wire:click="limpiarFiltros">
                 <iconify-icon icon="lucide:rotate-ccw" aria-hidden="true"></iconify-icon>
@@ -131,7 +133,9 @@
                         @foreach ($configuracion['campos'] as $campo)
                             <th>{{ $campo['etiqueta'] }}</th>
                         @endforeach
-                        <th>Estado</th>
+                        @if ($usaEstado)
+                            <th>Estado</th>
+                        @endif
                         <th>Uso</th>
                         <th>Actualizado</th>
                         <th>Acciones</th>
@@ -149,11 +153,13 @@
                                     @endif
                                 </td>
                             @endforeach
-                            <td>
-                                <span class="catalog-status {{ $this->valorEstado($registro) === 'Activo' ? 'is-active' : 'is-inactive' }}">
-                                    {{ $this->valorEstado($registro) }}
-                                </span>
-                            </td>
+                            @if ($usaEstado)
+                                <td>
+                                    <span class="catalog-status {{ $this->valorEstado($registro) === 'Activo' ? 'is-active' : 'is-inactive' }}">
+                                        {{ $this->valorEstado($registro) }}
+                                    </span>
+                                </td>
+                            @endif
                             <td>{{ $this->usoTotal($registro) }} {{ $configuracion['etiqueta_uso'] }}</td>
                             <td>{{ optional($registro->updated_at)->format('d/m/Y H:i') }}</td>
                             <td>
@@ -165,9 +171,11 @@
                                         <button type="button" wire:click="editar({{ $registro->id }})" title="Editar" aria-label="Editar {{ $configuracion['singular'] }}">
                                             <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
                                         </button>
-                                        <button type="button" wire:click="cambiarEstado({{ $registro->id }})" title="Cambiar estado" aria-label="Cambiar estado">
-                                            <iconify-icon icon="{{ $this->valorEstado($registro) === 'Activo' ? 'lucide:pause-circle' : 'lucide:check-circle' }}" aria-hidden="true"></iconify-icon>
-                                        </button>
+                                        @if ($usaEstado)
+                                            <button type="button" wire:click="cambiarEstado({{ $registro->id }})" title="Cambiar estado" aria-label="Cambiar estado">
+                                                <iconify-icon icon="{{ $this->valorEstado($registro) === 'Activo' ? 'lucide:pause-circle' : 'lucide:check-circle' }}" aria-hidden="true"></iconify-icon>
+                                            </button>
+                                        @endif
                                         <button
                                             type="button"
                                             data-confirm-delete-catalogo
@@ -185,7 +193,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ count($configuracion['campos']) + 4 }}" class="catalog-empty">
+                            <td colspan="{{ count($configuracion['campos']) + ($usaEstado ? 4 : 3) }}" class="catalog-empty">
                                 No se encontraron registros con los filtros actuales.
                             </td>
                         </tr>
@@ -201,7 +209,7 @@
 
     @if ($modalAbierto)
         <div class="catalog-modal-backdrop" wire:click.self="cerrarModal">
-            <section class="catalog-modal" role="dialog" aria-modal="true" aria-labelledby="catalogo-modal-title">
+            <section class="catalog-modal {{ $catalogo === 'signos-vitales' ? 'catalog-vital-signs-modal' : '' }}" role="dialog" aria-modal="true" aria-labelledby="catalogo-modal-title">
                 <header>
                     <div>
                         <p>{{ $modoFormulario === 'crear' ? 'Nuevo registro' : ($modoFormulario === 'editar' ? 'Editar registro' : 'Vista de registro') }}</p>
@@ -213,39 +221,95 @@
                 </header>
 
                 <form wire:submit.prevent="guardar" class="catalog-form">
-                    @foreach ($configuracion['campos'] as $campo)
-                        <label>
-                            <span>{{ $campo['etiqueta'] }}</span>
+                    @php
+                        $seccionesFormulario = collect($configuracion['secciones_formulario'] ?? []);
+                        $camposEnSecciones = $seccionesFormulario->flatMap(fn (array $seccion): array => $seccion['campos'])->all();
+                    @endphp
 
-                            @if (($campo['tipo'] ?? 'text') === 'textarea')
-                                <textarea wire:model.blur="form.{{ $campo['nombre'] }}" rows="4" @readonly($modoFormulario === 'ver')></textarea>
-                            @elseif (($campo['tipo'] ?? 'text') === 'select')
-                                <select wire:model="form.{{ $campo['nombre'] }}" @disabled($modoFormulario === 'ver')>
-                                    @if (! ($campo['requerido'] ?? false))
-                                        <option value="">Sin definir</option>
-                                    @endif
-                                    @foreach ($campo['opciones'] as $opcion)
-                                        <option value="{{ $opcion }}">{{ $opcion }}</option>
+                    @if ($catalogo === 'signos-vitales')
+                        <div class="catalog-vital-signs-grid">
+                            <section class="catalog-form-section catalog-vital-signs-card">
+                                <div class="catalog-form-section-header">
+                                    <span>
+                                        <iconify-icon icon="lucide:clipboard-list" aria-hidden="true"></iconify-icon>
+                                    </span>
+                                    <div>
+                                        <h3>Informacion General</h3>
+                                    </div>
+                                </div>
+
+                                <div class="catalog-form-section-fields">
+                                    @foreach (collect($configuracion['campos'])->whereIn('nombre', ['descripcion', 'unidad']) as $campo)
+                                        @include('livewire.catalogos.partials.campo-formulario', ['campo' => $campo, 'modoFormulario' => $modoFormulario])
                                     @endforeach
-                                </select>
-                            @elseif (($campo['tipo'] ?? 'text') === 'number')
-                                <input type="number" wire:model.blur="form.{{ $campo['nombre'] }}" @readonly($modoFormulario === 'ver')>
-                            @else
-                                <input type="text" wire:model.blur="form.{{ $campo['nombre'] }}" @readonly($modoFormulario === 'ver')>
-                            @endif
 
-                            @error('form.'.$campo['nombre']) <small>{{ $message }}</small> @enderror
+                                    @if ($usaEstado)
+                                        <label>
+                                            <span>Estado</span>
+                                            <select wire:model="estadoRegistro" @disabled($modoFormulario === 'ver')>
+                                                <option value="Activo">Activo</option>
+                                                <option value="Inactivo">Inactivo</option>
+                                            </select>
+                                            @error('estadoRegistro') <small>{{ $message }}</small> @enderror
+                                        </label>
+                                    @endif
+                                </div>
+                            </section>
+
+                            <section class="catalog-form-section catalog-vital-signs-card">
+                                <div class="catalog-form-section-header">
+                                    <span>
+                                        <iconify-icon icon="lucide:sliders-horizontal" aria-hidden="true"></iconify-icon>
+                                    </span>
+                                    <div>
+                                        <h3>Configuracion de Rangos</h3>
+                                        <p>Define el limite inicial y final que se usara como referencia clinica del signo vital.</p>
+                                    </div>
+                                </div>
+
+                                <div class="catalog-form-section-fields">
+                                    @foreach (collect($configuracion['campos'])->whereIn('nombre', ['rango_inicial', 'rango_final']) as $campo)
+                                        @include('livewire.catalogos.partials.campo-formulario', ['campo' => $campo, 'modoFormulario' => $modoFormulario])
+                                    @endforeach
+                                </div>
+                            </section>
+                        </div>
+                    @else
+                        @foreach (collect($configuracion['campos'])->reject(fn (array $campo): bool => in_array($campo['nombre'], $camposEnSecciones, true)) as $campo)
+                            @include('livewire.catalogos.partials.campo-formulario', ['campo' => $campo, 'modoFormulario' => $modoFormulario])
+                        @endforeach
+
+                        @foreach ($seccionesFormulario as $seccion)
+                            <section class="catalog-form-section">
+                                <div class="catalog-form-section-header">
+                                    <span>
+                                        <iconify-icon icon="{{ $seccion['icono'] ?? 'lucide:sliders-horizontal' }}" aria-hidden="true"></iconify-icon>
+                                    </span>
+                                    <div>
+                                        <h3>{{ $seccion['titulo'] }}</h3>
+                                        <p>{{ $seccion['descripcion'] }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="catalog-form-section-grid">
+                                    @foreach (collect($configuracion['campos'])->whereIn('nombre', $seccion['campos']) as $campo)
+                                        @include('livewire.catalogos.partials.campo-formulario', ['campo' => $campo, 'modoFormulario' => $modoFormulario])
+                                    @endforeach
+                                </div>
+                            </section>
+                        @endforeach
+                    @endif
+
+                    @if ($usaEstado && $catalogo !== 'signos-vitales')
+                        <label>
+                            <span>Estado</span>
+                            <select wire:model="estadoRegistro" @disabled($modoFormulario === 'ver')>
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                            @error('estadoRegistro') <small>{{ $message }}</small> @enderror
                         </label>
-                    @endforeach
-
-                    <label>
-                        <span>Estado</span>
-                        <select wire:model="estadoRegistro" @disabled($modoFormulario === 'ver')>
-                            <option value="Activo">Activo</option>
-                            <option value="Inactivo">Inactivo</option>
-                        </select>
-                        @error('estadoRegistro') <small>{{ $message }}</small> @enderror
-                    </label>
+                    @endif
 
                     @if ($esAdministrador && $auditoria !== [])
                         <section class="catalog-audit-box">

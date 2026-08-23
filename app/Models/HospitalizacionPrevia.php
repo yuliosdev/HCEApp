@@ -23,6 +23,11 @@ class HospitalizacionPrevia extends Model
         return $this->belongsTo(Paciente::class);
     }
 
+    public function ups(): BelongsTo
+    {
+        return $this->belongsTo(Ups::class);
+    }
+
     public function diagnosticoCie10(): BelongsTo
     {
         return $this->belongsTo(DiagnosticoCie10::class);

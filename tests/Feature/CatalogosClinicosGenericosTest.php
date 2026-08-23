@@ -5,7 +5,10 @@ namespace Tests\Feature;
 use App\Enums\EstadoCatalogo;
 use App\Livewire\Catalogos\CatalogoClinicoPanel;
 use App\Models\Ambiente;
+use App\Models\Glasgow;
 use App\Models\Medicamento;
+use App\Models\SignoVital;
+use App\Models\Ups;
 use App\Models\User;
 use App\Services\Catalogos\CatalogosClinicosArchivoService;
 use App\Support\Seguridad\Permisos;
@@ -146,6 +149,73 @@ class CatalogosClinicosGenericosTest extends TestCase
         $this->assertSoftDeleted('medicamentos', ['id' => $medicamento->id]);
     }
 
+    public function test_administrador_gestiona_catalogos_ups_y_glasgow(): void
+    {
+        $administrador = $this->crearAdministrador();
+
+        Livewire::actingAs($administrador)
+            ->test(CatalogoClinicoPanel::class, ['catalogo' => 'ups'])
+            ->call('abrirNuevo')
+            ->set('form.codigo', '999999')
+            ->set('form.denominacion', 'UPS de prueba funcional')
+            ->set('estadoRegistro', EstadoCatalogo::Activo->value)
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $ups = Ups::query()->where('codigo', '999999')->firstOrFail();
+
+        $this->assertTrue($ups->estado);
+
+        Livewire::actingAs($administrador)
+            ->test(CatalogoClinicoPanel::class, ['catalogo' => 'ups'])
+            ->call('cambiarEstado', $ups->id)
+            ->assertHasNoErrors();
+
+        $this->assertFalse($ups->fresh()->estado);
+
+        Livewire::actingAs($administrador)
+            ->test(CatalogoClinicoPanel::class, ['catalogo' => 'glasgow'])
+            ->call('abrirNuevo')
+            ->set('form.tipo', 'Ocular')
+            ->set('form.puntaje', 4)
+            ->set('form.descripcion', 'Apertura ocular espontanea')
+            ->set('estadoRegistro', EstadoCatalogo::Activo->value)
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('glasgow', [
+            'tipo' => 'Ocular',
+            'puntaje' => 4,
+            'descripcion' => 'Apertura ocular espontanea',
+            'estado' => EstadoCatalogo::Activo->value,
+            'registrado_por' => $administrador->id,
+            'actualizado_por' => $administrador->id,
+        ]);
+    }
+
+    public function test_signos_vitales_guardan_rangos_normales_desde_modal(): void
+    {
+        $administrador = $this->crearAdministrador();
+
+        Livewire::actingAs($administrador)
+            ->test(CatalogoClinicoPanel::class, ['catalogo' => 'signos-vitales'])
+            ->call('abrirNuevo')
+            ->assertSee('Informacion General')
+            ->assertSee('Configuracion de Rangos')
+            ->set('form.descripcion', 'Presion sistolica')
+            ->set('form.unidad', 'mmHg')
+            ->set('form.rango_inicial', '90.00')
+            ->set('form.rango_final', '120.00')
+            ->set('estadoRegistro', EstadoCatalogo::Activo->value)
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $signoVital = SignoVital::query()->where('descripcion', 'Presion sistolica')->firstOrFail();
+
+        $this->assertSame('90.00', $signoVital->rango_inicial);
+        $this->assertSame('120.00', $signoVital->rango_final);
+    }
+
     public function test_administrador_ve_auditoria_en_modal_generico(): void
     {
         $administrador = $this->crearAdministrador();
@@ -237,9 +307,11 @@ class CatalogosClinicosGenericosTest extends TestCase
         return [
             'catalogos.cie10.index' => 'CIE10',
             'catalogos.medicamentos.index' => 'Medicamentos',
+            'catalogos.ups.index' => 'UPS',
             'catalogos.examenes.index' => 'Examenes',
             'catalogos.especialidades.index' => 'Especialidades',
             'catalogos.signos-vitales.index' => 'Signos Vitales',
+            'catalogos.glasgow.index' => 'Glasgow',
             'catalogos.alergias.index' => 'Alergias',
             'catalogos.tipo-ordenes.index' => 'Tipo de Ordenes',
             'catalogos.prioridades.index' => 'Prioridades',

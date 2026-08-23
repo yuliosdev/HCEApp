@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProfesionalSalud extends Model
@@ -40,5 +41,10 @@ class ProfesionalSalud extends Model
     public function atencionesResponsables(): HasMany
     {
         return $this->hasMany(HcEmergencia::class, 'profesional_salud_id');
+    }
+
+    public function usuario(): HasOne
+    {
+        return $this->hasOne(User::class, 'profesional_salud_id');
     }
 }

@@ -8,11 +8,16 @@ use App\Enums\FactorRh;
 use App\Enums\GrupoSanguineo;
 use App\Enums\SiNo;
 use App\Enums\TopicoAtencion;
+use App\Models\HcReferencia;
 use App\Models\HcEmergencia;
+use App\Models\HospitalizacionPrevia;
+use App\Models\MedicamentoHabitual;
 use App\Models\Paciente;
 use App\Models\Prioridad;
+use App\Models\Ups;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -27,9 +32,12 @@ class BaseDatosClinicaTest extends TestCase
     {
         $tablas = [
             'prioridades',
+            'ups',
+            'glasgow',
             'pacientes',
             'profesionales_salud',
             'hc_emergencia',
+            'hc_referencias',
             'triaje_signos_vitales',
             'ingreso_diagnosticos',
             'prescripciones',
@@ -42,6 +50,19 @@ class BaseDatosClinicaTest extends TestCase
         }
 
         $this->assertTrue(Schema::hasColumn('hc_emergencia', 'triaje'), 'La tabla hc_emergencia debe tener el campo booleano triaje.');
+        $this->assertTrue(Schema::hasColumn('hospitalizaciones_previas', 'ups_id'), 'La tabla hospitalizaciones_previas debe relacionarse con ups.');
+        $this->assertTrue(Schema::hasColumn('signos_vitales', 'rango_inicial'), 'La tabla signos_vitales debe tener rango inicial.');
+        $this->assertTrue(Schema::hasColumn('signos_vitales', 'rango_final'), 'La tabla signos_vitales debe tener rango final.');
+        $this->assertTrue(Schema::hasColumn('evoluciones', 'detalle_clinico'), 'La tabla evoluciones debe tener detalle clinico.');
+        $this->assertTrue(Schema::hasColumn('alta_medicamentos', 'cantidad'), 'La tabla alta_medicamentos debe tener cantidad.');
+        $this->assertFalse(Schema::hasColumn('medicamentos_habituales', 'hc_emergencia_id'), 'medicamentos_habituales ya no debe depender directamente de hc_emergencia.');
+        $this->assertTrue(Schema::hasColumn('medicamentos_habituales', 'paciente_id'), 'medicamentos_habituales debe depender del paciente.');
+        $this->assertTrue(Schema::hasColumn('users', 'tipo_usuario'), 'La tabla users debe tener el campo tipo_usuario.');
+        $this->assertTrue(Schema::hasColumn('users', 'profesional_salud_id'), 'La tabla users debe relacionarse con profesionales_salud.');
+        $this->assertTrue(
+            $this->existeClaveForanea('users', 'profesional_salud_id', 'profesionales_salud', 'id'),
+            'users.profesional_salud_id debe tener una clave foranea real hacia profesionales_salud.id.'
+        );
     }
 
     /**
@@ -56,13 +77,30 @@ class BaseDatosClinicaTest extends TestCase
         ]);
         $this->assertDatabaseHas('users', [
             'email' => 'yuliostch@gmail.com',
+            'tipo_usuario' => 'Supervisor',
+        ]);
+        $this->assertDatabaseHas('users', [
+            'email' => 'medico.seed@hceapp.test',
+            'tipo_usuario' => 'Profesional de Salud',
         ]);
 
         $this->assertDatabaseCount('prioridades', 4);
+        $this->assertDatabaseCount('ups', 392);
+        $this->assertDatabaseCount('glasgow', 15);
         $this->assertDatabaseHas('prioridades', [
             'prioridad' => 'II.URGENCIA MAYOR',
             'color' => 'Naranja',
             'orden' => 2,
+        ]);
+        $this->assertDatabaseHas('ups', [
+            'codigo' => '030000',
+            'denominacion' => 'ANATOMO PATOLOGÍA / PATOLOGÍA',
+            'estado' => true,
+        ]);
+        $this->assertDatabaseHas('glasgow', [
+            'tipo' => 'Motora',
+            'puntaje' => 6,
+            'descripcion' => 'Obedece ordenes',
         ]);
         $this->assertDatabaseHas('signos_vitales', [
             'descripcion' => 'Temperatura',
@@ -102,5 +140,81 @@ class BaseDatosClinicaTest extends TestCase
         $this->assertTrue($episodio->triaje);
         $this->assertInstanceOf(GrupoSanguineo::class, $paciente->grupo_sanguineo);
         $this->assertInstanceOf(FactorRh::class, $paciente->factor_rh);
+    }
+
+    /**
+     * Verifica las relaciones agregadas en la reestructura de migraciones.
+     */
+    public function test_puede_usar_relaciones_nuevas_de_ups_referencias_y_medicamentos_habituales(): void
+    {
+        $this->seed();
+
+        $administrador = User::query()->where('email', 'admin@hceapp.test')->firstOrFail();
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $administrador->id,
+            'actualizado_por' => $administrador->id,
+        ]);
+        $episodio = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'registrado_por' => $administrador->id,
+            'actualizado_por' => $administrador->id,
+        ]);
+        $ups = Ups::query()->where('codigo', '030000')->firstOrFail();
+
+        $hospitalizacion = HospitalizacionPrevia::query()->create([
+            'paciente_id' => $paciente->id,
+            'ups_id' => $ups->id,
+            'denominacion' => 'Hospitalizacion de prueba',
+            'registrado_por' => $administrador->id,
+            'actualizado_por' => $administrador->id,
+        ]);
+
+        $medicamentoHabitual = MedicamentoHabitual::query()->create([
+            'paciente_id' => $paciente->id,
+            'medicacion' => 'Metformina',
+            'periodo' => 'Habitual',
+            'registrado_por' => $administrador->id,
+            'actualizado_por' => $administrador->id,
+        ]);
+
+        $referencia = HcReferencia::factory()->create([
+            'hc_emergencia_id' => $episodio->id,
+            'ups_origen_id' => $ups->id,
+            'ups_destino_id' => $ups->id,
+            'registrado_por' => $administrador->id,
+            'actualizado_por' => $administrador->id,
+        ]);
+
+        $this->assertTrue($hospitalizacion->fresh()->ups->is($ups));
+        $this->assertTrue($medicamentoHabitual->fresh()->paciente->is($paciente));
+        $this->assertTrue($referencia->fresh()->hcEmergencia->is($episodio));
+        $this->assertTrue($referencia->fresh()->upsOrigen->is($ups));
+        $this->assertTrue($referencia->fresh()->upsDestino->is($ups));
+        $this->assertTrue($episodio->fresh()->referencias->contains($referencia));
+        $this->assertTrue($paciente->fresh()->medicamentosHabituales->contains($medicamentoHabitual));
+    }
+
+    private function existeClaveForanea(string $tabla, string $columna, string $tablaReferenciada, string $columnaReferenciada): bool
+    {
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'mysql') {
+            return DB::table('information_schema.KEY_COLUMN_USAGE')
+                ->where('TABLE_SCHEMA', DB::connection()->getDatabaseName())
+                ->where('TABLE_NAME', $tabla)
+                ->where('COLUMN_NAME', $columna)
+                ->where('REFERENCED_TABLE_NAME', $tablaReferenciada)
+                ->where('REFERENCED_COLUMN_NAME', $columnaReferenciada)
+                ->exists();
+        }
+
+        if ($driver === 'sqlite') {
+            return collect(DB::select("PRAGMA foreign_key_list({$tabla})"))
+                ->contains(fn (object $clave): bool => $clave->from === $columna
+                    && $clave->table === $tablaReferenciada
+                    && $clave->to === $columnaReferenciada);
+        }
+
+        return true;
     }
 }

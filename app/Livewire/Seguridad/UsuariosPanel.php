@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Seguridad;
 
+use App\Models\ProfesionalSalud;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,12 +33,61 @@ class UsuariosPanel extends Component
 
     public bool $activo = true;
 
+    public string $tipoUsuario = 'Administrativo';
+
+    public ?int $profesionalSaludId = null;
+
+    public string $busquedaProfesional = '';
+
+    public bool $mostrarSugerenciasProfesional = false;
+
     /** @var array<int, string> */
     public array $rolesSeleccionados = [];
+
+    /**
+     * Tipos de usuario definidos en el enum de la tabla users.
+     *
+     * @return array<int, string>
+     */
+    public function tiposUsuario(): array
+    {
+        return ['Supervisor', 'Administrativo', 'Médico', 'Profesional de Salud'];
+    }
 
     public function updatingBusqueda(): void
     {
         $this->resetPage();
+    }
+
+    public function updatedTipoUsuario(): void
+    {
+        if (! $this->requiereProfesionalSalud()) {
+            $this->profesionalSaludId = null;
+            $this->busquedaProfesional = '';
+            $this->mostrarSugerenciasProfesional = false;
+        }
+    }
+
+    public function updatedBusquedaProfesional(): void
+    {
+        if (! $this->requiereProfesionalSalud()) {
+            return;
+        }
+
+        $this->profesionalSaludId = null;
+        $this->mostrarSugerenciasProfesional = trim($this->busquedaProfesional) !== '';
+    }
+
+    public function seleccionarProfesional(int $profesionalId): void
+    {
+        $profesional = ProfesionalSalud::query()
+            ->with('especialidad')
+            ->findOrFail($profesionalId);
+
+        $this->profesionalSaludId = $profesional->id;
+        $this->busquedaProfesional = $this->etiquetaProfesional($profesional);
+        $this->mostrarSugerenciasProfesional = false;
+        $this->resetValidation('profesionalSaludId');
     }
 
     public function crear(): void
@@ -51,13 +101,21 @@ class UsuariosPanel extends Component
     {
         $this->authorize('usuarios.editar');
 
-        $usuario = User::query()->with('roles')->findOrFail($usuarioId);
+        $usuario = User::query()
+            ->with(['profesionalSalud.especialidad', 'roles'])
+            ->findOrFail($usuarioId);
 
         $this->usuarioId = $usuario->id;
         $this->name = $usuario->name;
         $this->email = $usuario->email;
         $this->password = '';
         $this->activo = $usuario->activo;
+        $this->tipoUsuario = $usuario->tipo_usuario ?: 'Administrativo';
+        $this->profesionalSaludId = $usuario->profesional_salud_id;
+        $this->busquedaProfesional = $usuario->profesionalSalud
+            ? $this->etiquetaProfesional($usuario->profesionalSalud)
+            : '';
+        $this->mostrarSugerenciasProfesional = false;
         $this->rolesSeleccionados = $usuario->roles->pluck('name')->values()->all();
         $this->mostrarFormulario = true;
         $this->resetValidation();
@@ -71,6 +129,8 @@ class UsuariosPanel extends Component
             'name' => 'nombre',
             'email' => 'correo electronico',
             'password' => 'contrasena',
+            'tipoUsuario' => 'tipo de usuario',
+            'profesionalSaludId' => 'profesional medico',
             'rolesSeleccionados' => 'roles',
         ]);
 
@@ -81,6 +141,8 @@ class UsuariosPanel extends Component
         $usuario->fill([
             'name' => $datos['name'],
             'email' => $datos['email'],
+            'tipo_usuario' => $datos['tipoUsuario'],
+            'profesional_salud_id' => $this->requiereProfesionalSalud() ? $datos['profesionalSaludId'] : null,
             'activo' => $datos['activo'],
             'actualizado_por' => Auth::id(),
         ]);
@@ -140,6 +202,8 @@ class UsuariosPanel extends Component
     {
         return view('livewire.seguridad.usuarios-panel', [
             'usuarios' => $this->usuarios(),
+            'profesionales' => $this->profesionalesDisponibles(),
+            'requiereProfesionalSalud' => $this->requiereProfesionalSalud(),
             'roles' => Role::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -155,6 +219,13 @@ class UsuariosPanel extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->usuarioId)],
             'password' => [$this->usuarioId ? 'nullable' : 'required', 'string', 'min:8'],
+            'tipoUsuario' => ['required', Rule::in($this->tiposUsuario())],
+            'profesionalSaludId' => [
+                Rule::requiredIf($this->requiereProfesionalSalud()),
+                'nullable',
+                'integer',
+                Rule::exists('profesionales_salud', 'id')->whereNull('deleted_at'),
+            ],
             'activo' => ['boolean'],
             'rolesSeleccionados' => ['required', 'array', 'min:1'],
             'rolesSeleccionados.*' => [
@@ -167,7 +238,7 @@ class UsuariosPanel extends Component
     private function usuarios(): LengthAwarePaginator
     {
         return User::query()
-            ->with('roles')
+            ->with(['profesionalSalud', 'roles'])
             ->when($this->busqueda !== '', function (Builder $consulta): void {
                 $consulta->where(function (Builder $grupo): void {
                     $grupo
@@ -200,8 +271,51 @@ class UsuariosPanel extends Component
         $this->email = '';
         $this->password = '';
         $this->activo = true;
+        $this->tipoUsuario = 'Administrativo';
+        $this->profesionalSaludId = null;
+        $this->busquedaProfesional = '';
+        $this->mostrarSugerenciasProfesional = false;
         $this->rolesSeleccionados = [];
         $this->resetValidation();
+    }
+
+    public function requiereProfesionalSalud(): bool
+    {
+        return in_array($this->tipoUsuario, ['Médico', 'Profesional de Salud'], true);
+    }
+
+    private function profesionalesDisponibles()
+    {
+        if (! $this->requiereProfesionalSalud() || ! $this->mostrarSugerenciasProfesional || trim($this->busquedaProfesional) === '') {
+            return collect();
+        }
+
+        return ProfesionalSalud::query()
+            ->with('especialidad')
+            ->whereNull('deleted_at')
+            ->where(function (Builder $consulta): void {
+                $consulta->where(function (Builder $grupo): void {
+                    $grupo
+                        ->where('nombres', 'like', "%{$this->busquedaProfesional}%")
+                        ->orWhere('cmp', 'like', "%{$this->busquedaProfesional}%")
+                        ->orWhere('rne', 'like', "%{$this->busquedaProfesional}%")
+                        ->orWhereHas('especialidad', function (Builder $especialidad): void {
+                            $especialidad->where('nombre', 'like', "%{$this->busquedaProfesional}%");
+                        });
+                });
+            })
+            ->orderBy('nombres')
+            ->limit(8)
+            ->get(['id', 'nombres', 'cmp', 'rne', 'especialidad_id']);
+    }
+
+    private function etiquetaProfesional(ProfesionalSalud $profesional): string
+    {
+        return collect([
+            $profesional->nombres,
+            $profesional->cmp ? 'CMP '.$profesional->cmp : null,
+            optional($profesional->especialidad)->nombre,
+        ])->filter()->implode(' - ');
     }
 
     private function esUltimoAdministradorActivo(User $usuario): bool

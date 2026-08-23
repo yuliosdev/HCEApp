@@ -450,6 +450,7 @@ const confirmarEliminacionCatalogo = async (boton) => {
     const registroId = Number(boton.dataset.registroId || boton.dataset.procedimientoId || 0);
     const registroNombre = boton.dataset.registroNombre || boton.dataset.procedimientoNombre || 'este registro';
     const catalogoSingular = boton.dataset.catalogoSingular || 'procedimiento';
+    const metodoEliminacion = boton.dataset.deleteMethod || 'eliminar';
     const componente = boton.closest('[wire\\:id]');
     const instanciaLivewire = componente ? window.Livewire?.find(componente.getAttribute('wire:id')) : null;
 
@@ -489,7 +490,7 @@ const confirmarEliminacionCatalogo = async (boton) => {
     boton.disabled = true;
 
     try {
-        await instanciaLivewire.call('eliminar', registroId);
+        await instanciaLivewire.call(metodoEliminacion, registroId);
     } finally {
         boton.disabled = false;
     }
@@ -504,7 +505,7 @@ const prepararConfirmacionesCatalogo = () => {
 
     document.addEventListener('click', (evento) => {
         const boton = evento.target instanceof Element
-            ? evento.target.closest('[data-confirm-delete-procedimiento], [data-confirm-delete-catalogo], [data-confirm-delete-registro-clinico]')
+            ? evento.target.closest('[data-confirm-delete-procedimiento], [data-confirm-delete-catalogo], [data-confirm-delete-registro-clinico], [data-confirm-delete-paciente-dashboard]')
             : null;
 
         if (!boton) {

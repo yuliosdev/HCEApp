@@ -18,6 +18,14 @@ class SignoVital extends Model
 
     protected $guarded = ['id'];
 
+    protected function casts(): array
+    {
+        return [
+            'rango_inicial' => 'decimal:2',
+            'rango_final' => 'decimal:2',
+        ];
+    }
+
     /**
      * Valores tomados durante el triaje.
      */

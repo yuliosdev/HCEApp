@@ -41,4 +41,29 @@ class Paciente extends Model
     {
         return $this->hasMany(AntecedentePatologico::class);
     }
+
+    public function reaccionesAdversasMedicamentos(): HasMany
+    {
+        return $this->hasMany(ReaccionAdversaMedicamento::class);
+    }
+
+    public function antecedentesFamiliares(): HasMany
+    {
+        return $this->hasMany(AntecedenteFamiliar::class);
+    }
+
+    public function cirugiasPrevias(): HasMany
+    {
+        return $this->hasMany(CirugiaPrevia::class);
+    }
+
+    public function hospitalizacionesPrevias(): HasMany
+    {
+        return $this->hasMany(HospitalizacionPrevia::class);
+    }
+
+    public function medicamentosHabituales(): HasMany
+    {
+        return $this->hasMany(MedicamentoHabitual::class);
+    }
 }

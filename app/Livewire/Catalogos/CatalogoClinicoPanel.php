@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -117,10 +118,15 @@ class CatalogoClinicoPanel extends Component
             ? $modelo::query()->findOrFail($this->registroId)
             : new $modelo(['registrado_por' => Auth::id()]);
 
-        $registro->fill(array_merge($this->datosNormalizados($datos['form']), [
-            'estado' => $datos['estadoRegistro'],
+        $datosPersistibles = array_merge($this->datosNormalizados($datos['form']), [
             'actualizado_por' => Auth::id(),
-        ]));
+        ]);
+
+        if ($this->usaEstado()) {
+            $datosPersistibles['estado'] = $this->valorEstadoPersistible($datos['estadoRegistro']);
+        }
+
+        $registro->fill($datosPersistibles);
 
         $registro->save();
         $this->cerrarModal();
@@ -132,13 +138,19 @@ class CatalogoClinicoPanel extends Component
     {
         $this->authorize('catalogos.gestionar');
 
+        if (! $this->usaEstado()) {
+            flash()->warning('Este catalogo no maneja cambio de estado.', [], 'Catalogos');
+
+            return;
+        }
+
         $registro = $this->consultaRegistro($registroId);
         $nuevoEstado = $this->valorEstadoActual($registro) === EstadoCatalogo::Activo->value
             ? EstadoCatalogo::Inactivo->value
             : EstadoCatalogo::Activo->value;
 
         $registro->forceFill([
-            'estado' => $nuevoEstado,
+            'estado' => $this->valorEstadoPersistible($nuevoEstado),
             'actualizado_por' => Auth::id(),
         ])->save();
 
@@ -249,6 +261,7 @@ class CatalogoClinicoPanel extends Component
             'estados' => ['Todos', EstadoCatalogo::Activo->value, EstadoCatalogo::Inactivo->value],
             'esAdministrador' => $this->esAdministrador(),
             'opcionesPorPagina' => [5, 10, 15, 25, 50],
+            'usaEstado' => $this->usaEstado(),
         ]);
     }
 
@@ -268,7 +281,13 @@ class CatalogoClinicoPanel extends Component
 
             if (($campo['tipo'] ?? 'text') === 'number') {
                 $reglaCampo[] = 'integer';
-                $reglaCampo[] = 'min:0';
+                $reglaCampo[] = 'min:'.($campo['min'] ?? 0);
+                if (array_key_exists('max_numero', $campo)) {
+                    $reglaCampo[] = 'max:'.$campo['max_numero'];
+                }
+            } elseif (($campo['tipo'] ?? 'text') === 'decimal') {
+                $reglaCampo[] = 'numeric';
+                $reglaCampo[] = 'min:'.($campo['min'] ?? 0);
             } else {
                 $reglaCampo[] = 'string';
                 $reglaCampo[] = 'max:'.($campo['max'] ?? 255);
@@ -294,7 +313,13 @@ class CatalogoClinicoPanel extends Component
             $reglas['form.'.$nombre] = $reglaCampo;
         }
 
-        $reglas['estadoRegistro'] = ['required', Rule::enum(EstadoCatalogo::class)];
+        if (isset($reglas['form.rango_final'])) {
+            $reglas['form.rango_final'][] = 'gte:form.rango_inicial';
+        }
+
+        if ($this->usaEstado()) {
+            $reglas['estadoRegistro'] = ['required', Rule::enum(EstadoCatalogo::class)];
+        }
 
         return $reglas;
     }
@@ -352,8 +377,8 @@ class CatalogoClinicoPanel extends Component
 
         return [
             'total' => $modelo::query()->count(),
-            'activos' => $modelo::query()->where('estado', EstadoCatalogo::Activo->value)->count(),
-            'inactivos' => $modelo::query()->where('estado', EstadoCatalogo::Inactivo->value)->count(),
+            'activos' => $this->usaEstado() ? $this->consultaPorEstado($modelo, EstadoCatalogo::Activo->value)->count() : $modelo::query()->count(),
+            'inactivos' => $this->usaEstado() ? $this->consultaPorEstado($modelo, EstadoCatalogo::Inactivo->value)->count() : 0,
             'eliminados' => $this->usaEliminacionLogica($modelo) ? $modelo::onlyTrashed()->count() : 0,
         ];
     }
@@ -363,7 +388,7 @@ class CatalogoClinicoPanel extends Component
         $modelo = $this->configuracion()['modelo'];
 
         return $modelo::query()
-            ->when($this->estado !== 'Todos', fn (Builder $consulta): Builder => $consulta->where('estado', $this->estado))
+            ->when($this->usaEstado() && $this->estado !== 'Todos', fn (Builder $consulta): Builder => $consulta->where('estado', $this->valorEstadoPersistible($this->estado)))
             ->when($this->busqueda !== '', function (Builder $consulta): void {
                 $consulta->where(function (Builder $grupo): void {
                     foreach ($this->configuracion()['campos'] as $campo) {
@@ -398,7 +423,7 @@ class CatalogoClinicoPanel extends Component
             $this->form[$campo['nombre']] = $this->valorFormulario(data_get($registro, $campo['nombre']));
         }
 
-        $this->estadoRegistro = $this->valorEstadoActual($registro);
+        $this->estadoRegistro = $this->usaEstado() ? $this->valorEstadoActual($registro) : EstadoCatalogo::Activo->value;
         $this->auditoria = [
             'registrado_por' => optional($registro->registradoPor)->name ?? 'No registrado',
             'registrado_email' => optional($registro->registradoPor)->email ?? '',
@@ -455,6 +480,10 @@ class CatalogoClinicoPanel extends Component
                     $valor = (int) $valor;
                 }
 
+                if (($campo['tipo'] ?? 'text') === 'decimal' && $valor !== null && $valor !== '') {
+                    $valor = (float) $valor;
+                }
+
                 return [$nombre => $valor];
             })
             ->all();
@@ -477,7 +506,42 @@ class CatalogoClinicoPanel extends Component
     {
         $estado = data_get($registro, 'estado');
 
+        if (is_bool($estado) || is_int($estado)) {
+            return (bool) $estado ? EstadoCatalogo::Activo->value : EstadoCatalogo::Inactivo->value;
+        }
+
         return $estado instanceof BackedEnum ? $estado->value : (string) $estado;
+    }
+
+    /**
+     * Determina si el catalogo realmente tiene columna de estado en la base actual.
+     */
+    private function usaEstado(): bool
+    {
+        return ($this->configuracion()['maneja_estado'] ?? true)
+            && Schema::hasColumn($this->configuracion()['tabla'], 'estado');
+    }
+
+    private function estadoTipo(): string
+    {
+        return $this->configuracion()['estado_tipo'] ?? 'catalogo';
+    }
+
+    private function valorEstadoPersistible(string $estado): string|bool
+    {
+        if ($this->estadoTipo() === 'booleano') {
+            return $estado === EstadoCatalogo::Activo->value;
+        }
+
+        return $estado;
+    }
+
+    /**
+     * @param  class-string  $modelo
+     */
+    private function consultaPorEstado(string $modelo, string $estado): Builder
+    {
+        return $modelo::query()->where('estado', $this->valorEstadoPersistible($estado));
     }
 
     /**

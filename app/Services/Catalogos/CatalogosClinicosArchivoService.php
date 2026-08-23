@@ -9,6 +9,7 @@ use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -25,11 +26,13 @@ class CatalogosClinicosArchivoService
      */
     public function columnasImportacion(string $catalogo): array
     {
-        return collect($this->configuracion($catalogo)['campos'])
-            ->pluck('nombre')
-            ->push('estado')
-            ->values()
-            ->all();
+        $columnas = collect($this->configuracion($catalogo)['campos'])->pluck('nombre');
+
+        if ($this->usaEstado($catalogo)) {
+            $columnas->push('estado');
+        }
+
+        return $columnas->values()->all();
     }
 
     /**
@@ -134,14 +137,16 @@ class CatalogosClinicosArchivoService
                     $registro = $this->registroPorClaveImportacion($catalogo, $datos);
                     $esNuevo = ! $registro->exists;
 
-                    $registro->fill(array_merge(
-                        $this->datosPersistibles($catalogo, $datos),
-                        [
-                            'estado' => $datos['estado'],
-                            'registrado_por' => $registro->registrado_por ?: $usuarioId,
-                            'actualizado_por' => $usuarioId,
-                        ],
-                    ));
+                    $datosRegistro = array_merge($this->datosPersistibles($catalogo, $datos), [
+                        'registrado_por' => $registro->registrado_por ?: $usuarioId,
+                        'actualizado_por' => $usuarioId,
+                    ]);
+
+                    if ($this->usaEstado($catalogo)) {
+                        $datosRegistro['estado'] = $this->valorEstadoPersistible($catalogo, $datos['estado']);
+                    }
+
+                    $registro->fill($datosRegistro);
                     $registro->save();
 
                     $esNuevo ? $resultado['creados']++ : $resultado['actualizados']++;
@@ -162,7 +167,7 @@ class CatalogosClinicosArchivoService
         $modelo = $configuracion['modelo'];
 
         return $modelo::query()
-            ->when($estado !== null && $estado !== '' && $estado !== 'Todos', fn (Builder $consulta): Builder => $consulta->where('estado', $estado))
+            ->when($this->usaEstado($catalogo) && $estado !== null && $estado !== '' && $estado !== 'Todos', fn (Builder $consulta): Builder => $consulta->where('estado', $this->valorEstadoPersistible($catalogo, $estado)))
             ->when($busqueda !== null && $busqueda !== '', function (Builder $consulta) use ($busqueda, $configuracion): void {
                 $consulta->where(function (Builder $grupo) use ($busqueda, $configuracion): void {
                     foreach ($configuracion['campos'] as $campo) {
@@ -191,9 +196,13 @@ class CatalogosClinicosArchivoService
      */
     private function encabezadosExportacion(array $configuracion): array
     {
-        return collect($configuracion['campos'])
-            ->pluck('etiqueta')
-            ->push('Estado')
+        $encabezados = collect($configuracion['campos'])->pluck('etiqueta');
+
+        if ($this->usaEstadoPorConfiguracion($configuracion)) {
+            $encabezados->push('Estado');
+        }
+
+        return $encabezados
             ->push('Registrado por')
             ->push('Creado')
             ->push('Actualizado por')
@@ -208,9 +217,15 @@ class CatalogosClinicosArchivoService
      */
     private function filaExportacion(mixed $registro, array $configuracion): array
     {
-        return collect($configuracion['campos'])
+        $fila = collect($configuracion['campos'])
             ->map(fn (array $campo): string => $this->valorExportable(data_get($registro, $campo['nombre'])))
-            ->push($this->valorExportable(data_get($registro, 'estado')))
+            ->values();
+
+        if ($this->usaEstadoPorConfiguracion($configuracion)) {
+            $fila->push($this->valorEstadoExportable(data_get($registro, 'estado')));
+        }
+
+        return $fila
             ->push($this->nombreUsuario($registro->registradoPor))
             ->push(optional($registro->created_at)->format('d/m/Y H:i:s') ?? '')
             ->push($this->nombreUsuario($registro->actualizadoPor))
@@ -243,18 +258,25 @@ class CatalogosClinicosArchivoService
     private function filaEjemplo(string $catalogo, int $numero): array
     {
         $valores = collect($this->configuracion($catalogo)['campos'])
-            ->map(fn (array $campo): string|int => $this->valorEjemplo($campo, $numero))
-            ->push($numero === 1 ? EstadoCatalogo::Activo->value : EstadoCatalogo::Inactivo->value)
-            ->values()
-            ->all();
+            ->map(fn (array $campo): string|int|float => $this->valorEjemplo($campo, $numero));
+
+        if ($this->usaEstado($catalogo)) {
+            $valores->push($numero === 1 ? EstadoCatalogo::Activo->value : EstadoCatalogo::Inactivo->value);
+        }
+
+        $valores = $valores->values()->all();
 
         return $valores;
     }
 
-    private function valorEjemplo(array $campo, int $numero): string|int
+    private function valorEjemplo(array $campo, int $numero): string|int|float
     {
         if (($campo['tipo'] ?? 'text') === 'number') {
             return $numero;
+        }
+
+        if (($campo['tipo'] ?? 'text') === 'decimal') {
+            return $numero * 10.5;
         }
 
         if (($campo['tipo'] ?? 'text') === 'select') {
@@ -322,6 +344,10 @@ class CatalogosClinicosArchivoService
                 $valor = $valor === '' ? null : (int) $valor;
             }
 
+            if (($campo['tipo'] ?? 'text') === 'decimal') {
+                $valor = $valor === '' ? null : (float) $valor;
+            }
+
             if (! ($campo['requerido'] ?? false) && $valor === '') {
                 $valor = null;
             }
@@ -329,7 +355,9 @@ class CatalogosClinicosArchivoService
             $datos[$nombre] = $valor;
         }
 
-        $datos['estado'] = $this->normalizarOpcion($datos['estado'] ?? '', EstadoCatalogo::cases());
+        if ($this->usaEstado($catalogo)) {
+            $datos['estado'] = $this->normalizarOpcion($datos['estado'] ?? '', EstadoCatalogo::cases());
+        }
 
         return $datos;
     }
@@ -365,7 +393,13 @@ class CatalogosClinicosArchivoService
 
             if (($campo['tipo'] ?? 'text') === 'number') {
                 $reglaCampo[] = 'integer';
-                $reglaCampo[] = 'min:0';
+                $reglaCampo[] = 'min:'.($campo['min'] ?? 0);
+                if (array_key_exists('max_numero', $campo)) {
+                    $reglaCampo[] = 'max:'.$campo['max_numero'];
+                }
+            } elseif (($campo['tipo'] ?? 'text') === 'decimal') {
+                $reglaCampo[] = 'numeric';
+                $reglaCampo[] = 'min:'.($campo['min'] ?? 0);
             } else {
                 $reglaCampo[] = 'string';
                 $reglaCampo[] = 'max:'.($campo['max'] ?? 255);
@@ -378,7 +412,13 @@ class CatalogosClinicosArchivoService
             $reglas[$campo['nombre']] = $reglaCampo;
         }
 
-        $reglas['estado'] = ['required', Rule::enum(EstadoCatalogo::class)];
+        if (isset($reglas['rango_final'])) {
+            $reglas['rango_final'][] = 'gte:rango_inicial';
+        }
+
+        if ($this->usaEstado($catalogo)) {
+            $reglas['estado'] = ['required', Rule::enum(EstadoCatalogo::class)];
+        }
 
         return $reglas;
     }
@@ -390,7 +430,7 @@ class CatalogosClinicosArchivoService
     {
         return collect($this->configuracion($catalogo)['campos'])
             ->mapWithKeys(fn (array $campo): array => [$campo['nombre'] => mb_strtolower($campo['etiqueta'])])
-            ->merge(['estado' => 'estado'])
+            ->merge($this->usaEstado($catalogo) ? ['estado' => 'estado'] : [])
             ->all();
     }
 
@@ -436,5 +476,39 @@ class CatalogosClinicosArchivoService
         return collect($this->configuracion($catalogo)['campos'])
             ->mapWithKeys(fn (array $campo): array => [$campo['nombre'] => $datos[$campo['nombre']] ?? null])
             ->all();
+    }
+
+    private function usaEstado(string $catalogo): bool
+    {
+        $configuracion = $this->configuracion($catalogo);
+
+        return $this->usaEstadoPorConfiguracion($configuracion);
+    }
+
+    /**
+     * @param  array<string, mixed>  $configuracion
+     */
+    private function usaEstadoPorConfiguracion(array $configuracion): bool
+    {
+        return ($configuracion['maneja_estado'] ?? true)
+            && Schema::hasColumn($configuracion['tabla'], 'estado');
+    }
+
+    private function valorEstadoPersistible(string $catalogo, string $estado): string|bool
+    {
+        if (($this->configuracion($catalogo)['estado_tipo'] ?? 'catalogo') === 'booleano') {
+            return $estado === EstadoCatalogo::Activo->value;
+        }
+
+        return $estado;
+    }
+
+    private function valorEstadoExportable(mixed $estado): string
+    {
+        if (is_bool($estado) || is_int($estado)) {
+            return (bool) $estado ? EstadoCatalogo::Activo->value : EstadoCatalogo::Inactivo->value;
+        }
+
+        return $this->valorExportable($estado);
     }
 }

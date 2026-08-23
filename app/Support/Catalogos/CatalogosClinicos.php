@@ -9,10 +9,12 @@ use App\Models\Ambiente;
 use App\Models\DiagnosticoCie10;
 use App\Models\Especialidad;
 use App\Models\Examen;
+use App\Models\Glasgow;
 use App\Models\Medicamento;
 use App\Models\Prioridad;
 use App\Models\SignoVital;
 use App\Models\TipoOrden;
+use App\Models\Ups;
 
 final class CatalogosClinicos
 {
@@ -58,6 +60,23 @@ final class CatalogosClinicos
                     ['nombre' => 'generico', 'etiqueta' => 'Generico', 'tipo' => 'text', 'requerido' => false, 'max' => 255],
                     ['nombre' => 'stock', 'etiqueta' => 'Stock', 'tipo' => 'number', 'requerido' => true, 'default' => 0],
                     ['nombre' => 'id_producto_externo', 'etiqueta' => 'ID producto externo', 'tipo' => 'number', 'requerido' => false],
+                ],
+            ],
+            'ups' => [
+                'titulo' => 'UPS',
+                'singular' => 'UPS',
+                'kicker' => 'Catalogos clinicos',
+                'descripcion' => 'Administra unidades productoras de servicios usadas en referencias y hospitalizaciones previas.',
+                'modelo' => Ups::class,
+                'tabla' => 'ups',
+                'orden' => 'codigo',
+                'placeholder' => 'Buscar por codigo o denominacion',
+                'etiqueta_uso' => 'referencias clinicas',
+                'relaciones_uso' => ['hospitalizacionesPrevias', 'referenciasOrigen', 'referenciasDestino'],
+                'estado_tipo' => 'booleano',
+                'campos' => [
+                    ['nombre' => 'codigo', 'etiqueta' => 'Codigo', 'tipo' => 'text', 'requerido' => true, 'max' => 20, 'unico' => true],
+                    ['nombre' => 'denominacion', 'etiqueta' => 'Denominacion', 'tipo' => 'textarea', 'requerido' => true, 'max' => 255],
                 ],
             ],
             'examenes' => [
@@ -106,6 +125,34 @@ final class CatalogosClinicos
                 'campos' => [
                     ['nombre' => 'descripcion', 'etiqueta' => 'Descripcion', 'tipo' => 'text', 'requerido' => true, 'max' => 150, 'unico_compuesto' => ['descripcion', 'unidad']],
                     ['nombre' => 'unidad', 'etiqueta' => 'Unidad', 'tipo' => 'text', 'requerido' => false, 'max' => 50],
+                    ['nombre' => 'rango_inicial', 'etiqueta' => 'Rango Inicial', 'tipo' => 'decimal', 'requerido' => false, 'min' => 0, 'step' => '0.01', 'seccion' => 'rangos_normales'],
+                    ['nombre' => 'rango_final', 'etiqueta' => 'Rango Final', 'tipo' => 'decimal', 'requerido' => false, 'min' => 0, 'step' => '0.01', 'seccion' => 'rangos_normales'],
+                ],
+                'secciones_formulario' => [
+                    [
+                        'clave' => 'rangos_normales',
+                        'titulo' => 'Rangos Normales',
+                        'descripcion' => 'Define el limite inicial y final que se usara como referencia clinica del signo vital.',
+                        'icono' => 'lucide:activity',
+                        'campos' => ['rango_inicial', 'rango_final'],
+                    ],
+                ],
+            ],
+            'glasgow' => [
+                'titulo' => 'Glasgow',
+                'singular' => 'registro Glasgow',
+                'kicker' => 'Catalogos clinicos',
+                'descripcion' => 'Administra los puntajes de la escala de Glasgow para valoracion ocular, verbal y motora.',
+                'modelo' => Glasgow::class,
+                'tabla' => 'glasgow',
+                'orden' => 'tipo',
+                'placeholder' => 'Buscar por tipo, puntaje o descripcion',
+                'etiqueta_uso' => 'triajes',
+                'relaciones_uso' => [],
+                'campos' => [
+                    ['nombre' => 'tipo', 'etiqueta' => 'Tipo', 'tipo' => 'select', 'requerido' => true, 'opciones' => ['Ocular', 'Motora', 'Verbal']],
+                    ['nombre' => 'puntaje', 'etiqueta' => 'Puntaje', 'tipo' => 'number', 'requerido' => true, 'min' => 1, 'max_numero' => 6, 'unico_compuesto' => ['puntaje', 'tipo']],
+                    ['nombre' => 'descripcion', 'etiqueta' => 'Descripcion', 'tipo' => 'textarea', 'requerido' => true, 'max' => 255],
                 ],
             ],
             'alergias' => [

@@ -80,7 +80,7 @@
 
         <section class="dashboard-stat-grid">
             @foreach ($tarjetas as $indice => $tarjeta)
-                <article class="dashboard-stat-card panel-animate accent-{{ $tarjeta['color'] }}" style="--panel-delay: {{ $indice * 90 }}ms">
+                <article class="dashboard-stat-card hce-card-motion panel-animate accent-{{ $tarjeta['color'] }}" style="--panel-delay: {{ $indice * 90 }}ms">
                     <span class="dashboard-stat-icon">
                         <iconify-icon icon="{{ $tarjeta['icono'] }}" aria-hidden="true"></iconify-icon>
                     </span>

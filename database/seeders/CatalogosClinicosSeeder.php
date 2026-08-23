@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CatalogosClinicosSeeder extends Seeder
 {
@@ -16,6 +17,8 @@ class CatalogosClinicosSeeder extends Seeder
         $usuarioAdministradorId = User::query()->where('email', 'admin@hceapp.test')->value('id');
 
         $this->cargarPrioridades($usuarioAdministradorId);
+        $this->cargarUps($usuarioAdministradorId);
+        $this->cargarGlasgow($usuarioAdministradorId);
         $this->cargarSignosVitales($usuarioAdministradorId);
         $this->cargarTiposOrdenes($usuarioAdministradorId);
         $this->cargarEspecialidades($usuarioAdministradorId);
@@ -35,6 +38,35 @@ class CatalogosClinicosSeeder extends Seeder
             ['prioridad' => 'III.URGENCIA MENOR', 'color' => 'Amarillo', 'orden' => 3],
             ['prioridad' => 'IV.PATOLOGIA AGUDA COMUN', 'color' => 'Verde', 'orden' => 4],
         ], ['prioridad'], $usuarioId);
+    }
+
+    private function cargarUps(?int $usuarioId): void
+    {
+        $ruta = database_path('seeders/data/ups.json');
+        $ups = json_decode(file_get_contents($ruta), true, flags: JSON_THROW_ON_ERROR);
+
+        $this->upsertConAuditoria('ups', $ups, ['codigo'], $usuarioId);
+    }
+
+    private function cargarGlasgow(?int $usuarioId): void
+    {
+        $this->upsertConAuditoria('glasgow', [
+            ['tipo' => 'Ocular', 'puntaje' => 1, 'descripcion' => 'No apertura ocular'],
+            ['tipo' => 'Ocular', 'puntaje' => 2, 'descripcion' => 'Apertura ocular al dolor'],
+            ['tipo' => 'Ocular', 'puntaje' => 3, 'descripcion' => 'Apertura ocular al llamado'],
+            ['tipo' => 'Ocular', 'puntaje' => 4, 'descripcion' => 'Apertura ocular espontanea'],
+            ['tipo' => 'Verbal', 'puntaje' => 1, 'descripcion' => 'Sin respuesta verbal'],
+            ['tipo' => 'Verbal', 'puntaje' => 2, 'descripcion' => 'Sonidos incomprensibles'],
+            ['tipo' => 'Verbal', 'puntaje' => 3, 'descripcion' => 'Palabras inapropiadas'],
+            ['tipo' => 'Verbal', 'puntaje' => 4, 'descripcion' => 'Respuesta verbal confusa'],
+            ['tipo' => 'Verbal', 'puntaje' => 5, 'descripcion' => 'Respuesta verbal orientada'],
+            ['tipo' => 'Motora', 'puntaje' => 1, 'descripcion' => 'Sin respuesta motora'],
+            ['tipo' => 'Motora', 'puntaje' => 2, 'descripcion' => 'Extension anormal al dolor'],
+            ['tipo' => 'Motora', 'puntaje' => 3, 'descripcion' => 'Flexion anormal al dolor'],
+            ['tipo' => 'Motora', 'puntaje' => 4, 'descripcion' => 'Retirada ante estimulo doloroso'],
+            ['tipo' => 'Motora', 'puntaje' => 5, 'descripcion' => 'Localiza el dolor'],
+            ['tipo' => 'Motora', 'puntaje' => 6, 'descripcion' => 'Obedece ordenes'],
+        ], ['tipo', 'puntaje'], $usuarioId, Schema::hasColumn('glasgow', 'estado'));
     }
 
     private function cargarSignosVitales(?int $usuarioId): void
@@ -147,7 +179,7 @@ class CatalogosClinicosSeeder extends Seeder
      * @param  array<int, array<string, mixed>>  $filas
      * @param  array<int, string>  $clavesUnicas
      */
-    private function upsertConAuditoria(string $tabla, array $filas, array $clavesUnicas, ?int $usuarioId): void
+    private function upsertConAuditoria(string $tabla, array $filas, array $clavesUnicas, ?int $usuarioId, bool $incluyeEstado = true): void
     {
         $ahora = now();
 
@@ -156,10 +188,9 @@ class CatalogosClinicosSeeder extends Seeder
             $existe = DB::table($tabla)->where($criterios)->exists();
 
             $datos = array_merge([
-                'estado' => 'Activo',
                 'actualizado_por' => $usuarioId,
                 'updated_at' => $ahora,
-            ], $fila);
+            ], $incluyeEstado ? ['estado' => 'Activo'] : [], $fila);
 
             if ($existe) {
                 DB::table($tabla)->where($criterios)->update($datos);

@@ -7,12 +7,13 @@ use App\Notifications\RestablecerContrasenaNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'activo', 'registrado_por', 'actualizado_por'])]
+#[Fillable(['name', 'email', 'tipo_usuario', 'profesional_salud_id', 'password', 'activo', 'registrado_por', 'actualizado_por'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -31,6 +32,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function profesionalSalud(): BelongsTo
+    {
+        return $this->belongsTo(ProfesionalSalud::class, 'profesional_salud_id');
     }
 
     public function sendPasswordResetNotification($token): void

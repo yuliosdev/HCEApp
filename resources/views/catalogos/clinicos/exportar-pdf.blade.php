@@ -48,6 +48,8 @@
     </style>
 </head>
 <body>
+    @php($usaEstado = \Illuminate\Support\Facades\Schema::hasColumn($configuracion['tabla'], 'estado'))
+
     <h1>Catalogo de {{ $configuracion['titulo'] }}</h1>
     <div class="meta">
         Generado por: {{ $generadoPor->name }} | Fecha: {{ $generadoEn->format('d/m/Y H:i:s') }}<br>
@@ -60,7 +62,9 @@
                 @foreach ($configuracion['campos'] as $campo)
                     <th>{{ $campo['etiqueta'] }}</th>
                 @endforeach
-                <th>Estado</th>
+                @if ($usaEstado)
+                    <th>Estado</th>
+                @endif
                 <th>Registrado por</th>
                 <th>Creado</th>
                 <th>Actualizado por</th>
@@ -74,8 +78,16 @@
                         @php($valor = data_get($registro, $campo['nombre']))
                         <td>{{ $valor instanceof \BackedEnum ? $valor->value : (filled($valor) ? $valor : '-') }}</td>
                     @endforeach
-                    @php($estado = data_get($registro, 'estado'))
-                    <td class="estado">{{ $estado instanceof \BackedEnum ? $estado->value : (filled($estado) ? $estado : '-') }}</td>
+                    @if ($usaEstado)
+                        @php($estado = data_get($registro, 'estado'))
+                        <td class="estado">
+                            @if (is_bool($estado) || is_int($estado))
+                                {{ (bool) $estado ? 'Activo' : 'Inactivo' }}
+                            @else
+                                {{ $estado instanceof \BackedEnum ? $estado->value : (filled($estado) ? $estado : '-') }}
+                            @endif
+                        </td>
+                    @endif
                     <td>{{ optional($registro->registradoPor)->name ?? 'No registrado' }}</td>
                     <td>{{ optional($registro->created_at)->format('d/m/Y H:i:s') }}</td>
                     <td>{{ optional($registro->actualizadoPor)->name ?? 'No registrado' }}</td>
@@ -83,7 +95,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="{{ count($configuracion['campos']) + 5 }}">No existen registros para los filtros seleccionados.</td>
+                    <td colspan="{{ count($configuracion['campos']) + ($usaEstado ? 5 : 4) }}">No existen registros para los filtros seleccionados.</td>
                 </tr>
             @endforelse
         </tbody>

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Seguridad\RolesPermisosPanel;
 use App\Livewire\Seguridad\UsuariosPanel;
+use App\Models\ProfesionalSalud;
 use App\Models\User;
 use App\Support\Seguridad\Permisos;
 use Database\Seeders\RolesPermisosSeeder;
@@ -52,6 +53,7 @@ class SeguridadUsuariosRolesTest extends TestCase
             ->get(route('seguridad.usuarios.index'))
             ->assertOk()
             ->assertSee('Usuarios del sistema')
+            ->assertSee('Tipo')
             ->assertSee('Nuevo usuario');
 
         $this->actingAs($administrador)
@@ -101,6 +103,84 @@ class SeguridadUsuariosRolesTest extends TestCase
 
         $this->assertTrue($usuario->hasRole('Medico'));
         $this->assertTrue($usuario->activo);
+    }
+
+    public function test_componente_crea_usuario_profesional_de_salud_vinculado(): void
+    {
+        $administrador = $this->crearAdministrador();
+        $profesional = ProfesionalSalud::factory()->create([
+            'nombres' => 'Claudia Ramos Guardia',
+            'cmp' => '123456',
+        ]);
+
+        Livewire::actingAs($administrador)
+            ->test(UsuariosPanel::class)
+            ->call('crear')
+            ->set('name', 'Claudia Ramos')
+            ->set('email', 'claudia.ramos@hceapp.test')
+            ->set('password', 'ClaveSegura123')
+            ->set('tipoUsuario', 'Profesional de Salud')
+            ->set('busquedaProfesional', '123456')
+            ->assertSee('Claudia Ramos Guardia')
+            ->call('seleccionarProfesional', $profesional->id)
+            ->assertSet('profesionalSaludId', $profesional->id)
+            ->assertSet('mostrarSugerenciasProfesional', false)
+            ->set('rolesSeleccionados', ['Medico'])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'claudia.ramos@hceapp.test',
+            'tipo_usuario' => 'Profesional de Salud',
+            'profesional_salud_id' => $profesional->id,
+        ]);
+    }
+
+    public function test_componente_edita_usuario_medico_y_autocompleta_profesional(): void
+    {
+        $administrador = $this->crearAdministrador();
+        $usuario = User::factory()->create([
+            'tipo_usuario' => 'Administrativo',
+            'profesional_salud_id' => null,
+        ]);
+        $usuario->assignRole('Medico');
+        $profesional = ProfesionalSalud::factory()->create([
+            'nombres' => 'Mario Vargas Emergencias',
+            'cmp' => '654321',
+        ]);
+
+        Livewire::actingAs($administrador)
+            ->test(UsuariosPanel::class)
+            ->call('editar', $usuario->id)
+            ->set('tipoUsuario', 'Médico')
+            ->set('busquedaProfesional', 'Vargas')
+            ->assertSee('Mario Vargas Emergencias')
+            ->call('seleccionarProfesional', $profesional->id)
+            ->assertSet('profesionalSaludId', $profesional->id)
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $usuario->id,
+            'tipo_usuario' => 'Médico',
+            'profesional_salud_id' => $profesional->id,
+        ]);
+    }
+
+    public function test_usuario_profesional_de_salud_requiere_profesional_vinculado(): void
+    {
+        $administrador = $this->crearAdministrador();
+
+        Livewire::actingAs($administrador)
+            ->test(UsuariosPanel::class)
+            ->call('crear')
+            ->set('name', 'Usuario sin profesional')
+            ->set('email', 'sin.profesional@hceapp.test')
+            ->set('password', 'ClaveSegura123')
+            ->set('tipoUsuario', 'Profesional de Salud')
+            ->set('rolesSeleccionados', ['Medico'])
+            ->call('guardar')
+            ->assertHasErrors(['profesionalSaludId' => 'required']);
     }
 
     public function test_componente_crea_rol_con_permisos(): void

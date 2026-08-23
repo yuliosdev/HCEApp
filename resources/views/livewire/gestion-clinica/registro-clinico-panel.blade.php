@@ -8,28 +8,28 @@
     </div>
 
     <div class="catalog-stats">
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:list-checks" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['total'] }}">{{ $estadisticas['total'] }}</strong>
                 <p>Total registros</p>
             </div>
         </article>
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="{{ $tieneEstado ? 'lucide:check-circle' : 'lucide:id-card' }}" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['activos'] }}">{{ $estadisticas['activos'] }}</strong>
                 <p>{{ $tieneEstado ? 'Activos' : 'Con documento' }}</p>
             </div>
         </article>
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="{{ $tieneEstado ? 'lucide:pause-circle' : 'lucide:file-question' }}" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['inactivos'] }}">{{ $estadisticas['inactivos'] }}</strong>
                 <p>{{ $tieneEstado ? 'Inactivos' : 'Sin documento' }}</p>
             </div>
         </article>
-        <article class="catalog-stat-card panel-animate">
+        <article class="catalog-stat-card hce-card-motion panel-animate">
             <span><iconify-icon icon="lucide:trash-2" aria-hidden="true"></iconify-icon></span>
             <div>
                 <strong data-count-target="{{ $estadisticas['eliminados'] }}">{{ $estadisticas['eliminados'] }}</strong>

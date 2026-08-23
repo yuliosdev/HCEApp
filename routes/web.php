@@ -11,6 +11,10 @@ use App\Http\Controllers\ConfiguracionLoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GestionClinica\RegistroClinicoController;
 use App\Http\Controllers\GestionClinica\RegistrosClinicosArchivoController;
+use App\Http\Controllers\HistoriaClinica\AtencionesPacienteController;
+use App\Http\Controllers\HistoriaClinica\HcEmergenciaPanelController;
+use App\Http\Controllers\HistoriaClinica\HistoriaClinicaPacienteController;
+use App\Http\Controllers\HistoriaClinica\PacienteDashboardController;
 use App\Http\Controllers\Seguridad\RolesPermisosController;
 use App\Http\Controllers\Seguridad\UsuariosController;
 use App\Http\Controllers\TestTecnologiasController;
@@ -55,6 +59,30 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('can:'.Permisos::PROFESIONALES_VER)
         ->name('gestion-clinica.profesionales.index');
 
+    Route::get('/historia-clinica/atenciones-paciente', AtencionesPacienteController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.atenciones-paciente.index');
+
+    Route::get('/historia-clinica/atenciones-paciente/{paciente}/dashboard', PacienteDashboardController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.atenciones-paciente.dashboard');
+
+    Route::get('/historia-clinica/atenciones-paciente/{paciente}/historia-clinica', HistoriaClinicaPacienteController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.atenciones-paciente.historia');
+
+    Route::get('/historia-clinica/atenciones-paciente/{paciente}/emergencia/nuevo', [HcEmergenciaPanelController::class, 'nuevo'])
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.atenciones-paciente.emergencia.nuevo');
+
+    Route::get('/historia-clinica/atenciones-paciente/{paciente}/emergencia/{atencion}/ver', [HcEmergenciaPanelController::class, 'ver'])
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.atenciones-paciente.emergencia.ver');
+
+    Route::get('/historia-clinica/atenciones-paciente/{paciente}/emergencia/{atencion}/editar', [HcEmergenciaPanelController::class, 'editar'])
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.atenciones-paciente.emergencia.editar');
+
     foreach ([
         'pacientes' => 'pacientes',
         'profesionales' => 'profesionales',
@@ -82,9 +110,11 @@ Route::middleware('auth')->group(function (): void {
     foreach ([
         'cie10' => 'cie10',
         'medicamentos' => 'medicamentos',
+        'ups' => 'ups',
         'examenes' => 'examenes',
         'especialidades' => 'especialidades',
         'signos-vitales' => 'signos-vitales',
+        'glasgow' => 'glasgow',
         'alergias' => 'alergias',
         'tipo-ordenes' => 'tipo-ordenes',
         'prioridades' => 'prioridades',

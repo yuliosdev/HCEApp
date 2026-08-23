@@ -15,9 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->enum('tipo_usuario', ['Supervisor', 'Administrativo', 'Médico', 'Profesional de Salud'])->default('Administrativo');
+            $table->foreignId('profesional_salud_id')->nullable()->index();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('activo')->default(true);
             $table->rememberToken();
+            $table->foreignId('registrado_por')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('actualizado_por')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
 

@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         $this->crearCatalogosClinicos();
+        $this->vincularUsuariosConProfesionalesSalud();
         $this->crearTablasDePacientes();
         $this->crearTablaCentralDeEmergencia();
         $this->crearTablasClinicasDelEpisodio();
@@ -22,10 +23,17 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (Schema::hasTable('users') && Schema::hasColumn('users', 'profesional_salud_id')) {
+            Schema::table('users', function (Blueprint $table): void {
+                $table->dropForeign(['profesional_salud_id']);
+            });
+        }
+
         $tablas = [
             'documentos_adjuntos',
             'alta_medicamentos',
             'egreso_diagnosticos',
+            'hc_referencias',
             'transferencias',
             'enfermeria_notas',
             'interconsultas',
@@ -53,6 +61,8 @@ return new class extends Migration
             'alergias',
             'diagnosticos_cie10',
             'signos_vitales',
+            'glasgow',
+            'ups',
             'procedimientos',
             'prioridades',
         ];
@@ -60,6 +70,20 @@ return new class extends Migration
         foreach ($tablas as $tabla) {
             Schema::dropIfExists($tabla);
         }
+    }
+
+    /**
+     * Relaciona usuarios del sistema con profesionales de salud.
+     */
+    private function vincularUsuariosConProfesionalesSalud(): void
+    {
+        Schema::table('users', function (Blueprint $table): void {
+            $table
+                ->foreign('profesional_salud_id')
+                ->references('id')
+                ->on('profesionales_salud')
+                ->nullOnDelete();
+        });
     }
 
     /**
@@ -346,11 +370,31 @@ return new class extends Migration
             $this->auditoriaBasica($table, true);
         });
 
+        Schema::create('ups', function (Blueprint $table) {
+            $table->id();
+            $table->string('codigo', 20)->unique();
+            $table->string('denominacion');
+            $table->boolean('estado')->default(true)->index();
+            $this->auditoriaBasica($table);
+        });
+
+        Schema::create('glasgow', function (Blueprint $table) {
+            $table->id();
+            $table->enum('tipo', ['Ocular', 'Motora', 'Verbal']);
+            $table->unsignedTinyInteger('puntaje');
+            $table->string('descripcion');
+            $table->enum('estado', $this->estadosCatalogo())->default('Activo');
+            $this->auditoriaBasica($table);
+            $table->unique(['tipo', 'puntaje']);
+        });
+
         Schema::create('signos_vitales', function (Blueprint $table) {
             $table->id();
             $table->string('descripcion', 150);
             $table->string('unidad', 50)->nullable();
             $table->enum('estado', $this->estadosCatalogo())->default('Activo');
+            $table->decimal('rango_inicial', 8, 2)->nullable();
+            $table->decimal('rango_final', 8, 2)->nullable();
             $this->auditoriaBasica($table, true);
             $table->unique(['descripcion', 'unidad']);
         });
@@ -464,6 +508,14 @@ return new class extends Migration
             $this->auditoriaBasica($table, true);
         });
 
+        Schema::create('medicamentos_habituales', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('paciente_id')->constrained('pacientes')->restrictOnDelete();
+            $table->string('medicacion');
+            $table->string('periodo', 20)->nullable();
+            $this->auditoriaBasica($table);
+        });
+        
         Schema::create('reacciones_adversas_medicamentos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('paciente_id')->constrained('pacientes')->restrictOnDelete();
@@ -487,6 +539,7 @@ return new class extends Migration
         Schema::create('hospitalizaciones_previas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('paciente_id')->constrained('pacientes')->restrictOnDelete();
+            $table->foreignId('ups_id')->nullable()->constrained('ups')->nullOnDelete();
             $table->string('codigo_ups', 30)->nullable();
             $table->foreignId('diagnostico_cie10_id')->nullable()->constrained('diagnosticos_cie10')->nullOnDelete();
             $table->string('denominacion')->nullable();
@@ -594,14 +647,6 @@ return new class extends Migration
             $this->auditoriaBasica($table);
         });
 
-        Schema::create('medicamentos_habituales', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('hc_emergencia_id')->constrained('hc_emergencia')->restrictOnDelete();
-            $table->string('medicacion');
-            $table->string('periodo', 20)->nullable();
-            $this->auditoriaBasica($table);
-        });
-
         Schema::create('ingreso_diagnosticos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hc_emergencia_id')->constrained('hc_emergencia')->restrictOnDelete();
@@ -670,6 +715,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('hc_emergencia_id')->constrained('hc_emergencia')->restrictOnDelete();
             $table->dateTime('fecha_hora');
+            $table->text('detalle_clinico')->nullable();
             $table->text('apreciacion_subjetiva')->nullable();
             $table->text('apreciacion_objetiva')->nullable();
             $table->text('funciones_vitales')->nullable();
@@ -715,6 +761,21 @@ return new class extends Migration
             $table->index(['hc_emergencia_id', 'fecha_hora']);
         });
 
+        Schema::create('hc_referencias', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('hc_emergencia_id')->constrained('hc_emergencia')->restrictOnDelete();
+            $table->string('ipress_origen')->nullable();
+            $table->foreignId('ups_origen_id')->nullable()->constrained('ups')->nullOnDelete();
+            $table->string('ipress_referencia')->nullable();
+            $table->foreignId('ups_destino_id')->nullable()->constrained('ups')->nullOnDelete();
+            $table->text('motivo_referencia')->nullable();
+            $table->dateTime('fecha_hora_solicitud')->nullable();
+            $table->text('respuesta_solicitud')->nullable();
+            $table->dateTime('fecha_hora_respuesta')->nullable();
+            $this->auditoriaBasica($table);
+            $table->index(['hc_emergencia_id', 'fecha_hora_solicitud']);
+        });
+
         Schema::create('egreso_diagnosticos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hc_emergencia_id')->constrained('hc_emergencia')->restrictOnDelete();
@@ -735,6 +796,7 @@ return new class extends Migration
             $table->string('presentacion', 150)->nullable();
             $table->string('dosis', 100)->nullable();
             $table->string('via', 100)->nullable();
+            $table->unsignedTinyInteger('cantidad')->nullable();
             $table->text('indicaciones')->nullable();
             $this->auditoriaBasica($table);
         });
