@@ -36,4 +36,9 @@ class SolicitudExamen extends Model
     {
         return $this->belongsTo(Examen::class);
     }
+
+    public function profesionalSalud(): BelongsTo
+    {
+        return $this->belongsTo(ProfesionalSalud::class);
+    }
 }

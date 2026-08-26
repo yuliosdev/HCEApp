@@ -104,6 +104,16 @@ class HcEmergencia extends Model
         return $this->hasMany(EnfermeriaNota::class);
     }
 
+    public function interconsultas(): HasMany
+    {
+        return $this->hasMany(Interconsulta::class);
+    }
+
+    public function transferencias(): HasMany
+    {
+        return $this->hasMany(Transferencia::class);
+    }
+
     public function referencias(): HasMany
     {
         return $this->hasMany(HcReferencia::class);

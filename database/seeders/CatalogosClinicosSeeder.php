@@ -33,10 +33,10 @@ class CatalogosClinicosSeeder extends Seeder
     private function cargarPrioridades(?int $usuarioId): void
     {
         $this->upsertConAuditoria('prioridades', [
-            ['prioridad' => 'I.EMERGENCIA RIESGO VITAL', 'color' => 'Rojo', 'orden' => 1],
-            ['prioridad' => 'II.URGENCIA MAYOR', 'color' => 'Naranja', 'orden' => 2],
-            ['prioridad' => 'III.URGENCIA MENOR', 'color' => 'Amarillo', 'orden' => 3],
-            ['prioridad' => 'IV.PATOLOGIA AGUDA COMUN', 'color' => 'Verde', 'orden' => 4],
+            ['prioridad' => 'I.EMERGENCIA RIESGO VITAL', 'color' => 'Rojo', 'orden' => 1, 'tiempo_atencion' => 0],
+            ['prioridad' => 'II.URGENCIA MAYOR', 'color' => 'Naranja', 'orden' => 2, 'tiempo_atencion' => 10],
+            ['prioridad' => 'III.URGENCIA MENOR', 'color' => 'Amarillo', 'orden' => 3, 'tiempo_atencion' => 60],
+            ['prioridad' => 'IV.PATOLOGIA AGUDA COMUN', 'color' => 'Verde', 'orden' => 4, 'tiempo_atencion' => 120],
         ], ['prioridad'], $usuarioId);
     }
 

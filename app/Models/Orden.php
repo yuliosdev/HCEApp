@@ -34,4 +34,9 @@ class Orden extends Model
     {
         return $this->belongsTo(TipoOrden::class);
     }
+
+    public function profesionalSalud(): BelongsTo
+    {
+        return $this->belongsTo(ProfesionalSalud::class);
+    }
 }

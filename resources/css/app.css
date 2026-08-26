@@ -488,8 +488,11 @@
 
     .app-shell {
         --app-sidebar-width: 286px;
+        --app-visual-viewport-height: calc(100dvh / var(--hce-ui-scale));
         display: grid;
         grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr);
+        min-height: 100dvh;
+        min-height: var(--app-visual-viewport-height);
         transition: grid-template-columns 280ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
@@ -498,11 +501,14 @@
     }
 
     .app-sidebar {
+        --app-sidebar-brand-height: 74px;
         position: sticky;
         top: 0;
         z-index: 60;
         display: flex;
         height: 100vh;
+        height: 100dvh;
+        height: var(--app-visual-viewport-height);
         flex-direction: column;
         overflow: visible;
         border-right: 1px solid var(--hce-app-sidebar-border);
@@ -527,6 +533,8 @@
     .app-sidebar-brand {
         position: relative;
         display: flex;
+        flex: 0 0 var(--app-sidebar-brand-height);
+        height: var(--app-sidebar-brand-height);
         min-height: 74px;
         align-items: center;
         gap: 10px;
@@ -618,11 +626,24 @@
 
     .app-sidebar-nav {
         display: flex;
-        flex: 1;
+        box-sizing: border-box;
+        flex: 0 0 calc(100vh - var(--app-sidebar-brand-height));
+        flex: 0 0 calc(100dvh - var(--app-sidebar-brand-height));
+        flex: 0 0 calc(var(--app-visual-viewport-height) - var(--app-sidebar-brand-height));
         flex-direction: column;
         gap: 18px;
+        height: calc(100vh - var(--app-sidebar-brand-height));
+        height: calc(100dvh - var(--app-sidebar-brand-height));
+        height: calc(var(--app-visual-viewport-height) - var(--app-sidebar-brand-height));
+        max-height: calc(100vh - var(--app-sidebar-brand-height));
+        max-height: calc(100dvh - var(--app-sidebar-brand-height));
+        max-height: calc(var(--app-visual-viewport-height) - var(--app-sidebar-brand-height));
+        min-height: calc(100vh - var(--app-sidebar-brand-height));
+        min-height: calc(100dvh - var(--app-sidebar-brand-height));
+        min-height: calc(var(--app-visual-viewport-height) - var(--app-sidebar-brand-height));
         overflow-x: hidden;
         overflow-y: auto;
+        border-bottom: 1px solid var(--hce-app-sidebar-border);
         padding: 0 18px 24px;
     }
 
@@ -5489,6 +5510,7 @@
         width: var(--app-sidebar-width);
         max-width: calc(100vw - 34px);
         height: 100dvh;
+        height: var(--app-visual-viewport-height);
         box-shadow: 28px 0 70px rgba(0, 19, 64, 0.36);
         transform: translateX(-105%);
         transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), background-color 220ms ease, border-color 220ms ease;
@@ -6376,13 +6398,64 @@ a.dashboard-primary-action,
     }
 
     .emergency-vitals-summary .is-priority {
-        background: color-mix(in srgb, #fb923c 18%, #ffffff 82%);
-        border-color: color-mix(in srgb, #fb923c 48%, transparent);
+        --priority-bg: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%);
+        --priority-border: #64748b;
+        --priority-glow: rgba(100, 116, 139, 0.18);
+        --priority-label: #334155;
+        --priority-text: #0f172a;
+
+        background: var(--priority-bg);
+        border-color: var(--priority-border);
+        box-shadow: 0 10px 24px var(--priority-glow), inset 0 1px 0 rgba(255, 255, 255, 0.36);
         min-width: 104px;
     }
 
+    .emergency-vitals-summary .priority-level-1 {
+        --priority-bg: linear-gradient(145deg, #ff5a5f 0%, #dc2626 52%, #991b1b 100%);
+        --priority-border: #b91c1c;
+        --priority-glow: rgba(220, 38, 38, 0.28);
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
+    }
+
+    .emergency-vitals-summary .priority-level-2 {
+        --priority-bg: linear-gradient(145deg, #ffb347 0%, #f97316 54%, #c2410c 100%);
+        --priority-border: #ea580c;
+        --priority-glow: rgba(249, 115, 22, 0.3);
+        --priority-label: #111827;
+        --priority-text: #111827;
+    }
+
+    .emergency-vitals-summary .priority-level-3 {
+        --priority-bg: linear-gradient(145deg, #fff176 0%, #facc15 54%, #ca8a04 100%);
+        --priority-border: #ca8a04;
+        --priority-glow: rgba(234, 179, 8, 0.32);
+        --priority-label: #111827;
+        --priority-text: #111827;
+    }
+
+    .emergency-vitals-summary .priority-level-4 {
+        --priority-bg: linear-gradient(145deg, #86efac 0%, #22c55e 52%, #15803d 100%);
+        --priority-border: #16a34a;
+        --priority-glow: rgba(34, 197, 94, 0.3);
+        --priority-label: #052e16;
+        --priority-text: #052e16;
+    }
+
+    .emergency-vitals-summary .priority-level-5 {
+        --priority-bg: linear-gradient(145deg, #38bdf8 0%, #0ea5e9 52%, #1d4ed8 100%);
+        --priority-border: #0284c7;
+        --priority-glow: rgba(14, 165, 233, 0.32);
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
+    }
+
+    .emergency-vitals-summary .is-priority > span {
+        color: var(--priority-label);
+    }
+
     .emergency-vitals-summary .is-priority strong {
-        color: #9a3412;
+        color: var(--priority-text);
         font-size: 1rem;
         text-align: center;
     }
@@ -6390,7 +6463,7 @@ a.dashboard-primary-action,
     .emergency-vitals-summary select {
         background: transparent;
         border: 0;
-        color: #9a3412;
+        color: var(--priority-text, var(--hce-color-accent));
         font-family: var(--hce-font-ui);
         font-size: 0.82rem;
         font-weight: 600;
@@ -6635,6 +6708,14 @@ a.dashboard-primary-action,
         box-shadow: 0 14px 30px rgba(3, 4, 94, 0.06);
         min-width: 0;
         padding: 16px 18px;
+        transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .emergency-attention-card:hover,
+    .emergency-timeline-card:hover {
+        border-color: color-mix(in srgb, var(--hce-color-highlight) 44%, var(--hce-app-panel-border));
+        box-shadow: 0 18px 34px rgba(3, 4, 94, 0.1);
+        transform: translateY(-2px);
     }
 
     .emergency-attention-card header,
@@ -6845,6 +6926,1141 @@ a.dashboard-primary-action,
         min-height: 0;
     }
 
+    .emergency-triage-grid {
+        align-items: stretch;
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
+        padding-top: 18px;
+    }
+
+    .emergency-triage-left {
+        display: grid;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .emergency-triage-card,
+    .emergency-vital-signs-card,
+    .emergency-anamnesis-card {
+        min-width: 0;
+    }
+
+    .emergency-section-toolbar {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .emergency-inline-action {
+        align-items: center;
+        border: 0;
+        border-radius: 8px;
+        color: var(--hce-color-primary);
+        display: inline-flex;
+        font-family: var(--hce-font-ui);
+        font-size: 0.82rem;
+        font-weight: 500;
+        gap: 6px;
+        min-height: 34px;
+        padding: 0 10px;
+        transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .emergency-inline-action:hover {
+        background: var(--hce-app-hover);
+        color: var(--hce-color-accent);
+        transform: translateY(-1px);
+    }
+
+    .emergency-combobox {
+        position: relative;
+    }
+
+    .emergency-combobox-field {
+        align-items: center;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        position: relative;
+    }
+
+    .emergency-combobox-field input {
+        padding-right: 38px;
+    }
+
+    .emergency-combobox-field iconify-icon {
+        color: var(--hce-app-muted);
+        font-size: 1.1rem;
+        pointer-events: none;
+        position: absolute;
+        right: 12px;
+    }
+
+    .emergency-combobox-list {
+        background: var(--hce-app-panel-bg);
+        border: 1px solid var(--hce-app-panel-border);
+        border-radius: 10px;
+        box-shadow: 0 18px 40px rgba(0, 19, 64, 0.16);
+        display: grid;
+        left: 0;
+        max-height: 240px;
+        overflow-y: auto;
+        padding: 6px;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 6px);
+        z-index: 30;
+    }
+
+    .emergency-combobox:not(:focus-within) .emergency-combobox-list {
+        display: none;
+    }
+
+    .emergency-combobox-list button,
+    .emergency-combobox-list p {
+        border: 0;
+        border-radius: 8px;
+        color: var(--hce-app-text);
+        display: grid;
+        gap: 2px;
+        padding: 9px 10px;
+        text-align: left;
+    }
+
+    .emergency-combobox-list button:hover {
+        background: var(--hce-app-hover);
+    }
+
+    .emergency-combobox-list strong {
+        color: var(--hce-app-heading);
+        font-size: 0.84rem;
+        font-weight: 500;
+    }
+
+    .emergency-combobox-list span,
+    .emergency-combobox-list p {
+        color: var(--hce-app-muted);
+        font-size: 0.74rem;
+        margin: 0;
+    }
+
+    .emergency-vitals-table-wrap {
+        overflow-x: auto;
+    }
+
+    .emergency-vitals-table {
+        border-collapse: collapse;
+        min-width: 620px;
+        width: 100%;
+    }
+
+    .emergency-vitals-table th {
+        background: color-mix(in srgb, var(--hce-app-bg), #ffffff 42%);
+        color: var(--hce-app-muted);
+        font-family: var(--hce-font-ui);
+        font-size: 0.72rem;
+        font-weight: 500;
+        padding: 10px 12px;
+        text-align: left;
+    }
+
+    .emergency-vitals-table td {
+        border-top: 1px solid var(--hce-app-divider);
+        color: var(--hce-app-text);
+        font-size: 0.86rem;
+        padding: 11px 12px;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+        vertical-align: middle;
+    }
+
+    .emergency-vitals-table td strong {
+        color: var(--hce-app-heading);
+        font-weight: 600;
+        transition: color 160ms ease;
+    }
+
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) {
+        background: color-mix(in srgb, var(--hce-color-soft) 58%, #ffffff 42%);
+        border-color: color-mix(in srgb, var(--hce-color-highlight) 28%, var(--hce-app-divider));
+        color: #03045e;
+    }
+
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) strong,
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-inline,
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-vital-state {
+        color: #03045e;
+    }
+
+    .emergency-vital-state {
+        align-items: center;
+        display: inline-grid;
+        height: 28px;
+        place-items: center;
+        width: 28px;
+    }
+
+    .emergency-vital-state iconify-icon {
+        font-size: 1.12rem;
+        stroke-width: 2.4;
+    }
+
+    .emergency-vital-state.is-high,
+    .emergency-vital-state.is-low {
+        color: #dc2626;
+    }
+
+    .emergency-vital-state.is-ok {
+        color: #059669;
+    }
+
+    .emergency-vital-state.is-neutral {
+        color: var(--hce-app-muted);
+    }
+
+    .emergency-row-actions {
+        display: inline-flex;
+        gap: 6px;
+    }
+
+    .emergency-row-actions button {
+        align-items: center;
+        border: 0;
+        border-radius: 8px;
+        color: var(--hce-color-primary);
+        display: inline-flex;
+        height: 30px;
+        justify-content: center;
+        transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+        width: 30px;
+    }
+
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions button {
+        color: #03045e;
+    }
+
+    .emergency-row-actions button:hover {
+        background: var(--hce-app-hover);
+        color: var(--hce-color-accent);
+        transform: translateY(-1px);
+    }
+
+    .emergency-empty-cell {
+        color: var(--hce-app-muted) !important;
+        padding: 18px 12px !important;
+        text-align: center;
+    }
+
+    .emergency-vital-form {
+        align-items: end;
+        border-top: 1px solid var(--hce-app-divider);
+        display: grid;
+        gap: 12px;
+        grid-template-columns: minmax(0, 1.4fr) minmax(130px, 0.7fr) auto;
+        margin-top: 12px;
+        padding-top: 14px;
+    }
+
+    .emergency-vital-form label {
+        color: var(--hce-app-heading);
+        display: grid;
+        font-family: var(--hce-font-ui);
+        font-size: 0.8rem;
+        font-weight: 500;
+        gap: 7px;
+        min-width: 0;
+    }
+
+    .emergency-vital-form input,
+    .emergency-vital-form select {
+        background: color-mix(in srgb, var(--hce-app-panel-bg), #ffffff 8%);
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        color: var(--hce-app-text);
+        min-height: 38px;
+        padding: 0 12px;
+        width: 100%;
+    }
+
+    .emergency-vital-form small {
+        color: #dc2626;
+        font-size: 0.74rem;
+    }
+
+    .emergency-vital-form > div {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .emergency-triage-check {
+        align-items: center;
+        border-top: 1px solid var(--hce-app-divider);
+        color: var(--hce-app-heading);
+        display: inline-flex;
+        font-family: var(--hce-font-ui);
+        font-size: 0.86rem;
+        font-weight: 500;
+        gap: 9px;
+        margin-top: 14px;
+        padding-top: 14px;
+    }
+
+    .emergency-triage-check input {
+        accent-color: var(--hce-color-accent);
+        height: 16px;
+        width: 16px;
+    }
+
+    .emergency-anamnesis-form {
+        grid-template-columns: minmax(0, 2fr) minmax(110px, 1fr) minmax(130px, 1fr);
+    }
+
+    .emergency-anamnesis-form textarea:last-child {
+        min-height: 210px;
+    }
+
+    .emergency-exams-stack {
+        display: grid;
+        gap: 18px;
+        padding-top: 18px;
+    }
+
+    .emergency-glasgow-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .emergency-glasgow-score-card {
+        background: color-mix(in srgb, var(--hce-app-bg) 76%, #ffffff 24%);
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        color: var(--hce-app-heading);
+        display: grid;
+        gap: 8px;
+        min-height: 112px;
+        padding: 14px;
+        position: relative;
+        transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .emergency-glasgow-score-card:hover {
+        border-color: color-mix(in srgb, var(--hce-color-highlight) 48%, var(--hce-app-divider));
+        box-shadow: 0 14px 28px rgba(0, 119, 182, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .emergency-glasgow-score-card > span {
+        color: var(--hce-app-heading);
+        font-family: var(--hce-font-ui);
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    .emergency-glasgow-score-card strong {
+        color: var(--hce-color-primary);
+        font-family: var(--hce-font-heading);
+        font-size: 1.75rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .emergency-glasgow-score-card em {
+        color: var(--hce-app-muted);
+        font-size: 0.78rem;
+        font-style: normal;
+        line-height: 1.25;
+        min-height: 1.25em;
+    }
+
+    .emergency-glasgow-score-card select {
+        background: color-mix(in srgb, var(--hce-app-panel-bg), #ffffff 8%);
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        color: var(--hce-app-text);
+        min-height: 36px;
+        padding: 0 10px;
+        width: 100%;
+    }
+
+    .emergency-glasgow-score-card small {
+        color: #dc2626;
+        font-size: 0.72rem;
+    }
+
+    .emergency-glasgow-score-card.is-total {
+        --glasgow-total-bg: linear-gradient(340deg, #38bdf8, #0ea5e9);
+        --glasgow-total-border: #0284c7;
+        --glasgow-total-text: #ffffff;
+        --glasgow-total-badge-bg: rgba(255, 255, 255, 0.18);
+        --glasgow-total-badge-text: #ffffff;
+
+        background: var(--glasgow-total-bg);
+        border-color: var(--glasgow-total-border);
+        box-shadow: 0 14px 28px color-mix(in srgb, var(--glasgow-total-border) 26%, transparent);
+    }
+
+    .emergency-glasgow-score-card.is-total.is-mild {
+        --glasgow-total-bg: linear-gradient(340deg, #4ade80, #054d20);
+        --glasgow-total-border: #15803d;
+        --glasgow-total-badge-bg: #14532d;
+        --glasgow-total-badge-text: #ffffff;
+    }
+
+    .emergency-glasgow-score-card.is-total.is-moderate {
+        --glasgow-total-bg: linear-gradient(340deg, #fb923c, #f97316 52%, #c2410c);
+        --glasgow-total-border: #ea580c;
+        --glasgow-total-text: #ffffff;
+        --glasgow-total-badge-bg: #7c2d12;
+        --glasgow-total-badge-text: #ffffff;
+    }
+
+    .emergency-glasgow-score-card.is-total.is-severe {
+        --glasgow-total-bg: linear-gradient(340deg, #ef4444, #dc2626 52%, #991b1b);
+        --glasgow-total-border: #b91c1c;
+        --glasgow-total-badge-bg: #7f1d1d;
+        --glasgow-total-badge-text: #ffffff;
+    }
+
+    .emergency-glasgow-score-card.is-total > span,
+    .emergency-glasgow-score-card.is-total strong {
+        color: var(--glasgow-total-text);
+    }
+
+    .emergency-glasgow-score-card.is-total em {
+        align-self: end;
+        background: var(--glasgow-total-badge-bg);
+        border-radius: 5px;
+        color: var(--glasgow-total-badge-text);
+        justify-self: start;
+        padding: 4px 8px;
+    }
+
+    .emergency-exams-grid {
+        align-items: start;
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .emergency-general-exam-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .emergency-regional-exam-form {
+        grid-template-columns: 1fr;
+    }
+
+    .emergency-general-exam-form textarea,
+    .emergency-regional-exam-form textarea {
+        min-height: 58px;
+    }
+
+    .emergency-diagnosis-stack {
+        display: grid;
+        gap: 18px;
+        padding-top: 18px;
+    }
+
+    .emergency-clinical-table-card {
+        padding-bottom: 14px;
+    }
+
+    .emergency-clinical-table {
+        min-width: 860px;
+    }
+
+    .emergency-evolutions-table {
+        min-width: 940px;
+    }
+
+    .emergency-orders-table,
+    .emergency-lab-table {
+        min-width: 1180px;
+    }
+
+    .emergency-medications-table {
+        min-width: 1320px;
+    }
+
+    .emergency-procedures-table {
+        min-width: 920px;
+    }
+
+    .emergency-nursing-table {
+        min-width: 820px;
+    }
+
+    .emergency-interconsultations-table {
+        min-width: 1080px;
+    }
+
+    .emergency-code-chip,
+    .emergency-table-badge {
+        align-items: center;
+        border-radius: 6px;
+        display: inline-flex;
+        font-family: var(--hce-font-ui);
+        font-size: 0.72rem;
+        font-weight: 600;
+        min-height: 24px;
+        padding: 3px 8px;
+        transition: background-color 160ms ease, color 160ms ease;
+    }
+
+    .emergency-code-chip {
+        background: color-mix(in srgb, var(--hce-app-bg) 70%, #ffffff 30%);
+        color: var(--hce-app-heading);
+    }
+
+    .emergency-table-badge {
+        background: color-mix(in srgb, var(--hce-color-soft) 74%, #ffffff 26%);
+        color: var(--hce-color-primary);
+        letter-spacing: 0;
+    }
+
+    .emergency-professional-inline {
+        align-items: center;
+        display: inline-flex;
+        gap: 8px;
+    }
+
+    .emergency-professional-detail {
+        display: grid;
+        gap: 2px;
+        line-height: 1.25;
+    }
+
+    .emergency-professional-detail b {
+        color: var(--hce-app-heading);
+        font-weight: 500;
+    }
+
+    .emergency-professional-detail em {
+        color: var(--hce-app-muted);
+        font-size: 0.78rem;
+        font-style: normal;
+    }
+
+    .emergency-professional-inline strong {
+        align-items: center;
+        background: color-mix(in srgb, var(--hce-color-soft) 72%, #ffffff 28%);
+        border-radius: 999px;
+        color: var(--hce-color-primary);
+        display: inline-flex;
+        font-size: 0.68rem;
+        font-weight: 700;
+        height: 24px;
+        justify-content: center;
+        transition: background-color 160ms ease, color 160ms ease;
+        width: 24px;
+    }
+
+    .emergency-main-cell {
+        display: grid;
+        gap: 3px;
+    }
+
+    .emergency-date-cell {
+        display: grid;
+        gap: 2px;
+    }
+
+    .emergency-date-cell strong {
+        color: var(--hce-app-heading);
+        font-weight: 600;
+    }
+
+    .emergency-date-cell span {
+        color: var(--hce-app-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .emergency-main-cell strong {
+        color: var(--hce-app-heading);
+        font-weight: 600;
+    }
+
+    .emergency-main-cell span {
+        color: var(--hce-app-muted);
+        font-size: 0.72rem;
+    }
+
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-code-chip,
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-table-badge,
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-inline strong {
+        background: rgba(3, 4, 94, 0.1);
+        color: #03045e;
+    }
+
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-main-cell strong,
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-main-cell span {
+        color: #03045e;
+    }
+
+    .emergency-table-empty-state {
+        align-items: center;
+        color: var(--hce-app-muted);
+        display: grid;
+        gap: 8px;
+        justify-items: center;
+        min-height: 128px;
+        padding: 18px 12px;
+    }
+
+    .emergency-table-empty-state iconify-icon {
+        color: color-mix(in srgb, var(--hce-app-muted) 70%, transparent);
+        font-size: 1.75rem;
+    }
+
+    .emergency-table-empty-state p {
+        font-size: 0.84rem;
+        margin: 0;
+    }
+
+    .emergency-diagnosis-form {
+        grid-template-columns: minmax(420px, 1.35fr) minmax(140px, 0.48fr) minmax(240px, 0.9fr) auto;
+    }
+
+    .emergency-evolution-form {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+    }
+
+    .emergency-discharge-diagnosis-form {
+        grid-template-columns: minmax(420px, 1.35fr) minmax(150px, 0.48fr) minmax(140px, 0.42fr) minmax(220px, 0.8fr) auto;
+    }
+
+    .emergency-order-form {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+    }
+
+    .emergency-lab-form {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+    }
+
+    .emergency-medication-form {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+    }
+
+    .emergency-procedure-form {
+        align-items: end;
+        grid-template-columns: minmax(420px, 0.9fr) minmax(120px, 140px) minmax(220px, 240px) auto;
+    }
+
+    .emergency-nursing-grid {
+        align-items: start;
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(0, 2fr) minmax(320px, 0.95fr);
+        padding-top: 18px;
+    }
+
+    .emergency-nursing-notes-card {
+        min-width: 0;
+    }
+
+    .emergency-nursing-form {
+        align-items: end;
+        grid-template-columns: minmax(280px, 290px) minmax(320px, 1fr) minmax(180px, 220px) auto;
+    }
+
+    .emergency-interconsultation-form {
+        align-items: end;
+        grid-template-columns: minmax(260px, 280px) minmax(360px, 1fr) auto;
+    }
+
+    .emergency-nursing-form label.is-full {
+        grid-column: 1 / -1;
+    }
+
+    .emergency-interconsultation-form label.is-full {
+        grid-column: 1 / -1;
+    }
+
+    .emergency-nursing-form textarea {
+        min-height: 76px;
+    }
+
+    .emergency-interconsultation-form textarea {
+        min-height: 82px;
+    }
+
+    .emergency-nursing-form-actions {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        min-width: 190px;
+    }
+
+    .emergency-interconsultation-form-actions {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        min-width: 190px;
+    }
+
+    .emergency-nursing-professional-list {
+        max-height: 280px;
+    }
+
+    .emergency-interconsultation-professional-list {
+        max-height: 280px;
+    }
+
+    .emergency-water-balance-card {
+        display: grid;
+        gap: 14px;
+    }
+
+    .emergency-water-balance-fields {
+        border-bottom: 1px solid var(--hce-app-divider);
+        display: grid;
+        gap: 12px;
+        padding-bottom: 14px;
+    }
+
+    .emergency-water-balance-fields label {
+        align-items: center;
+        border: 1px solid transparent;
+        display: grid;
+        gap: 12px;
+        grid-template-columns: minmax(0, 1fr) minmax(110px, 130px);
+        padding: 12px;
+    }
+
+    .emergency-water-balance-fields span {
+        align-items: center;
+        display: inline-flex;
+        font-family: var(--hce-font-ui);
+        font-size: 0.92rem;
+        font-weight: 600;
+        gap: 8px;
+    }
+
+    .emergency-water-balance-fields input {
+        border: 1px solid currentColor;
+        border-radius: 0;
+        font-weight: 700;
+        min-height: 32px;
+        padding: 0 10px;
+        text-align: right;
+    }
+
+    .emergency-water-balance-fields small {
+        grid-column: 1 / -1;
+    }
+
+    .emergency-water-balance-fields .is-income {
+        background: rgba(34, 197, 94, 0.1);
+        border-color: rgba(34, 197, 94, 0.28);
+        color: #047857;
+    }
+
+    .emergency-water-balance-fields .is-income input {
+        background: rgba(240, 253, 244, 0.88);
+        color: #166534;
+    }
+
+    .emergency-water-balance-fields .is-output {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.28);
+        color: #b91c1c;
+    }
+
+    .emergency-water-balance-fields .is-output input {
+        background: rgba(254, 242, 242, 0.9);
+        color: #991b1b;
+    }
+
+    .emergency-water-balance-result {
+        align-items: center;
+        background: rgba(0, 119, 182, 0.1);
+        border: 1px solid rgba(0, 119, 182, 0.22);
+        color: var(--hce-color-primary);
+        display: grid;
+        gap: 6px;
+        justify-items: center;
+        min-height: 104px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .emergency-water-balance-result span {
+        font-family: var(--hce-font-ui);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .emergency-water-balance-result strong {
+        color: currentColor;
+        font-size: 1.65rem;
+        line-height: 1;
+    }
+
+    .emergency-water-balance-result em {
+        font-size: 0.78rem;
+        font-style: normal;
+        font-weight: 600;
+    }
+
+    .emergency-water-balance-result.is-positive {
+        background: rgba(0, 119, 182, 0.1);
+        border-color: rgba(0, 119, 182, 0.26);
+        color: #004bb8;
+    }
+
+    .emergency-water-balance-result.is-negative {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.28);
+        color: #b91c1c;
+    }
+
+    .emergency-water-balance-result.is-neutral {
+        background: rgba(65, 90, 119, 0.1);
+        border-color: rgba(65, 90, 119, 0.22);
+        color: var(--hce-app-muted);
+    }
+
+    .emergency-cie10-field {
+        min-width: min(100%, 420px);
+    }
+
+    .emergency-cie10-list {
+        max-height: 280px;
+    }
+
+    .emergency-cie10-list button {
+        gap: 4px;
+        padding: 10px 12px;
+    }
+
+    .emergency-evolution-form label.is-full {
+        grid-column: 1 / -1;
+    }
+
+    .emergency-order-form label.is-full {
+        grid-column: 1 / -1;
+    }
+
+    .emergency-order-form > .emergency-order-form-row {
+        align-items: end;
+        display: grid;
+        gap: 12px;
+        grid-template-columns: minmax(180px, 190px) minmax(260px, 270px) minmax(120px, 130px) minmax(240px, 255px) minmax(420px, 500px) auto;
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .emergency-order-professional-field {
+        margin-left: 35px;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .emergency-order-form-actions {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        min-width: 190px;
+    }
+
+    .emergency-lab-form > .emergency-lab-form-row {
+        display: grid;
+        gap: 12px;
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .emergency-lab-form-row.is-primary {
+        align-items: end;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .emergency-lab-form-row.is-secondary {
+        align-items: start;
+        grid-template-columns: minmax(160px, 170px) minmax(220px, 230px) minmax(0, 1fr);
+    }
+
+    .emergency-lab-exam-field,
+    .emergency-lab-form-row.is-secondary .is-result {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .emergency-lab-professional-field {
+        flex: 1.35 1 430px;
+        margin-left: 55px;
+        min-width: 0;
+        width: auto;
+    }
+
+    .emergency-lab-form-row.is-primary > .emergency-lab-exam-field {
+        flex: 1.15 1 360px;
+        max-width: 520px;
+    }
+
+    .emergency-lab-form-row.is-primary > label:not(.emergency-lab-exam-field):not(.emergency-lab-professional-field) {
+        flex: 0 1 235px;
+    }
+
+    .emergency-lab-form-row.is-primary > .emergency-lab-form-actions {
+        flex: 0 0 auto;
+        margin-left: auto;
+    }
+
+    .emergency-lab-exam-list {
+        max-height: 280px;
+    }
+
+    .emergency-lab-form-actions {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        min-width: 190px;
+    }
+
+    .emergency-lab-form textarea {
+        min-height: 62px;
+    }
+
+    .emergency-medication-form > .emergency-medication-form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .emergency-medication-form-row.is-primary {
+        align-items: end;
+    }
+
+    .emergency-medication-form-row.is-secondary {
+        align-items: end;
+        display: grid;
+        grid-template-columns: 140px 290px minmax(300px, 1fr) auto;
+    }
+
+    .emergency-medication-name-field {
+        flex: 1.4 1 360px;
+        min-width: 0;
+    }
+
+    .emergency-medication-form-row.is-primary > label:not(.emergency-medication-name-field) {
+        flex: 1 1 150px;
+        min-width: 0;
+    }
+
+    .emergency-medication-form-row.is-primary > label:nth-child(2) {
+        flex-basis: 230px;
+    }
+
+    .emergency-medication-form-row.is-secondary > label:first-child {
+        min-width: 0;
+    }
+
+    .emergency-medication-form-row.is-secondary > label:nth-child(2) {
+        min-width: 0;
+    }
+
+    .emergency-medication-professional-field {
+        min-width: 0;
+    }
+
+    .emergency-medication-form-actions,
+    .emergency-procedure-form-actions {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        min-width: 190px;
+    }
+
+    .emergency-medication-list,
+    .emergency-procedure-list {
+        max-height: 280px;
+    }
+
+    .emergency-medication-list button,
+    .emergency-procedure-list button {
+        gap: 4px;
+        padding: 10px 12px;
+    }
+
+    .emergency-procedure-name-field {
+        min-width: min(100%, 420px);
+    }
+
+    .emergency-evolution-form > .emergency-evolution-form-row {
+        align-items: end;
+        display: grid;
+        gap: 12px;
+        grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) auto;
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .emergency-evolution-professional-field {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .emergency-evolution-form-row > label:first-child {
+        min-width: 280px;
+    }
+
+    .emergency-evolution-professional-list {
+        max-height: 280px;
+        min-width: min(860px, 100%);
+    }
+
+    .emergency-evolution-professional-list button {
+        gap: 4px;
+        padding: 10px 12px;
+    }
+
+    .emergency-evolution-form-actions {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        min-width: 180px;
+    }
+
+    .emergency-vital-form textarea {
+        background: color-mix(in srgb, var(--hce-app-panel-bg), #ffffff 8%);
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        color: var(--hce-app-text);
+        font-family: var(--hce-font-ui);
+        min-height: 72px;
+        padding: 10px 12px;
+        resize: vertical;
+        width: 100%;
+    }
+
+    .emergency-evolution-form textarea {
+        min-height: 56px;
+    }
+
+    .emergency-order-form textarea {
+        min-height: 34px;
+    }
+
+    .emergency-feedback-backdrop {
+        align-items: center;
+        backdrop-filter: blur(6px);
+        background: rgba(15, 23, 42, 0.46);
+        display: flex;
+        inset: 0;
+        justify-content: center;
+        padding: 22px;
+        position: fixed;
+        z-index: 140;
+    }
+
+    .emergency-feedback-modal {
+        background: var(--hce-app-panel-bg);
+        border: 1px solid var(--hce-app-panel-border);
+        border-radius: 14px;
+        box-shadow: 0 24px 70px rgba(0, 19, 64, 0.22);
+        display: grid;
+        gap: 16px;
+        grid-template-columns: auto minmax(0, 1fr);
+        max-width: 560px;
+        padding: 20px;
+        width: min(100%, 560px);
+    }
+
+    .emergency-feedback-icon {
+        align-items: center;
+        background: color-mix(in srgb, var(--hce-color-soft) 78%, #ffffff 22%);
+        border: 1px solid color-mix(in srgb, var(--hce-color-accent) 34%, transparent);
+        border-radius: 14px;
+        color: var(--hce-color-primary);
+        display: inline-flex;
+        height: 48px;
+        justify-content: center;
+        width: 48px;
+    }
+
+    .emergency-feedback-icon iconify-icon {
+        font-size: 1.35rem;
+    }
+
+    .emergency-feedback-modal.is-error .emergency-feedback-icon {
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: #dc2626;
+    }
+
+    .emergency-feedback-modal.is-success .emergency-feedback-icon {
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+        color: #059669;
+    }
+
+    .emergency-feedback-content {
+        display: grid;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .emergency-feedback-content p {
+        color: var(--hce-color-accent);
+        font-family: var(--hce-font-ui);
+        font-size: 0.76rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .emergency-feedback-content h2 {
+        color: var(--hce-app-heading);
+        font-family: var(--hce-font-heading);
+        font-size: 1.1rem;
+        font-weight: 600;
+        line-height: 1.25;
+        margin: 0;
+    }
+
+    .emergency-feedback-content > span {
+        color: var(--hce-app-muted);
+        font-size: 0.86rem;
+        line-height: 1.45;
+    }
+
+    .emergency-feedback-content ul {
+        background: color-mix(in srgb, var(--hce-app-bg) 84%, #ffffff 16%);
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 10px;
+        color: var(--hce-app-text);
+        display: grid;
+        font-size: 0.84rem;
+        gap: 7px;
+        margin: 4px 0 0;
+        padding: 12px 14px 12px 30px;
+    }
+
+    .emergency-feedback-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 4px;
+    }
+
     @media (min-width: 821px) {
         .emergency-tabs-stack {
             align-items: stretch;
@@ -6979,7 +8195,99 @@ a.dashboard-primary-action,
 
     .theme-dark .emergency-vitals-summary .is-priority,
     html[data-applied-theme='dark'] .emergency-vitals-summary .is-priority {
-        background: color-mix(in srgb, #fb923c 18%, #183052 82%);
+        --priority-bg: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+        --priority-border: rgba(152, 193, 217, 0.34);
+        --priority-glow: rgba(152, 193, 217, 0.16);
+        --priority-label: #caf0f8;
+        --priority-text: #ffffff;
+
+        background: var(--priority-bg);
+        border-color: var(--priority-border);
+        box-shadow: 0 12px 28px var(--priority-glow), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    }
+
+    .theme-dark .emergency-vitals-summary .priority-level-1,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-1 {
+        --priority-bg: linear-gradient(145deg, #ef4444 0%, #b91c1c 54%, #7f1d1d 100%);
+        --priority-border: #f87171;
+        --priority-glow: rgba(248, 113, 113, 0.28);
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
+    }
+
+    .theme-dark .emergency-vitals-summary .priority-level-2,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-2 {
+        --priority-bg: linear-gradient(145deg, #fb923c 0%, #ea580c 54%, #9a3412 100%);
+        --priority-border: #fb923c;
+        --priority-glow: rgba(251, 146, 60, 0.3);
+        --priority-label: #111827;
+        --priority-text: #111827;
+    }
+
+    .theme-dark .emergency-vitals-summary .priority-level-2 strong,
+    .theme-dark .emergency-vitals-summary .priority-level-2 select,
+    .theme-dark .emergency-vitals-summary .priority-level-2 > span,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-2 strong,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-2 select,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-2 > span {
+        color: #111827;
+    }
+
+    .theme-dark .emergency-vitals-summary .priority-level-3,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-3 {
+        --priority-bg: linear-gradient(145deg, #fde047 0%, #eab308 54%, #a16207 100%);
+        --priority-border: #fde047;
+        --priority-glow: rgba(253, 224, 71, 0.3);
+        --priority-label: #111827;
+        --priority-text: #111827;
+    }
+
+    .theme-dark .emergency-vitals-summary .priority-level-3 strong,
+    .theme-dark .emergency-vitals-summary .priority-level-3 select,
+    .theme-dark .emergency-vitals-summary .priority-level-3 > span,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-3 strong,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-3 select,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-3 > span {
+        color: #111827;
+    }
+
+    .theme-dark .emergency-vitals-summary .priority-level-4,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-4 {
+        --priority-bg: linear-gradient(145deg, #4ade80 0%, #22c55e 52%, #166534 100%);
+        --priority-border: #86efac;
+        --priority-glow: rgba(74, 222, 128, 0.28);
+        --priority-label: #052e16;
+        --priority-text: #052e16;
+    }
+
+    .theme-dark .emergency-vitals-summary .priority-level-4 strong,
+    .theme-dark .emergency-vitals-summary .priority-level-4 select,
+    .theme-dark .emergency-vitals-summary .priority-level-4 > span,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-4 strong,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-4 select,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-4 > span {
+        color: #052e16;
+    }
+
+    .theme-dark .emergency-vitals-summary .priority-level-5,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-5 {
+        --priority-bg: linear-gradient(145deg, #38bdf8 0%, #0284c7 52%, #1e40af 100%);
+        --priority-border: #7dd3fc;
+        --priority-glow: rgba(56, 189, 248, 0.3);
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
+    }
+
+    .theme-dark .emergency-vitals-summary .is-priority > span,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .is-priority > span {
+        color: var(--priority-label);
+    }
+
+    .theme-dark .emergency-vitals-summary .is-priority strong,
+    .theme-dark .emergency-vitals-summary .is-priority select,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .is-priority strong,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .is-priority select {
+        color: var(--priority-text);
     }
 
     .theme-dark .emergency-vitals-summary select,
@@ -6991,13 +8299,25 @@ a.dashboard-primary-action,
     .theme-dark .emergency-attention-form input,
     .theme-dark .emergency-attention-form select,
     .theme-dark .emergency-attention-form textarea,
+    .theme-dark .emergency-vital-form input,
+    .theme-dark .emergency-vital-form select,
+    .theme-dark .emergency-vital-form textarea,
     html[data-applied-theme='dark'] .emergency-attention-form input,
     html[data-applied-theme='dark'] .emergency-attention-form select,
-    html[data-applied-theme='dark'] .emergency-attention-form textarea {
+    html[data-applied-theme='dark'] .emergency-attention-form textarea,
+    html[data-applied-theme='dark'] .emergency-vital-form input,
+    html[data-applied-theme='dark'] .emergency-vital-form select,
+    html[data-applied-theme='dark'] .emergency-vital-form textarea {
         background: #183052;
         border-color: rgba(152, 193, 217, 0.42);
         color: #f8fafc;
         color-scheme: dark;
+    }
+
+    .theme-dark .emergency-vitals-summary .is-priority select,
+    html[data-applied-theme='dark'] .emergency-vitals-summary .is-priority select {
+        background: transparent;
+        color: var(--priority-text);
     }
 
     .theme-dark .emergency-attention-card header,
@@ -7025,6 +8345,272 @@ a.dashboard-primary-action,
         color: #caf0f8;
     }
 
+    .theme-dark .emergency-combobox-list,
+    html[data-applied-theme='dark'] .emergency-combobox-list {
+        background: #0d111c;
+        border-color: rgba(152, 193, 217, 0.28);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.36);
+    }
+
+    .theme-dark .emergency-combobox-list button:hover,
+    html[data-applied-theme='dark'] .emergency-combobox-list button:hover {
+        background: #183052;
+    }
+
+    .theme-dark .emergency-attention-card:hover,
+    .theme-dark .emergency-timeline-card:hover,
+    html[data-applied-theme='dark'] .emergency-attention-card:hover,
+    html[data-applied-theme='dark'] .emergency-timeline-card:hover {
+        border-color: rgba(202, 240, 248, 0.42);
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.22);
+    }
+
+    .theme-dark .emergency-glasgow-score-card,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card {
+        background: #101827;
+        border-color: rgba(152, 193, 217, 0.24);
+    }
+
+    .theme-dark .emergency-glasgow-score-card > span,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card > span {
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-glasgow-score-card strong,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card strong {
+        color: #caf0f8;
+    }
+
+    .theme-dark .emergency-glasgow-score-card em,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card em {
+        color: #a7b2c5;
+    }
+
+    .theme-dark .emergency-glasgow-score-card select,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card select {
+        background: #183052;
+        border-color: rgba(152, 193, 217, 0.42);
+        color: #f8fafc;
+        color-scheme: dark;
+    }
+
+    .theme-dark .emergency-glasgow-score-card select option,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card select option {
+        background: #183052;
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-glasgow-score-card.is-total,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card.is-total {
+        background: var(--glasgow-total-bg);
+        border-color: var(--glasgow-total-border);
+        box-shadow: 0 14px 28px color-mix(in srgb, var(--glasgow-total-border) 32%, transparent);
+    }
+
+    .theme-dark .emergency-glasgow-score-card.is-total > span,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card.is-total > span,
+    .theme-dark .emergency-glasgow-score-card.is-total strong,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card.is-total strong {
+        color: var(--glasgow-total-text);
+    }
+
+    .theme-dark .emergency-glasgow-score-card.is-total em,
+    html[data-applied-theme='dark'] .emergency-glasgow-score-card.is-total em {
+        background: var(--glasgow-total-badge-bg);
+        color: var(--glasgow-total-badge-text);
+    }
+
+    .theme-dark .emergency-inline-action,
+    html[data-applied-theme='dark'] .emergency-inline-action {
+        background: rgba(152, 193, 217, 0.1);
+        border: 1px solid rgba(152, 193, 217, 0.24);
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-inline-action iconify-icon,
+    html[data-applied-theme='dark'] .emergency-inline-action iconify-icon {
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-inline-action:hover,
+    html[data-applied-theme='dark'] .emergency-inline-action:hover {
+        background: #183052;
+        border-color: rgba(202, 240, 248, 0.42);
+        color: #caf0f8;
+    }
+
+    .theme-dark .emergency-row-actions button,
+    html[data-applied-theme='dark'] .emergency-row-actions button {
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-row-actions button iconify-icon,
+    html[data-applied-theme='dark'] .emergency-row-actions button iconify-icon {
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-row-actions button:hover,
+    html[data-applied-theme='dark'] .emergency-row-actions button:hover {
+        background: rgba(152, 193, 217, 0.14);
+        color: #caf0f8;
+    }
+
+    .theme-dark .emergency-vitals-table th,
+    html[data-applied-theme='dark'] .emergency-vitals-table th {
+        background: #183052;
+        color: #caf0f8;
+    }
+
+    .theme-dark .emergency-vitals-table td,
+    html[data-applied-theme='dark'] .emergency-vitals-table td {
+        border-color: rgba(152, 193, 217, 0.2);
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-vitals-table td strong,
+    html[data-applied-theme='dark'] .emergency-vitals-table td strong,
+    .theme-dark .emergency-main-cell strong,
+    html[data-applied-theme='dark'] .emergency-main-cell strong,
+    .theme-dark .emergency-professional-detail b,
+    html[data-applied-theme='dark'] .emergency-professional-detail b,
+    .theme-dark .emergency-triage-check,
+    html[data-applied-theme='dark'] .emergency-triage-check {
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-main-cell span,
+    html[data-applied-theme='dark'] .emergency-main-cell span,
+    .theme-dark .emergency-professional-detail em,
+    html[data-applied-theme='dark'] .emergency-professional-detail em {
+        color: #caf0f8;
+    }
+
+    .theme-dark .emergency-date-cell strong,
+    html[data-applied-theme='dark'] .emergency-date-cell strong {
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-date-cell span,
+    html[data-applied-theme='dark'] .emergency-date-cell span {
+        color: #caf0f8;
+    }
+
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell),
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) {
+        background: #1380a7;
+        border-color: rgba(202, 240, 248, 0.36);
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) strong,
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-main-cell span,
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-inline,
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-detail b,
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-detail em,
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-vital-state,
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions button,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) strong,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-main-cell span,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-inline,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-detail b,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-detail em,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-vital-state,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions button {
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-code-chip,
+    html[data-applied-theme='dark'] .emergency-code-chip {
+        background: rgba(152, 193, 217, 0.12);
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-table-badge,
+    html[data-applied-theme='dark'] .emergency-table-badge {
+        background: rgba(0, 180, 216, 0.18);
+        color: #caf0f8;
+    }
+
+    .theme-dark .emergency-professional-inline strong,
+    html[data-applied-theme='dark'] .emergency-professional-inline strong {
+        background: rgba(202, 240, 248, 0.12);
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-code-chip,
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-table-badge,
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-inline strong,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-code-chip,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-table-badge,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-inline strong {
+        background: rgba(202, 240, 248, 0.16);
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-table-empty-state,
+    html[data-applied-theme='dark'] .emergency-table-empty-state {
+        color: #98c1d9;
+    }
+
+    .theme-dark .emergency-table-empty-state iconify-icon,
+    html[data-applied-theme='dark'] .emergency-table-empty-state iconify-icon {
+        color: rgba(202, 240, 248, 0.72);
+    }
+
+    .theme-dark .emergency-vital-form,
+    .theme-dark .emergency-triage-check,
+    html[data-applied-theme='dark'] .emergency-vital-form,
+    html[data-applied-theme='dark'] .emergency-triage-check {
+        border-color: rgba(152, 193, 217, 0.2);
+    }
+
+    .theme-dark .emergency-water-balance-fields .is-income,
+    html[data-applied-theme='dark'] .emergency-water-balance-fields .is-income {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: rgba(74, 222, 128, 0.34);
+        color: #86efac;
+    }
+
+    .theme-dark .emergency-water-balance-fields .is-income input,
+    html[data-applied-theme='dark'] .emergency-water-balance-fields .is-income input {
+        background: #183052;
+        color: #bbf7d0;
+    }
+
+    .theme-dark .emergency-water-balance-fields .is-output,
+    html[data-applied-theme='dark'] .emergency-water-balance-fields .is-output {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(248, 113, 113, 0.36);
+        color: #fca5a5;
+    }
+
+    .theme-dark .emergency-water-balance-fields .is-output input,
+    html[data-applied-theme='dark'] .emergency-water-balance-fields .is-output input {
+        background: #183052;
+        color: #fecaca;
+    }
+
+    .theme-dark .emergency-water-balance-result.is-positive,
+    html[data-applied-theme='dark'] .emergency-water-balance-result.is-positive {
+        background: rgba(14, 165, 233, 0.16);
+        border-color: rgba(56, 189, 248, 0.32);
+        color: #bae6fd;
+    }
+
+    .theme-dark .emergency-water-balance-result.is-negative,
+    html[data-applied-theme='dark'] .emergency-water-balance-result.is-negative {
+        background: rgba(239, 68, 68, 0.16);
+        border-color: rgba(248, 113, 113, 0.32);
+        color: #fecaca;
+    }
+
+    .theme-dark .emergency-water-balance-result.is-neutral,
+    html[data-applied-theme='dark'] .emergency-water-balance-result.is-neutral {
+        background: rgba(152, 193, 217, 0.12);
+        border-color: rgba(152, 193, 217, 0.28);
+        color: #e0f2fe;
+    }
+
     .theme-dark .emergency-episode-timeline li::before,
     html[data-applied-theme='dark'] .emergency-episode-timeline li::before {
         background: rgba(152, 193, 217, 0.24);
@@ -7037,12 +8623,56 @@ a.dashboard-primary-action,
         box-shadow: 0 0 0 2px rgba(152, 193, 217, 0.2);
     }
 
+    .theme-dark .emergency-feedback-backdrop,
+    html[data-applied-theme='dark'] .emergency-feedback-backdrop {
+        background: rgba(8, 10, 16, 0.62);
+    }
+
+    .theme-dark .emergency-feedback-modal,
+    html[data-applied-theme='dark'] .emergency-feedback-modal {
+        background: #0d111c;
+        border-color: rgba(152, 193, 217, 0.28);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.46);
+    }
+
+    .theme-dark .emergency-feedback-content ul,
+    html[data-applied-theme='dark'] .emergency-feedback-content ul {
+        background: #101827;
+        border-color: rgba(152, 193, 217, 0.22);
+    }
+
+    .theme-dark .emergency-feedback-modal.is-error .emergency-feedback-icon,
+    html[data-applied-theme='dark'] .emergency-feedback-modal.is-error .emergency-feedback-icon {
+        background: rgba(220, 38, 38, 0.14);
+        border-color: rgba(248, 113, 113, 0.34);
+        color: #fca5a5;
+    }
+
+    .theme-dark .emergency-feedback-modal.is-success .emergency-feedback-icon,
+    html[data-applied-theme='dark'] .emergency-feedback-modal.is-success .emergency-feedback-icon {
+        background: rgba(5, 150, 105, 0.14);
+        border-color: rgba(52, 211, 153, 0.34);
+        color: #6ee7b7;
+    }
+
     @media (max-width: 1280px) {
         .emergency-record-header {
             grid-template-columns: 1fr;
         }
 
         .emergency-attention-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .emergency-triage-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .emergency-exams-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .emergency-nursing-grid {
             grid-template-columns: 1fr;
         }
 
@@ -7112,6 +8742,14 @@ a.dashboard-primary-action,
             grid-template-columns: 1fr;
         }
 
+        .emergency-glasgow-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .emergency-general-exam-form {
+            grid-template-columns: 1fr;
+        }
+
         .emergency-status {
             justify-content: center;
         }
@@ -7144,12 +8782,130 @@ a.dashboard-primary-action,
         }
 
         .emergency-attention-form.is-two-columns,
-        .emergency-attention-form.is-three-columns {
+        .emergency-attention-form.is-three-columns,
+        .emergency-anamnesis-form,
+        .emergency-vital-form,
+        .emergency-diagnosis-form,
+        .emergency-evolution-form,
+        .emergency-discharge-diagnosis-form,
+        .emergency-order-form,
+        .emergency-lab-form,
+        .emergency-medication-form,
+        .emergency-procedure-form,
+        .emergency-nursing-form,
+        .emergency-interconsultation-form {
+            grid-template-columns: 1fr;
+        }
+
+        .emergency-evolution-form label.is-full,
+        .emergency-nursing-form label.is-full,
+        .emergency-interconsultation-form label.is-full {
+            grid-column: 1 / -1;
+        }
+
+        .emergency-evolution-form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .emergency-order-form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .emergency-lab-form-row.is-primary,
+        .emergency-lab-form-row.is-secondary {
+            grid-template-columns: 1fr;
+        }
+
+        .emergency-lab-form-row.is-primary {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .emergency-lab-form-row.is-primary > .emergency-lab-exam-field,
+        .emergency-lab-form-row.is-primary > label:not(.emergency-lab-exam-field):not(.emergency-lab-professional-field),
+        .emergency-lab-professional-field,
+        .emergency-lab-form-row.is-primary > .emergency-lab-form-actions {
+            flex: 1 1 auto;
+            margin-left: 0;
+            max-width: none;
+            width: 100%;
+        }
+
+        .emergency-medication-form-row.is-primary,
+        .emergency-medication-form-row.is-secondary {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .emergency-medication-form-row.is-secondary {
+            grid-template-columns: 1fr;
+        }
+
+        .emergency-medication-name-field,
+        .emergency-medication-form-row.is-primary > label:not(.emergency-medication-name-field),
+        .emergency-medication-form-row.is-secondary > label,
+        .emergency-medication-professional-field,
+        .emergency-medication-form-actions,
+        .emergency-procedure-name-field,
+        .emergency-procedure-form > label,
+        .emergency-procedure-form-actions {
+            flex: 1 1 auto;
+            max-width: none;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .emergency-evolution-form-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .emergency-order-form-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .emergency-lab-form-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .emergency-medication-form-actions,
+        .emergency-procedure-form-actions,
+        .emergency-nursing-form-actions,
+        .emergency-interconsultation-form-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .emergency-water-balance-fields label {
             grid-template-columns: 1fr;
         }
 
         .emergency-episode-timeline li {
             min-height: 68px;
+        }
+
+        .emergency-vital-form > div {
+            justify-content: stretch;
+        }
+
+        .emergency-vital-form > div button {
+            flex: 1;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .emergency-glasgow-grid {
+            grid-template-columns: 1fr;
         }
     }
 

@@ -518,12 +518,52 @@ const prepararConfirmacionesCatalogo = () => {
     });
 };
 
+const cerrarAutocompletado = (contenedor) => {
+    contenedor.classList.remove('is-combobox-open');
+};
+
+const abrirAutocompletado = (contenedor) => {
+    contenedor.classList.add('is-combobox-open');
+};
+
+const prepararAutocompletados = () => {
+    document.querySelectorAll('.emergency-combobox').forEach((contenedor) => {
+        contenedor.classList.toggle('is-combobox-open', contenedor.contains(document.activeElement));
+
+        if (contenedor.dataset.comboboxReady === 'true') {
+            return;
+        }
+
+        contenedor.dataset.comboboxReady = 'true';
+
+        contenedor.addEventListener('focusin', () => abrirAutocompletado(contenedor));
+        contenedor.addEventListener('focusout', () => {
+            window.setTimeout(() => {
+                if (!contenedor.contains(document.activeElement)) {
+                    cerrarAutocompletado(contenedor);
+                }
+            }, 140);
+        });
+
+        contenedor.addEventListener('mousedown', (evento) => {
+            const botonResultado = evento.target instanceof Element
+                ? evento.target.closest('.emergency-combobox-list button')
+                : null;
+
+            if (botonResultado) {
+                evento.preventDefault();
+            }
+        });
+    });
+};
+
 const inicializarAplicacion = () => {
     inicializarPreline();
     prepararTransicionSalidaLogin();
     prepararPreferenciasPanel();
     prepararAnimacionesDashboard();
     prepararConfirmacionesCatalogo();
+    prepararAutocompletados();
 };
 
 consultaTemaSistema.addEventListener('change', () => {

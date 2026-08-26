@@ -358,6 +358,7 @@ return new class extends Migration
             $table->string('prioridad', 100)->unique();
             $table->enum('color', $this->coloresTriaje())->nullable();
             $table->unsignedTinyInteger('orden')->nullable()->unique();
+            $table->unsignedSmallInteger('tiempo_atencion')->nullable();
             $table->enum('estado', $this->estadosCatalogo())->default('Activo');
             $this->auditoriaBasica($table, true);
         });

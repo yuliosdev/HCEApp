@@ -32,4 +32,9 @@ class Prescripcion extends Model
     {
         return $this->belongsTo(Medicamento::class, 'medicamento_id');
     }
+
+    public function profesionalSalud(): BelongsTo
+    {
+        return $this->belongsTo(ProfesionalSalud::class);
+    }
 }

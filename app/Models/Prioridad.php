@@ -24,6 +24,7 @@ class Prioridad extends Model
     {
         return [
             'color' => ColorTriaje::class,
+            'tiempo_atencion' => 'integer',
             'estado' => EstadoCatalogo::class,
         ];
     }

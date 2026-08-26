@@ -25,4 +25,9 @@ class EnfermeriaNota extends Model
     {
         return $this->belongsTo(HcEmergencia::class);
     }
+
+    public function profesionalSalud(): BelongsTo
+    {
+        return $this->belongsTo(ProfesionalSalud::class);
+    }
 }
