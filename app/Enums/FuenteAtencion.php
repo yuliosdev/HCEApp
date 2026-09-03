@@ -4,6 +4,6 @@ namespace App\Enums;
 
 enum FuenteAtencion: string
 {
-    case ServicioMedicoEmergencia = 'Servicio medico de emergencia';
+    case ServicioMedicoEmergencia = 'Servicio médico de emergencia';
     case Otro = 'Otro';
 }

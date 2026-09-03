@@ -208,7 +208,7 @@
     </article>
 
     @if ($modalAbierto)
-        <div class="catalog-modal-backdrop" wire:click.self="cerrarModal">
+        <div class="catalog-modal-backdrop">
             <section class="catalog-modal clinical-record-modal" role="dialog" aria-modal="true" aria-labelledby="registro-clinico-modal-title">
                 <header>
                     <div>

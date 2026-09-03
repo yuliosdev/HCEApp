@@ -50,6 +50,8 @@ class BaseDatosClinicaTest extends TestCase
         }
 
         $this->assertTrue(Schema::hasColumn('hc_emergencia', 'triaje'), 'La tabla hc_emergencia debe tener el campo booleano triaje.');
+        $this->assertTrue(Schema::hasColumn('hc_emergencia', 'alias'), 'La tabla hc_emergencia debe tener el campo alias.');
+        $this->assertTrue(Schema::hasColumn('hc_emergencia', 'indicaciones_finales'), 'La tabla hc_emergencia debe tener indicaciones finales.');
         $this->assertTrue(Schema::hasColumn('hospitalizaciones_previas', 'ups_id'), 'La tabla hospitalizaciones_previas debe relacionarse con ups.');
         $this->assertTrue(Schema::hasColumn('signos_vitales', 'rango_inicial'), 'La tabla signos_vitales debe tener rango inicial.');
         $this->assertTrue(Schema::hasColumn('signos_vitales', 'rango_final'), 'La tabla signos_vitales debe tener rango final.');
@@ -128,6 +130,8 @@ class BaseDatosClinicaTest extends TestCase
             'actualizado_por' => $administrador->id,
             'color_triaje' => ColorTriaje::Azul,
             'triaje' => true,
+            'alias' => 'Paciente no identificado',
+            'indicaciones_finales' => 'Control por consultorio externo.',
         ]);
 
         $this->assertTrue($episodio->paciente->is($paciente));
@@ -138,6 +142,8 @@ class BaseDatosClinicaTest extends TestCase
         $this->assertSame(SiNo::No, $episodio->sin_identificacion);
         $this->assertSame(ColorTriaje::Azul, $episodio->color_triaje);
         $this->assertTrue($episodio->triaje);
+        $this->assertSame('Paciente no identificado', $episodio->alias);
+        $this->assertSame('Control por consultorio externo.', $episodio->indicaciones_finales);
         $this->assertInstanceOf(GrupoSanguineo::class, $paciente->grupo_sanguineo);
         $this->assertInstanceOf(FactorRh::class, $paciente->factor_rh);
     }
@@ -190,7 +196,7 @@ class BaseDatosClinicaTest extends TestCase
         $this->assertTrue($referencia->fresh()->hcEmergencia->is($episodio));
         $this->assertTrue($referencia->fresh()->upsOrigen->is($ups));
         $this->assertTrue($referencia->fresh()->upsDestino->is($ups));
-        $this->assertTrue($episodio->fresh()->referencias->contains($referencia));
+        $this->assertTrue($episodio->fresh()->referencia->is($referencia));
         $this->assertTrue($paciente->fresh()->medicamentosHabituales->contains($medicamentoHabitual));
     }
 

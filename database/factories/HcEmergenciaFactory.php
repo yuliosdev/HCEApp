@@ -31,12 +31,13 @@ class HcEmergenciaFactory extends Factory
     public function definition(): array
     {
         return [
-            'numero_atencion' => fake()->unique()->numberBetween(100000, 999999),
+            'numero_atencion' => null,
             'fecha_hora_inicio_episodio' => now()->subMinutes(30),
             'fecha_hora_atencion' => now(),
             'topico' => TopicoAtencion::Topico,
             'ambiente' => 'Cubiculo '.fake()->numberBetween(1, 10),
             'paciente_id' => Paciente::factory(),
+            'alias' => fake()->optional()->firstName(),
             'sin_identificacion' => SiNo::No,
             'fecha_hora_recepcion' => now()->subMinutes(35),
             'fecha_hora_triaje' => now()->subMinutes(25),
@@ -45,6 +46,7 @@ class HcEmergenciaFactory extends Factory
             'color_triaje' => fake()->randomElement(ColorTriaje::cases()),
             'triaje' => true,
             'estado_firma' => EstadoFirma::Pendiente,
+            'indicaciones_finales' => fake()->optional()->sentence(),
             'estado_atencion' => EstadoAtencion::Abierta,
         ];
     }

@@ -448,9 +448,15 @@ const obtenerSweetAlert = () => window.Swal || window.Sweetalert2 || window.swee
 
 const confirmarEliminacionCatalogo = async (boton) => {
     const registroId = Number(boton.dataset.registroId || boton.dataset.procedimientoId || 0);
-    const registroNombre = boton.dataset.registroNombre || boton.dataset.procedimientoNombre || 'este registro';
+    const registroNombre = boton.dataset.registroNombre || boton.dataset.procedimientoNombre || '';
     const catalogoSingular = boton.dataset.catalogoSingular || 'procedimiento';
     const metodoEliminacion = boton.dataset.deleteMethod || 'eliminar';
+    const titulo = boton.dataset.confirmTitle || `Eliminar ${catalogoSingular}`;
+    const mensaje = boton.dataset.confirmMessage || (
+        registroNombre
+            ? `Deseas eliminar ${catalogoSingular} "${registroNombre}"?`
+            : `Deseas eliminar ${catalogoSingular}?`
+    );
     const componente = boton.closest('[wire\\:id]');
     const instanciaLivewire = componente ? window.Livewire?.find(componente.getAttribute('wire:id')) : null;
 
@@ -464,8 +470,8 @@ const confirmarEliminacionCatalogo = async (boton) => {
 
     if (sweetAlert && typeof sweetAlert.fire === 'function') {
         const resultado = await sweetAlert.fire({
-            title: `Eliminar ${catalogoSingular}`,
-            text: `Deseas eliminar ${catalogoSingular} "${registroNombre}"?`,
+            title: titulo,
+            text: mensaje,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Si, eliminar',
@@ -480,7 +486,7 @@ const confirmarEliminacionCatalogo = async (boton) => {
 
         confirmado = resultado.isConfirmed;
     } else {
-        confirmado = window.confirm(`Deseas eliminar ${catalogoSingular} "${registroNombre}"?`);
+        confirmado = window.confirm(mensaje);
     }
 
     if (!confirmado) {
@@ -505,7 +511,7 @@ const prepararConfirmacionesCatalogo = () => {
 
     document.addEventListener('click', (evento) => {
         const boton = evento.target instanceof Element
-            ? evento.target.closest('[data-confirm-delete-procedimiento], [data-confirm-delete-catalogo], [data-confirm-delete-registro-clinico], [data-confirm-delete-paciente-dashboard]')
+            ? evento.target.closest('[data-confirm-delete-procedimiento], [data-confirm-delete-catalogo], [data-confirm-delete-registro-clinico], [data-confirm-delete-paciente-dashboard], [data-confirm-delete-emergency-tab]')
             : null;
 
         if (!boton) {

@@ -2,17 +2,23 @@
 
 namespace App\Livewire\HistoriaClinica;
 
+use App\Enums\CondicionEgreso;
+use App\Enums\DestinoDentroIpress;
+use App\Enums\DestinoFueraIpress;
 use App\Enums\EstadoAtencion;
 use App\Enums\EstadoSolicitudExamen;
 use App\Enums\FuenteAtencion;
 use App\Enums\PrioridadOrden;
 use App\Enums\PrioridadSolicitudExamen;
 use App\Enums\SiNo;
+use App\Enums\TipoDocumentoAdjunto;
 use App\Enums\TopicoAtencion;
 use App\Enums\ClasificacionDiagnosticoEgreso;
 use App\Enums\TipoDiagnostico;
 use App\Enums\UnidadTiempoEnfermedad;
+use App\Models\AltaMedicamento;
 use App\Models\DiagnosticoCie10;
+use App\Models\DocumentoAdjunto;
 use App\Models\EgresoDiagnostico;
 use App\Models\EnfermeriaNota;
 use App\Models\Examen;
@@ -40,16 +46,22 @@ use BackedEnum;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class HcEmergenciaPanel extends Component
 {
-    public Paciente $paciente;
+    use WithFileUploads;
+
+    public ?Paciente $paciente = null;
 
     public ?HcEmergencia $atencion = null;
+
+    public ?int $atencionId = null;
 
     public string $modo = 'nuevo';
 
@@ -62,6 +74,7 @@ class HcEmergenciaPanel extends Component
         'fecha_hora_atencion' => null,
         'topico' => null,
         'ambiente' => null,
+        'alias' => null,
         'acompanante' => null,
         'parentesco' => null,
         'telefono' => null,
@@ -108,6 +121,12 @@ class HcEmergenciaPanel extends Component
         'shock_trauma_resultado' => null,
         'shock_trauma_destino' => null,
         'registro_especializado' => null,
+        'destino_dentro_ipress' => null,
+        'destino_fuera_ipress' => null,
+        'condicion_egreso' => null,
+        'fecha_hora_egreso' => null,
+        'profesional_egreso_id' => null,
+        'indicaciones_finales' => null,
         'estado_atencion' => 'Abierta',
         'profesional_salud_id' => null,
     ];
@@ -123,6 +142,17 @@ class HcEmergenciaPanel extends Component
     public string $shockTraumaResponsableBusqueda = '';
 
     public string $transferenciaResponsableBusqueda = '';
+
+    public string $profesionalEgresoBusqueda = '';
+
+    public string $upsOrigenBusqueda = '';
+
+    public string $upsDestinoBusqueda = '';
+
+    public string $busquedaDocumentoAdjunto = '';
+
+    /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
+    public array $documentosAdjuntosArchivos = [];
 
     public bool $formularioSignoVitalAbierto = false;
 
@@ -176,6 +206,8 @@ class HcEmergenciaPanel extends Component
 
     public ?int $ordenEditandoId = null;
 
+    public string $ordenProfesionalBusqueda = '';
+
     /** @var array<string, mixed> */
     public array $ordenForm = [
         'tipo_orden_id' => '',
@@ -192,6 +224,8 @@ class HcEmergenciaPanel extends Component
 
     public string $solicitudExamenBusqueda = '';
 
+    public string $solicitudExamenProfesionalBusqueda = '';
+
     /** @var array<string, mixed> */
     public array $solicitudExamenForm = [
         'examen_id' => '',
@@ -207,6 +241,8 @@ class HcEmergenciaPanel extends Component
     public ?int $prescripcionEditandoId = null;
 
     public string $prescripcionMedicamentoBusqueda = '';
+
+    public string $prescripcionProfesionalBusqueda = '';
 
     /** @var array<string, mixed> */
     public array $prescripcionForm = [
@@ -233,6 +269,23 @@ class HcEmergenciaPanel extends Component
         'denominacion' => '',
         'sesiones' => '',
         'fecha_hora' => '',
+    ];
+
+    public bool $formularioAltaMedicamentoAbierto = false;
+
+    public ?int $altaMedicamentoEditandoId = null;
+
+    public string $altaMedicamentoBusqueda = '';
+
+    /** @var array<string, mixed> */
+    public array $altaMedicamentoForm = [
+        'medicamento_id' => '',
+        'medicamento' => '',
+        'presentacion' => '',
+        'dosis' => '',
+        'via' => '',
+        'cantidad' => '',
+        'indicaciones' => '',
     ];
 
     public bool $formularioNotaEnfermeriaAbierto = false;
@@ -277,12 +330,6 @@ class HcEmergenciaPanel extends Component
         'responsable' => '',
     ];
 
-    public bool $formularioReferenciaAbierto = false;
-
-    public ?int $referenciaEditandoId = null;
-
-    public bool $referenciaSoloLectura = false;
-
     /** @var array<string, mixed> */
     public array $referenciaForm = [
         'ipress_origen' => '',
@@ -299,24 +346,35 @@ class HcEmergenciaPanel extends Component
 
     public bool $panelConfirmacionGuardadoAbierto = false;
 
+    public bool $panelConfirmacionCierreAbierto = false;
+
+    public bool $panelAtencionCerradaAbierto = false;
+
     /** @var array<int, string> */
     public array $erroresGuardado = [];
 
-    public function mount(Paciente $paciente, ?HcEmergencia $atencion = null, string $modo = 'nuevo'): void
+    public function mount(?Paciente $paciente = null, ?HcEmergencia $atencion = null, string $modo = 'nuevo'): void
     {
         abort_unless(in_array($modo, ['nuevo', 'ver', 'editar'], true), 404);
 
-        $this->paciente = $paciente;
+        $this->paciente = $paciente ?: $atencion?->paciente;
         $this->atencion = $atencion;
+        $this->atencionId = $atencion?->id;
         $this->modo = $modo;
 
         if ($modo === 'nuevo') {
+            abort_if($this->paciente === null, 404);
+
             $this->prepararNuevoRegistro();
 
             return;
         }
 
-        abort_if($atencion === null || $atencion->paciente_id !== $paciente->id, 404);
+        abort_if($atencion === null, 404);
+
+        if ($paciente !== null) {
+            abort_if($atencion->paciente_id !== $paciente->id, 404);
+        }
 
         $this->cargarAtencion($atencion);
     }
@@ -330,7 +388,17 @@ class HcEmergenciaPanel extends Component
 
     public function guardar(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        $this->persistirHistoria();
+    }
+
+    private function persistirHistoria(
+        bool $mostrarConfirmacionGuardado = true,
+        ?string $mensajeFlash = 'Historia clinica de emergencia guardada correctamente.',
+        ?string $tituloFlash = 'Historia clinica',
+        bool $permitirEstadoCerrado = false
+    ): ?HcEmergencia
+    {
+        abort_if($this->edicionBloqueada() && ! $permitirEstadoCerrado, 403);
 
         if ($this->modo === 'nuevo') {
             $this->validarUsuarioMedico();
@@ -342,22 +410,30 @@ class HcEmergenciaPanel extends Component
         $datos = $this->validarFormularioParaGuardado();
 
         if ($datos === null) {
-            return;
+            return null;
+        }
+
+        $referenciaDatos = $this->validarReferenciaParaGuardado();
+
+        if ($referenciaDatos === null) {
+            return null;
         }
 
         $usuarioId = Auth::id();
+        $pacienteId = $this->paciente?->id ?: $this->atencion?->paciente_id;
 
         $atencion = $this->atencion ?: new HcEmergencia([
-            'paciente_id' => $this->paciente->id,
+            'paciente_id' => $pacienteId,
             'registrado_por' => $usuarioId,
         ]);
 
         $atencion->forceFill([
-            'numero_atencion' => $datos['numero_atencion'] ?: $this->generarNumeroAtencion(),
+            'numero_atencion' => filled($datos['numero_atencion']) ? $datos['numero_atencion'] : null,
             'fecha_hora_inicio_episodio' => $datos['fecha_hora_inicio_episodio'] ?: now(),
             'fecha_hora_atencion' => $datos['fecha_hora_atencion'] ?: now(),
             'topico' => $datos['topico'] ?: TopicoAtencion::Topico->value,
             'ambiente' => $datos['ambiente'],
+            'alias' => $datos['alias'],
             'acompanante' => $datos['acompanante'],
             'parentesco' => $datos['parentesco'],
             'telefono' => $datos['telefono'],
@@ -403,8 +479,14 @@ class HcEmergenciaPanel extends Component
             'shock_trauma_resultado' => $datos['shock_trauma_resultado'],
             'shock_trauma_destino' => $datos['shock_trauma_destino'],
             'registro_especializado' => $datos['registro_especializado'],
-            'paciente_id' => $this->paciente->id,
-            'sin_identificacion' => SiNo::No->value,
+            'destino_dentro_ipress' => $datos['destino_dentro_ipress'],
+            'destino_fuera_ipress' => $datos['destino_fuera_ipress'],
+            'condicion_egreso' => $datos['condicion_egreso'],
+            'fecha_hora_egreso' => $datos['fecha_hora_egreso'],
+            'profesional_egreso_id' => $datos['profesional_egreso_id'],
+            'indicaciones_finales' => $datos['indicaciones_finales'],
+            'paciente_id' => $pacienteId,
+            'sin_identificacion' => $pacienteId === null ? SiNo::Si->value : SiNo::No->value,
             'prioridad_id' => $datos['prioridad_id'],
             'color_triaje' => $this->colorPrioridad($datos['prioridad_id']),
             'profesional_salud_id' => $datos['profesional_salud_id'],
@@ -412,36 +494,34 @@ class HcEmergenciaPanel extends Component
             'actualizado_por' => $usuarioId,
         ])->save();
 
+        $this->guardarReferenciaExtension($atencion, $referenciaDatos, $usuarioId);
+
         $this->atencion = $atencion->fresh(['paciente', 'profesionalResponsable.especialidad', 'prioridad']);
+        $this->atencionId = $this->atencion?->id;
         $this->modo = 'editar';
         $this->cargarAtencion($this->atencion);
 
         $this->panelErroresAbierto = false;
-        $this->panelConfirmacionGuardadoAbierto = true;
+        $this->panelConfirmacionGuardadoAbierto = $mostrarConfirmacionGuardado;
         $this->erroresGuardado = [];
 
-        flash()->success('Historia clinica de emergencia guardada correctamente.', [], 'Historia clinica');
+        if ($mensajeFlash !== null && $tituloFlash !== null) {
+            flash()->success($mensajeFlash, [], $tituloFlash);
+        }
+
+        return $this->atencion;
     }
 
     public function seguirEditandoHistoria(): void
     {
         $this->panelConfirmacionGuardadoAbierto = false;
-
-        if ($this->atencion === null) {
-            return;
-        }
-
-        $this->redirectRoute('historia-clinica.atenciones-paciente.emergencia.editar', [
-            'paciente' => $this->paciente,
-            'atencion' => $this->atencion,
-        ]);
     }
 
     public function volverAlHistorialPaciente(): void
     {
         $this->panelConfirmacionGuardadoAbierto = false;
 
-        $this->redirectRoute('historia-clinica.atenciones-paciente.historia', $this->paciente);
+        $this->redirigirAlListadoOrigen();
     }
 
     public function cerrarPanelErrores(): void
@@ -455,26 +535,60 @@ class HcEmergenciaPanel extends Component
         $this->panelErroresAbierto = false;
     }
 
+    private function edicionBloqueada(): bool
+    {
+        return $this->modo === 'ver'
+            || $this->form['estado_atencion'] === EstadoAtencion::Cerrada->value;
+    }
+
     public function cerrarAtencion(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
-        if ($this->atencion === null) {
-            $this->form['estado_atencion'] = EstadoAtencion::Cerrada->value;
-            $this->guardar();
+        $this->panelConfirmacionCierreAbierto = true;
+    }
+
+    public function cancelarCierreAtencion(): void
+    {
+        $this->panelConfirmacionCierreAbierto = false;
+    }
+
+    public function confirmarCierreAtencion(): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $estadoAnterior = $this->form['estado_atencion'];
+
+        $this->panelConfirmacionCierreAbierto = false;
+        $this->form['estado_atencion'] = EstadoAtencion::Cerrada->value;
+
+        if (blank($this->form['fecha_hora_egreso'])) {
+            $this->form['fecha_hora_egreso'] = now()->format('Y-m-d\TH:i');
+        }
+
+        $atencion = $this->persistirHistoria(
+            mostrarConfirmacionGuardado: false,
+            mensajeFlash: null,
+            tituloFlash: null,
+            permitirEstadoCerrado: true,
+        );
+
+        if ($atencion === null) {
+            $this->form['estado_atencion'] = $estadoAnterior;
 
             return;
         }
 
-        $this->atencion->forceFill([
-            'estado_atencion' => EstadoAtencion::Cerrada->value,
-            'fecha_hora_egreso' => now(),
-            'actualizado_por' => Auth::id(),
-        ])->save();
+        $this->panelAtencionCerradaAbierto = true;
 
-        $this->cargarAtencion($this->atencion->fresh(['paciente', 'profesionalResponsable.especialidad', 'prioridad']));
+        flash()->success('Atención ha sido cerrada', [], 'Historia clinica');
+    }
 
-        flash()->success('Atencion cerrada correctamente.', [], 'Historia clinica');
+    public function aceptarAtencionCerrada(): void
+    {
+        $this->panelAtencionCerradaAbierto = false;
+
+        $this->redirigirAlListadoOrigen();
     }
 
     public function render()
@@ -509,26 +623,36 @@ class HcEmergenciaPanel extends Component
             'prioridadesSolicitudExamen' => PrioridadSolicitudExamen::cases(),
             'estadosSolicitudExamen' => EstadoSolicitudExamen::cases(),
             'profesionalesCatalogo' => ProfesionalSalud::query()->orderBy('nombres')->limit(250)->get(['id', 'nombres', 'cmp']),
+            'profesionalesOrden' => $this->profesionalesPorBusqueda($this->ordenProfesionalBusqueda),
+            'profesionalesSolicitudExamen' => $this->profesionalesPorBusqueda($this->solicitudExamenProfesionalBusqueda),
             'profesionalesEnfermeria' => $this->profesionalesEnfermeria(),
             'profesionalesInterconsulta' => $this->profesionalesInterconsulta(),
             'profesionalesShockTrauma' => $this->profesionalesPorBusqueda($this->shockTraumaResponsableBusqueda),
             'profesionalesTransferencia' => $this->profesionalesPorBusqueda($this->transferenciaResponsableBusqueda),
-            'catalogoUps' => Ups::query()->where('estado', true)->orderBy('denominacion')->get(['id', 'codigo', 'denominacion']),
+            'profesionalesEgreso' => $this->profesionalesPorBusqueda($this->profesionalEgresoBusqueda),
+            'upsOrigenCatalogo' => $this->buscarUps($this->upsOrigenBusqueda),
+            'upsDestinoCatalogo' => $this->buscarUps($this->upsDestinoBusqueda),
+            'destinosDentroIpress' => DestinoDentroIpress::cases(),
+            'destinosFueraIpress' => DestinoFueraIpress::cases(),
+            'condicionesEgreso' => CondicionEgreso::cases(),
             'resultadosShockTrauma' => $this->resultadosShockTrauma(),
             'destinosShockTrauma' => $this->destinosShockTrauma(),
             'estadosRespuestaReferencia' => $this->estadosRespuestaReferencia(),
             'ordenesClinicas' => $this->ordenesClinicas(),
             'solicitudesExamenes' => $this->solicitudesExamenes(),
             'medicamentosPrescripcion' => $this->medicamentosPrescripcion(),
+            'profesionalesPrescripcion' => $this->profesionalesPorBusqueda($this->prescripcionProfesionalBusqueda),
             'prescripcionesMedicamentos' => $this->prescripcionesMedicamentos(),
             'procedimientosCatalogo' => $this->procedimientosCatalogo(),
             'procedimientosRealizados' => $this->procedimientosRealizados(),
+            'medicamentosAlta' => $this->medicamentosAlta(),
+            'altaMedicamentos' => $this->altaMedicamentos(),
+            'documentosAdjuntos' => $this->documentosAdjuntos(),
             'notasEnfermeria' => $this->notasEnfermeria(),
             'balanceHidrico' => $this->balanceHidrico(),
             'interconsultasClinicas' => $this->interconsultasClinicas(),
             'transferenciasClinicas' => $this->transferenciasClinicas(),
-            'referenciasClinicas' => $this->referenciasClinicas(),
-            'soloLectura' => $this->modo === 'ver',
+            'soloLectura' => $this->edicionBloqueada(),
             'esAtencionAbierta' => $this->form['estado_atencion'] === EstadoAtencion::Abierta->value,
         ]);
     }
@@ -612,6 +736,36 @@ class HcEmergenciaPanel extends Component
         $this->transferenciaForm['responsable'] = $this->transferenciaResponsableBusqueda;
     }
 
+    public function updatedProfesionalEgresoBusqueda(): void
+    {
+        if ($this->profesionalEgresoBusqueda !== $this->etiquetaProfesionalEvolucionId($this->form['profesional_egreso_id'] ?: null)) {
+            $this->form['profesional_egreso_id'] = null;
+        }
+    }
+
+    public function updatedAltaMedicamentoBusqueda(): void
+    {
+        $this->altaMedicamentoForm['medicamento'] = $this->altaMedicamentoBusqueda;
+
+        if ($this->altaMedicamentoBusqueda !== $this->etiquetaMedicamentoId($this->altaMedicamentoForm['medicamento_id'] ?: null)) {
+            $this->altaMedicamentoForm['medicamento_id'] = null;
+        }
+    }
+
+    public function updatedUpsOrigenBusqueda(): void
+    {
+        if ($this->upsOrigenBusqueda !== $this->etiquetaUpsId($this->referenciaForm['ups_origen_id'] ?: null)) {
+            $this->referenciaForm['ups_origen_id'] = '';
+        }
+    }
+
+    public function updatedUpsDestinoBusqueda(): void
+    {
+        if ($this->upsDestinoBusqueda !== $this->etiquetaUpsId($this->referenciaForm['ups_destino_id'] ?: null)) {
+            $this->referenciaForm['ups_destino_id'] = '';
+        }
+    }
+
     public function updatedDiagnosticoIngresoCie10Busqueda(): void
     {
         if ($this->diagnosticoIngresoCie10Busqueda !== $this->etiquetaDiagnosticoCie10Id($this->diagnosticoIngresoForm['diagnostico_cie10_id'] ?: null)) {
@@ -633,12 +787,33 @@ class HcEmergenciaPanel extends Component
         }
     }
 
+    public function updatedOrdenProfesionalBusqueda(): void
+    {
+        if ($this->ordenProfesionalBusqueda !== $this->etiquetaProfesionalEvolucionId($this->ordenForm['profesional_salud_id'] ?: null)) {
+            $this->ordenForm['profesional_salud_id'] = null;
+        }
+    }
+
+    public function updatedSolicitudExamenProfesionalBusqueda(): void
+    {
+        if ($this->solicitudExamenProfesionalBusqueda !== $this->etiquetaProfesionalEvolucionId($this->solicitudExamenForm['profesional_salud_id'] ?: null)) {
+            $this->solicitudExamenForm['profesional_salud_id'] = null;
+        }
+    }
+
     public function updatedPrescripcionMedicamentoBusqueda(): void
     {
         $this->prescripcionForm['medicamento'] = $this->prescripcionMedicamentoBusqueda;
 
         if ($this->prescripcionMedicamentoBusqueda !== $this->etiquetaMedicamentoId($this->prescripcionForm['medicamento_id'] ?: null)) {
             $this->prescripcionForm['medicamento_id'] = null;
+        }
+    }
+
+    public function updatedPrescripcionProfesionalBusqueda(): void
+    {
+        if ($this->prescripcionProfesionalBusqueda !== $this->etiquetaProfesionalEvolucionId($this->prescripcionForm['profesional_salud_id'] ?: null)) {
+            $this->prescripcionForm['profesional_salud_id'] = null;
         }
     }
 
@@ -653,7 +828,7 @@ class HcEmergenciaPanel extends Component
 
     public function seleccionarProfesionalTriaje(int $profesionalId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $profesional = ProfesionalSalud::query()->findOrFail($profesionalId);
 
@@ -663,7 +838,7 @@ class HcEmergenciaPanel extends Component
 
     public function seleccionarProfesionalEvolucion(int $profesionalId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $profesional = ProfesionalSalud::query()
             ->with('especialidad')
@@ -676,7 +851,7 @@ class HcEmergenciaPanel extends Component
 
     public function seleccionarProfesionalEnfermeria(int $profesionalId): void
     {
-        abort_if($this->modo === 'ver' || $this->notaEnfermeriaSoloLectura, 403);
+        abort_if($this->edicionBloqueada() || $this->notaEnfermeriaSoloLectura, 403);
 
         $profesional = ProfesionalSalud::query()
             ->with('especialidad')
@@ -689,7 +864,7 @@ class HcEmergenciaPanel extends Component
 
     public function seleccionarProfesionalInterconsulta(int $profesionalId): void
     {
-        abort_if($this->modo === 'ver' || $this->interconsultaSoloLectura, 403);
+        abort_if($this->edicionBloqueada() || $this->interconsultaSoloLectura, 403);
 
         $profesional = ProfesionalSalud::query()
             ->with('especialidad')
@@ -702,7 +877,7 @@ class HcEmergenciaPanel extends Component
 
     public function seleccionarResponsableShockTrauma(int $profesionalId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $profesional = ProfesionalSalud::query()
             ->with('especialidad')
@@ -715,7 +890,7 @@ class HcEmergenciaPanel extends Component
 
     public function seleccionarResponsableTransferencia(int $profesionalId): void
     {
-        abort_if($this->modo === 'ver' || $this->transferenciaSoloLectura, 403);
+        abort_if($this->edicionBloqueada() || $this->transferenciaSoloLectura, 403);
 
         $profesional = ProfesionalSalud::query()
             ->with('especialidad')
@@ -726,9 +901,57 @@ class HcEmergenciaPanel extends Component
         $this->resetValidation('transferenciaForm.responsable');
     }
 
+    public function seleccionarProfesionalEgreso(int $profesionalId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $profesional = ProfesionalSalud::query()
+            ->with('especialidad')
+            ->findOrFail($profesionalId);
+
+        $this->form['profesional_egreso_id'] = $profesional->id;
+        $this->profesionalEgresoBusqueda = $this->etiquetaProfesionalEvolucion($profesional);
+        $this->resetValidation('form.profesional_egreso_id');
+    }
+
+    public function seleccionarMedicamentoAlta(int $medicamentoId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $medicamento = Medicamento::query()->findOrFail($medicamentoId);
+
+        $this->altaMedicamentoForm['medicamento_id'] = $medicamento->id;
+        $this->altaMedicamentoForm['medicamento'] = $medicamento->descripcion;
+        $this->altaMedicamentoForm['presentacion'] = $medicamento->presentacion;
+        $this->altaMedicamentoBusqueda = $medicamento->descripcion;
+        $this->resetValidation(['altaMedicamentoForm.medicamento_id', 'altaMedicamentoForm.medicamento', 'altaMedicamentoForm.presentacion']);
+    }
+
+    public function seleccionarUpsOrigen(int $upsId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $ups = Ups::query()->findOrFail($upsId);
+
+        $this->referenciaForm['ups_origen_id'] = $ups->id;
+        $this->upsOrigenBusqueda = $this->etiquetaUps($ups);
+        $this->resetValidation('referenciaForm.ups_origen_id');
+    }
+
+    public function seleccionarUpsDestino(int $upsId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $ups = Ups::query()->findOrFail($upsId);
+
+        $this->referenciaForm['ups_destino_id'] = $ups->id;
+        $this->upsDestinoBusqueda = $this->etiquetaUps($ups);
+        $this->resetValidation('referenciaForm.ups_destino_id');
+    }
+
     public function seleccionarDiagnosticoIngresoCie10(int $diagnosticoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $diagnostico = DiagnosticoCie10::query()->findOrFail($diagnosticoId);
 
@@ -739,7 +962,7 @@ class HcEmergenciaPanel extends Component
 
     public function seleccionarDiagnosticoEgresoCie10(int $diagnosticoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $diagnostico = DiagnosticoCie10::query()->findOrFail($diagnosticoId);
 
@@ -750,7 +973,7 @@ class HcEmergenciaPanel extends Component
 
     public function seleccionarExamenLaboratorio(int $examenId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $examen = Examen::query()->findOrFail($examenId);
 
@@ -759,9 +982,35 @@ class HcEmergenciaPanel extends Component
         $this->resetValidation('solicitudExamenForm.examen_id');
     }
 
+    public function seleccionarProfesionalOrden(int $profesionalId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $profesional = ProfesionalSalud::query()
+            ->with('especialidad')
+            ->findOrFail($profesionalId);
+
+        $this->ordenForm['profesional_salud_id'] = $profesional->id;
+        $this->ordenProfesionalBusqueda = $this->etiquetaProfesionalEvolucion($profesional);
+        $this->resetValidation('ordenForm.profesional_salud_id');
+    }
+
+    public function seleccionarProfesionalSolicitudExamen(int $profesionalId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $profesional = ProfesionalSalud::query()
+            ->with('especialidad')
+            ->findOrFail($profesionalId);
+
+        $this->solicitudExamenForm['profesional_salud_id'] = $profesional->id;
+        $this->solicitudExamenProfesionalBusqueda = $this->etiquetaProfesionalEvolucion($profesional);
+        $this->resetValidation('solicitudExamenForm.profesional_salud_id');
+    }
+
     public function seleccionarMedicamentoPrescripcion(int $medicamentoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $medicamento = Medicamento::query()->findOrFail($medicamentoId);
 
@@ -772,9 +1021,22 @@ class HcEmergenciaPanel extends Component
         $this->resetValidation(['prescripcionForm.medicamento_id', 'prescripcionForm.medicamento', 'prescripcionForm.presentacion']);
     }
 
+    public function seleccionarProfesionalPrescripcion(int $profesionalId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $profesional = ProfesionalSalud::query()
+            ->with('especialidad')
+            ->findOrFail($profesionalId);
+
+        $this->prescripcionForm['profesional_salud_id'] = $profesional->id;
+        $this->prescripcionProfesionalBusqueda = $this->etiquetaProfesionalEvolucion($profesional);
+        $this->resetValidation('prescripcionForm.profesional_salud_id');
+    }
+
     public function seleccionarProcedimientoRealizado(int $procedimientoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $procedimiento = Procedimiento::query()->findOrFail($procedimientoId);
 
@@ -786,7 +1048,7 @@ class HcEmergenciaPanel extends Component
 
     public function abrirNuevoSignoVital(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->signoVitalEditandoId = null;
         $this->signoVitalForm = [
@@ -799,7 +1061,7 @@ class HcEmergenciaPanel extends Component
 
     public function editarSignoVital(int $signoVitalTriajeId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $registro = $this->consultaSignoVitalTriaje($signoVitalTriajeId);
 
@@ -814,7 +1076,7 @@ class HcEmergenciaPanel extends Component
 
     public function guardarSignoVital(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar signos vitales.', [], 'Triaje');
@@ -853,7 +1115,7 @@ class HcEmergenciaPanel extends Component
 
     public function eliminarSignoVital(int $signoVitalTriajeId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaSignoVitalTriaje($signoVitalTriajeId)->delete();
 
@@ -865,7 +1127,7 @@ class HcEmergenciaPanel extends Component
 
     public function abrirNuevoDiagnosticoIngreso(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->diagnosticoIngresoEditandoId = null;
         $this->diagnosticoIngresoForm = [
@@ -880,7 +1142,7 @@ class HcEmergenciaPanel extends Component
 
     public function editarDiagnosticoIngreso(int $diagnosticoIngresoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $registro = $this->consultaDiagnosticoIngreso($diagnosticoIngresoId);
 
@@ -897,7 +1159,7 @@ class HcEmergenciaPanel extends Component
 
     public function guardarDiagnosticoIngreso(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar diagnosticos de ingreso.', [], 'Diagnosticos');
@@ -940,7 +1202,7 @@ class HcEmergenciaPanel extends Component
 
     public function eliminarDiagnosticoIngreso(int $diagnosticoIngresoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaDiagnosticoIngreso($diagnosticoIngresoId)->delete();
 
@@ -952,7 +1214,7 @@ class HcEmergenciaPanel extends Component
 
     public function abrirNuevaEvolucion(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->evolucionEditandoId = null;
         $this->evolucionForm = [
@@ -967,7 +1229,7 @@ class HcEmergenciaPanel extends Component
 
     public function editarEvolucion(int $evolucionId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $registro = $this->consultaEvolucion($evolucionId);
 
@@ -984,7 +1246,7 @@ class HcEmergenciaPanel extends Component
 
     public function guardarEvolucion(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar evoluciones clinicas.', [], 'Evoluciones');
@@ -1026,7 +1288,7 @@ class HcEmergenciaPanel extends Component
 
     public function eliminarEvolucion(int $evolucionId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaEvolucion($evolucionId)->delete();
 
@@ -1038,7 +1300,7 @@ class HcEmergenciaPanel extends Component
 
     public function abrirNuevoDiagnosticoEgreso(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->diagnosticoEgresoEditandoId = null;
         $this->diagnosticoEgresoForm = [
@@ -1054,7 +1316,7 @@ class HcEmergenciaPanel extends Component
 
     public function editarDiagnosticoEgreso(int $diagnosticoEgresoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $registro = $this->consultaDiagnosticoEgreso($diagnosticoEgresoId);
 
@@ -1072,7 +1334,7 @@ class HcEmergenciaPanel extends Component
 
     public function guardarDiagnosticoEgreso(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar diagnosticos de egreso.', [], 'Diagnosticos');
@@ -1120,7 +1382,7 @@ class HcEmergenciaPanel extends Component
 
     public function eliminarDiagnosticoEgreso(int $diagnosticoEgresoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaDiagnosticoEgreso($diagnosticoEgresoId)->delete();
 
@@ -1132,7 +1394,7 @@ class HcEmergenciaPanel extends Component
 
     public function abrirNuevaOrden(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->ordenEditandoId = null;
         $this->ordenForm = [
@@ -1143,13 +1405,14 @@ class HcEmergenciaPanel extends Component
             'resultado' => '',
             'profesional_salud_id' => $this->form['profesional_salud_id'] ?: '',
         ];
+        $this->ordenProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($this->ordenForm['profesional_salud_id'] ?: null);
         $this->formularioOrdenAbierto = true;
         $this->resetValidation(['ordenForm.tipo_orden_id', 'ordenForm.detalle', 'ordenForm.prioridad', 'ordenForm.fecha_hora_solicitud', 'ordenForm.resultado', 'ordenForm.profesional_salud_id']);
     }
 
     public function editarOrden(int $ordenId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $registro = $this->consultaOrden($ordenId);
 
@@ -1162,13 +1425,14 @@ class HcEmergenciaPanel extends Component
             'resultado' => $registro->resultado,
             'profesional_salud_id' => $registro->profesional_salud_id,
         ];
+        $this->ordenProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($registro->profesional_salud_id);
         $this->formularioOrdenAbierto = true;
         $this->resetValidation(['ordenForm.tipo_orden_id', 'ordenForm.detalle', 'ordenForm.prioridad', 'ordenForm.fecha_hora_solicitud', 'ordenForm.resultado', 'ordenForm.profesional_salud_id']);
     }
 
     public function guardarOrden(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar ordenes.', [], 'Ordenes');
@@ -1212,25 +1476,27 @@ class HcEmergenciaPanel extends Component
         $this->formularioOrdenAbierto = false;
         $this->ordenEditandoId = null;
         $this->ordenForm = ['tipo_orden_id' => '', 'detalle' => '', 'prioridad' => '', 'fecha_hora_solicitud' => '', 'resultado' => '', 'profesional_salud_id' => ''];
+        $this->ordenProfesionalBusqueda = '';
 
         flash()->success('Orden registrada correctamente.', [], 'Ordenes');
     }
 
     public function eliminarOrden(int $ordenId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaOrden($ordenId)->delete();
 
         $this->formularioOrdenAbierto = false;
         $this->ordenEditandoId = null;
+        $this->ordenProfesionalBusqueda = '';
 
         flash()->success('Orden eliminada correctamente.', [], 'Ordenes');
     }
 
     public function abrirNuevaSolicitudExamen(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->solicitudExamenEditandoId = null;
         $this->solicitudExamenForm = [
@@ -1242,13 +1508,14 @@ class HcEmergenciaPanel extends Component
             'profesional_salud_id' => $this->form['profesional_salud_id'] ?: '',
         ];
         $this->solicitudExamenBusqueda = '';
+        $this->solicitudExamenProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($this->solicitudExamenForm['profesional_salud_id'] ?: null);
         $this->formularioSolicitudExamenAbierto = true;
         $this->resetValidation(['solicitudExamenForm.examen_id', 'solicitudExamenForm.prioridad', 'solicitudExamenForm.fecha_hora_solicitud', 'solicitudExamenForm.resultado', 'solicitudExamenForm.estado', 'solicitudExamenForm.profesional_salud_id']);
     }
 
     public function editarSolicitudExamen(int $solicitudExamenId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $registro = $this->consultaSolicitudExamen($solicitudExamenId);
 
@@ -1262,13 +1529,14 @@ class HcEmergenciaPanel extends Component
             'profesional_salud_id' => $registro->profesional_salud_id,
         ];
         $this->solicitudExamenBusqueda = $this->etiquetaExamen($registro->examen);
+        $this->solicitudExamenProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($registro->profesional_salud_id);
         $this->formularioSolicitudExamenAbierto = true;
         $this->resetValidation(['solicitudExamenForm.examen_id', 'solicitudExamenForm.prioridad', 'solicitudExamenForm.fecha_hora_solicitud', 'solicitudExamenForm.resultado', 'solicitudExamenForm.estado', 'solicitudExamenForm.profesional_salud_id']);
     }
 
     public function guardarSolicitudExamen(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar examenes de laboratorio.', [], 'Laboratorio');
@@ -1313,25 +1581,27 @@ class HcEmergenciaPanel extends Component
         $this->solicitudExamenEditandoId = null;
         $this->solicitudExamenForm = ['examen_id' => '', 'prioridad' => '', 'fecha_hora_solicitud' => '', 'resultado' => '', 'estado' => '', 'profesional_salud_id' => ''];
         $this->solicitudExamenBusqueda = '';
+        $this->solicitudExamenProfesionalBusqueda = '';
 
         flash()->success('Examen de laboratorio registrado correctamente.', [], 'Laboratorio');
     }
 
     public function eliminarSolicitudExamen(int $solicitudExamenId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaSolicitudExamen($solicitudExamenId)->delete();
 
         $this->formularioSolicitudExamenAbierto = false;
         $this->solicitudExamenEditandoId = null;
+        $this->solicitudExamenProfesionalBusqueda = '';
 
         flash()->success('Examen de laboratorio eliminado correctamente.', [], 'Laboratorio');
     }
 
     public function abrirNuevaPrescripcion(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->prescripcionEditandoId = null;
         $this->prescripcionForm = [
@@ -1346,13 +1616,14 @@ class HcEmergenciaPanel extends Component
             'profesional_salud_id' => $this->form['profesional_salud_id'] ?: '',
         ];
         $this->prescripcionMedicamentoBusqueda = '';
+        $this->prescripcionProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($this->prescripcionForm['profesional_salud_id'] ?: null);
         $this->formularioPrescripcionAbierto = true;
         $this->resetValidation(['prescripcionForm.medicamento_id', 'prescripcionForm.medicamento', 'prescripcionForm.presentacion', 'prescripcionForm.dosis', 'prescripcionForm.via', 'prescripcionForm.duracion', 'prescripcionForm.cantidad', 'prescripcionForm.fecha_hora', 'prescripcionForm.profesional_salud_id']);
     }
 
     public function editarPrescripcion(int $prescripcionId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $registro = $this->consultaPrescripcion($prescripcionId);
 
@@ -1369,13 +1640,14 @@ class HcEmergenciaPanel extends Component
             'profesional_salud_id' => $registro->profesional_salud_id,
         ];
         $this->prescripcionMedicamentoBusqueda = $registro->medicamento;
+        $this->prescripcionProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($registro->profesional_salud_id);
         $this->formularioPrescripcionAbierto = true;
         $this->resetValidation(['prescripcionForm.medicamento_id', 'prescripcionForm.medicamento', 'prescripcionForm.presentacion', 'prescripcionForm.dosis', 'prescripcionForm.via', 'prescripcionForm.duracion', 'prescripcionForm.cantidad', 'prescripcionForm.fecha_hora', 'prescripcionForm.profesional_salud_id']);
     }
 
     public function guardarPrescripcion(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar prescripciones.', [], 'Farmacos');
@@ -1433,25 +1705,27 @@ class HcEmergenciaPanel extends Component
         $this->prescripcionEditandoId = null;
         $this->prescripcionForm = ['medicamento_id' => '', 'medicamento' => '', 'presentacion' => '', 'dosis' => '', 'via' => '', 'duracion' => '', 'cantidad' => '', 'fecha_hora' => '', 'profesional_salud_id' => ''];
         $this->prescripcionMedicamentoBusqueda = '';
+        $this->prescripcionProfesionalBusqueda = '';
 
         flash()->success('Prescripcion registrada correctamente.', [], 'Farmacos');
     }
 
     public function eliminarPrescripcion(int $prescripcionId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaPrescripcion($prescripcionId)->delete();
 
         $this->formularioPrescripcionAbierto = false;
         $this->prescripcionEditandoId = null;
+        $this->prescripcionProfesionalBusqueda = '';
 
         flash()->success('Prescripcion eliminada correctamente.', [], 'Farmacos');
     }
 
     public function abrirNuevoProcedimiento(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->procedimientoEditandoId = null;
         $this->procedimientoForm = [
@@ -1467,7 +1741,7 @@ class HcEmergenciaPanel extends Component
 
     public function editarProcedimiento(int $procedimientoRealizadoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $registro = $this->consultaProcedimientoRealizado($procedimientoRealizadoId);
 
@@ -1485,7 +1759,7 @@ class HcEmergenciaPanel extends Component
 
     public function guardarProcedimiento(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar procedimientos.', [], 'Procedimientos');
@@ -1534,7 +1808,7 @@ class HcEmergenciaPanel extends Component
 
     public function eliminarProcedimiento(int $procedimientoRealizadoId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaProcedimientoRealizado($procedimientoRealizadoId)->delete();
 
@@ -1544,9 +1818,182 @@ class HcEmergenciaPanel extends Component
         flash()->success('Procedimiento eliminado correctamente.', [], 'Procedimientos');
     }
 
+    public function abrirNuevoAltaMedicamento(): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $this->altaMedicamentoEditandoId = null;
+        $this->altaMedicamentoForm = [
+            'medicamento_id' => '',
+            'medicamento' => '',
+            'presentacion' => '',
+            'dosis' => '',
+            'via' => '',
+            'cantidad' => '',
+            'indicaciones' => '',
+        ];
+        $this->altaMedicamentoBusqueda = '';
+        $this->formularioAltaMedicamentoAbierto = true;
+        $this->resetValidation(['altaMedicamentoForm.medicamento_id', 'altaMedicamentoForm.medicamento', 'altaMedicamentoForm.presentacion', 'altaMedicamentoForm.dosis', 'altaMedicamentoForm.via', 'altaMedicamentoForm.cantidad', 'altaMedicamentoForm.indicaciones']);
+    }
+
+    public function editarAltaMedicamento(int $altaMedicamentoId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $registro = $this->consultaAltaMedicamento($altaMedicamentoId);
+
+        $this->altaMedicamentoEditandoId = $registro->id;
+        $this->altaMedicamentoForm = [
+            'medicamento_id' => $registro->medicamento_id,
+            'medicamento' => $registro->medicamento,
+            'presentacion' => $registro->presentacion,
+            'dosis' => $registro->dosis,
+            'via' => $registro->via,
+            'cantidad' => $registro->cantidad,
+            'indicaciones' => $registro->indicaciones,
+        ];
+        $this->altaMedicamentoBusqueda = $registro->medicamento;
+        $this->formularioAltaMedicamentoAbierto = true;
+        $this->resetValidation(['altaMedicamentoForm.medicamento_id', 'altaMedicamentoForm.medicamento', 'altaMedicamentoForm.presentacion', 'altaMedicamentoForm.dosis', 'altaMedicamentoForm.via', 'altaMedicamentoForm.cantidad', 'altaMedicamentoForm.indicaciones']);
+    }
+
+    public function guardarAltaMedicamento(): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $atencion = $this->resolverAtencionPersistida();
+
+        if ($atencion === null) {
+            flash()->warning('Guarda primero la historia clinica para registrar medicamentos del alta.', [], 'Egresos');
+
+            return;
+        }
+
+        $this->altaMedicamentoForm['medicamento'] = filled($this->altaMedicamentoForm['medicamento'])
+            ? $this->altaMedicamentoForm['medicamento']
+            : $this->altaMedicamentoBusqueda;
+
+        $datos = $this->validate([
+            'altaMedicamentoForm.medicamento_id' => ['nullable', 'integer', Rule::exists('medicamentos', 'id')->whereNull('deleted_at')],
+            'altaMedicamentoForm.medicamento' => ['required', 'string', 'max:255'],
+            'altaMedicamentoForm.presentacion' => ['nullable', 'string', 'max:150'],
+            'altaMedicamentoForm.dosis' => ['nullable', 'string', 'max:100'],
+            'altaMedicamentoForm.via' => ['nullable', 'string', 'max:100'],
+            'altaMedicamentoForm.cantidad' => ['nullable', 'integer', 'min:1', 'max:255'],
+            'altaMedicamentoForm.indicaciones' => ['nullable', 'string'],
+        ], [], [
+            'altaMedicamentoForm.medicamento_id' => 'medicamento catalogado',
+            'altaMedicamentoForm.medicamento' => 'medicamento',
+            'altaMedicamentoForm.presentacion' => 'presentacion',
+            'altaMedicamentoForm.dosis' => 'dosis',
+            'altaMedicamentoForm.via' => 'via',
+            'altaMedicamentoForm.cantidad' => 'cantidad',
+            'altaMedicamentoForm.indicaciones' => 'indicaciones',
+        ])['altaMedicamentoForm'];
+
+        $registro = $this->altaMedicamentoEditandoId
+            ? $this->consultaAltaMedicamento($this->altaMedicamentoEditandoId)
+            : new AltaMedicamento([
+                'hc_emergencia_id' => $atencion->id,
+                'registrado_por' => Auth::id(),
+            ]);
+
+        $registro->forceFill([
+            'medicamento_id' => $datos['medicamento_id'] ?: null,
+            'medicamento' => $datos['medicamento'],
+            'presentacion' => $datos['presentacion'],
+            'dosis' => $datos['dosis'],
+            'via' => $datos['via'],
+            'cantidad' => $datos['cantidad'] ?: null,
+            'indicaciones' => $datos['indicaciones'],
+            'actualizado_por' => Auth::id(),
+        ])->save();
+
+        $this->formularioAltaMedicamentoAbierto = false;
+        $this->altaMedicamentoEditandoId = null;
+        $this->altaMedicamentoForm = ['medicamento_id' => '', 'medicamento' => '', 'presentacion' => '', 'dosis' => '', 'via' => '', 'cantidad' => '', 'indicaciones' => ''];
+        $this->altaMedicamentoBusqueda = '';
+
+        flash()->success('Medicamento del alta registrado correctamente.', [], 'Egresos');
+    }
+
+    public function eliminarAltaMedicamento(int $altaMedicamentoId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $this->consultaAltaMedicamento($altaMedicamentoId)->delete();
+
+        $this->formularioAltaMedicamentoAbierto = false;
+        $this->altaMedicamentoEditandoId = null;
+        $this->altaMedicamentoBusqueda = '';
+
+        flash()->success('Medicamento del alta eliminado correctamente.', [], 'Egresos');
+    }
+
+    public function guardarDocumentosAdjuntos(): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $atencion = $this->resolverAtencionPersistida();
+
+        if ($atencion === null) {
+            flash()->warning('Guarda primero la historia clinica para cargar documentos adjuntos.', [], 'Documentacion');
+
+            return;
+        }
+
+        $datos = $this->validate([
+            'documentosAdjuntosArchivos' => ['required', 'array', 'min:1'],
+            'documentosAdjuntosArchivos.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+        ], [], [
+            'documentosAdjuntosArchivos' => 'archivos adjuntos',
+            'documentosAdjuntosArchivos.*' => 'archivo adjunto',
+        ]);
+
+        foreach ($datos['documentosAdjuntosArchivos'] as $archivo) {
+            $extension = strtolower($archivo->getClientOriginalExtension() ?: 'bin');
+            $nombreAlmacenado = Str::uuid()->toString().'.'.$extension;
+            $ruta = $archivo->storeAs(
+                "historias-clinicas/{$atencion->id}/documentos",
+                $nombreAlmacenado,
+                'public'
+            );
+
+            DocumentoAdjunto::query()->create([
+                'hc_emergencia_id' => $atencion->id,
+                'tipo' => $this->tipoDocumentoAdjuntoPorArchivo($extension, $archivo->getMimeType())->value,
+                'contenido' => $archivo->getClientOriginalName(),
+                'ruta_archivo' => $ruta,
+                'registrado_por' => Auth::id(),
+                'actualizado_por' => Auth::id(),
+            ]);
+        }
+
+        $this->documentosAdjuntosArchivos = [];
+        $this->resetValidation(['documentosAdjuntosArchivos', 'documentosAdjuntosArchivos.*']);
+
+        flash()->success('Documento adjunto cargado correctamente.', [], 'Documentacion');
+    }
+
+    public function eliminarDocumentoAdjunto(int $documentoAdjuntoId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $documento = $this->consultaDocumentoAdjunto($documentoAdjuntoId);
+
+        if (filled($documento->ruta_archivo)) {
+            Storage::disk('public')->delete($documento->ruta_archivo);
+        }
+
+        $documento->delete();
+
+        flash()->success('Documento adjunto eliminado correctamente.', [], 'Documentacion');
+    }
+
     public function abrirNuevaNotaEnfermeria(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->notaEnfermeriaEditandoId = null;
         $this->notaEnfermeriaSoloLectura = false;
@@ -1568,14 +2015,14 @@ class HcEmergenciaPanel extends Component
 
     public function editarNotaEnfermeria(int $notaEnfermeriaId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->cargarNotaEnfermeriaFormulario($notaEnfermeriaId, false);
     }
 
     public function guardarNotaEnfermeria(): void
     {
-        abort_if($this->modo === 'ver' || $this->notaEnfermeriaSoloLectura, 403);
+        abort_if($this->edicionBloqueada() || $this->notaEnfermeriaSoloLectura, 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar notas de enfermeria.', [], 'Enfermeria');
@@ -1621,7 +2068,7 @@ class HcEmergenciaPanel extends Component
 
     public function eliminarNotaEnfermeria(int $notaEnfermeriaId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaNotaEnfermeria($notaEnfermeriaId)->delete();
 
@@ -1635,7 +2082,7 @@ class HcEmergenciaPanel extends Component
 
     public function abrirNuevaInterconsulta(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->interconsultaEditandoId = null;
         $this->interconsultaSoloLectura = false;
@@ -1656,14 +2103,14 @@ class HcEmergenciaPanel extends Component
 
     public function editarInterconsulta(int $interconsultaId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->cargarInterconsultaFormulario($interconsultaId, false);
     }
 
     public function guardarInterconsulta(): void
     {
-        abort_if($this->modo === 'ver' || $this->interconsultaSoloLectura, 403);
+        abort_if($this->edicionBloqueada() || $this->interconsultaSoloLectura, 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar interconsultas.', [], 'Interconsultas');
@@ -1706,7 +2153,7 @@ class HcEmergenciaPanel extends Component
 
     public function abrirNuevaTransferencia(): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->transferenciaEditandoId = null;
         $this->transferenciaSoloLectura = false;
@@ -1729,14 +2176,14 @@ class HcEmergenciaPanel extends Component
 
     public function editarTransferencia(int $transferenciaId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->cargarTransferenciaFormulario($transferenciaId, false);
     }
 
     public function guardarTransferencia(): void
     {
-        abort_if($this->modo === 'ver' || $this->transferenciaSoloLectura, 403);
+        abort_if($this->edicionBloqueada() || $this->transferenciaSoloLectura, 403);
 
         if ($this->atencion === null) {
             flash()->warning('Guarda primero la historia clinica para registrar transferencias.', [], 'Movimientos');
@@ -1789,7 +2236,7 @@ class HcEmergenciaPanel extends Component
 
     public function eliminarTransferencia(int $transferenciaId): void
     {
-        abort_if($this->modo === 'ver', 403);
+        abort_if($this->edicionBloqueada(), 403);
 
         $this->consultaTransferencia($transferenciaId)->delete();
 
@@ -1799,108 +2246,6 @@ class HcEmergenciaPanel extends Component
         $this->transferenciaResponsableBusqueda = '';
 
         flash()->success('Transferencia eliminada correctamente.', [], 'Movimientos');
-    }
-
-    public function abrirNuevaReferencia(): void
-    {
-        abort_if($this->modo === 'ver', 403);
-
-        $this->referenciaEditandoId = null;
-        $this->referenciaSoloLectura = false;
-        $this->referenciaForm = [
-            'ipress_origen' => 'Hospital Regional HCEApp',
-            'ups_origen_id' => '',
-            'ipress_referencia' => '',
-            'ups_destino_id' => '',
-            'motivo_referencia' => '',
-            'fecha_hora_solicitud' => now()->format('Y-m-d\TH:i'),
-            'respuesta_solicitud' => 'Pendiente',
-            'fecha_hora_respuesta' => '',
-        ];
-        $this->formularioReferenciaAbierto = true;
-        $this->resetValidation(['referenciaForm.ipress_origen', 'referenciaForm.ups_origen_id', 'referenciaForm.ipress_referencia', 'referenciaForm.ups_destino_id', 'referenciaForm.motivo_referencia', 'referenciaForm.fecha_hora_solicitud', 'referenciaForm.respuesta_solicitud', 'referenciaForm.fecha_hora_respuesta']);
-    }
-
-    public function verReferencia(int $referenciaId): void
-    {
-        $this->cargarReferenciaFormulario($referenciaId, true);
-    }
-
-    public function editarReferencia(int $referenciaId): void
-    {
-        abort_if($this->modo === 'ver', 403);
-
-        $this->cargarReferenciaFormulario($referenciaId, false);
-    }
-
-    public function guardarReferencia(): void
-    {
-        abort_if($this->modo === 'ver' || $this->referenciaSoloLectura, 403);
-
-        if ($this->atencion === null) {
-            flash()->warning('Guarda primero la historia clinica para registrar referencias.', [], 'Referencias');
-
-            return;
-        }
-
-        $datos = $this->validate([
-            'referenciaForm.ipress_origen' => ['nullable', 'string', 'max:255'],
-            'referenciaForm.ups_origen_id' => ['nullable', 'integer', Rule::exists('ups', 'id')],
-            'referenciaForm.ipress_referencia' => ['nullable', 'string', 'max:255'],
-            'referenciaForm.ups_destino_id' => ['nullable', 'integer', Rule::exists('ups', 'id')],
-            'referenciaForm.motivo_referencia' => ['nullable', 'string'],
-            'referenciaForm.fecha_hora_solicitud' => ['nullable', 'date'],
-            'referenciaForm.respuesta_solicitud' => ['nullable', 'string'],
-            'referenciaForm.fecha_hora_respuesta' => ['nullable', 'date'],
-        ], [], [
-            'referenciaForm.ipress_origen' => 'IPRESS origen',
-            'referenciaForm.ups_origen_id' => 'UPS origen',
-            'referenciaForm.ipress_referencia' => 'IPRESS destino',
-            'referenciaForm.ups_destino_id' => 'UPS destino',
-            'referenciaForm.motivo_referencia' => 'motivo de referencia',
-            'referenciaForm.fecha_hora_solicitud' => 'fecha y hora de solicitud',
-            'referenciaForm.respuesta_solicitud' => 'estado de respuesta',
-            'referenciaForm.fecha_hora_respuesta' => 'fecha y hora de respuesta',
-        ])['referenciaForm'];
-
-        $registro = $this->referenciaEditandoId
-            ? $this->consultaReferencia($this->referenciaEditandoId)
-            : new HcReferencia([
-                'hc_emergencia_id' => $this->atencion->id,
-                'registrado_por' => Auth::id(),
-            ]);
-
-        $registro->forceFill([
-            'ipress_origen' => $datos['ipress_origen'],
-            'ups_origen_id' => $datos['ups_origen_id'] ?: null,
-            'ipress_referencia' => $datos['ipress_referencia'],
-            'ups_destino_id' => $datos['ups_destino_id'] ?: null,
-            'motivo_referencia' => $datos['motivo_referencia'],
-            'fecha_hora_solicitud' => $datos['fecha_hora_solicitud'],
-            'respuesta_solicitud' => $datos['respuesta_solicitud'],
-            'fecha_hora_respuesta' => $datos['fecha_hora_respuesta'],
-            'actualizado_por' => Auth::id(),
-        ])->save();
-
-        $this->formularioReferenciaAbierto = false;
-        $this->referenciaEditandoId = null;
-        $this->referenciaSoloLectura = false;
-        $this->referenciaForm = ['ipress_origen' => '', 'ups_origen_id' => '', 'ipress_referencia' => '', 'ups_destino_id' => '', 'motivo_referencia' => '', 'fecha_hora_solicitud' => '', 'respuesta_solicitud' => '', 'fecha_hora_respuesta' => ''];
-
-        flash()->success('Referencia registrada correctamente.', [], 'Referencias');
-    }
-
-    public function eliminarReferencia(int $referenciaId): void
-    {
-        abort_if($this->modo === 'ver', 403);
-
-        $this->consultaReferencia($referenciaId)->delete();
-
-        $this->formularioReferenciaAbierto = false;
-        $this->referenciaEditandoId = null;
-        $this->referenciaSoloLectura = false;
-
-        flash()->success('Referencia eliminada correctamente.', [], 'Referencias');
     }
 
     /**
@@ -1927,14 +2272,17 @@ class HcEmergenciaPanel extends Component
     {
         $this->validarUsuarioMedico();
 
+        $this->atencionId = null;
+
         $profesionalId = Auth::user()?->profesional_salud_id;
 
         $this->form = [
-            'numero_atencion' => $this->generarNumeroAtencion(),
+            'numero_atencion' => null,
             'fecha_hora_inicio_episodio' => now()->format('Y-m-d\TH:i'),
             'fecha_hora_atencion' => now()->format('Y-m-d\TH:i'),
             'topico' => TopicoAtencion::Topico->value,
             'ambiente' => null,
+            'alias' => null,
             'acompanante' => null,
             'parentesco' => null,
             'telefono' => null,
@@ -1981,18 +2329,29 @@ class HcEmergenciaPanel extends Component
             'shock_trauma_resultado' => null,
             'shock_trauma_destino' => null,
             'registro_especializado' => null,
+            'destino_dentro_ipress' => DestinoDentroIpress::No->value,
+            'destino_fuera_ipress' => DestinoFueraIpress::No->value,
+            'condicion_egreso' => null,
+            'fecha_hora_egreso' => null,
+            'profesional_egreso_id' => $profesionalId,
+            'indicaciones_finales' => null,
             'estado_atencion' => EstadoAtencion::Abierta->value,
             'profesional_salud_id' => $profesionalId,
         ];
 
         $this->profesionalTriajeBusqueda = $this->etiquetaProfesionalId($profesionalId);
         $this->shockTraumaResponsableBusqueda = '';
+        $this->profesionalEgresoBusqueda = $this->etiquetaProfesionalEvolucionId($profesionalId);
+        $this->referenciaForm = $this->referenciaVacia();
+        $this->upsOrigenBusqueda = '';
+        $this->upsDestinoBusqueda = '';
         $this->recalcularTiemposTriaje();
     }
 
     private function cargarAtencion(HcEmergencia $atencion): void
     {
         $this->atencion = $atencion->loadMissing(['paciente', 'profesionalResponsable.especialidad', 'profesionalTriaje.especialidad', 'prioridad']);
+        $this->atencionId = $atencion->id;
 
         $this->form = [
             'numero_atencion' => $atencion->numero_atencion,
@@ -2000,6 +2359,7 @@ class HcEmergenciaPanel extends Component
             'fecha_hora_atencion' => $atencion->fecha_hora_atencion?->format('Y-m-d\TH:i'),
             'topico' => $this->valorEnum($atencion->topico),
             'ambiente' => $atencion->ambiente,
+            'alias' => $atencion->alias,
             'acompanante' => $atencion->acompanante,
             'parentesco' => $atencion->parentesco,
             'telefono' => $atencion->telefono,
@@ -2046,12 +2406,20 @@ class HcEmergenciaPanel extends Component
             'shock_trauma_resultado' => $atencion->shock_trauma_resultado,
             'shock_trauma_destino' => $atencion->shock_trauma_destino,
             'registro_especializado' => $atencion->registro_especializado,
+            'destino_dentro_ipress' => $this->valorEnum($atencion->destino_dentro_ipress),
+            'destino_fuera_ipress' => $this->valorEnum($atencion->destino_fuera_ipress),
+            'condicion_egreso' => $this->valorEnum($atencion->condicion_egreso),
+            'fecha_hora_egreso' => $atencion->fecha_hora_egreso?->format('Y-m-d\TH:i'),
+            'profesional_egreso_id' => $atencion->profesional_egreso_id,
+            'indicaciones_finales' => $atencion->indicaciones_finales,
             'estado_atencion' => $this->valorEnum($atencion->estado_atencion) ?: EstadoAtencion::Abierta->value,
             'profesional_salud_id' => $atencion->profesional_salud_id,
         ];
 
         $this->profesionalTriajeBusqueda = $this->etiquetaProfesional($atencion->profesionalTriaje);
         $this->shockTraumaResponsableBusqueda = $atencion->shock_trauma_responsable ?: '';
+        $this->profesionalEgresoBusqueda = $this->etiquetaProfesionalEvolucionId($atencion->profesional_egreso_id);
+        $this->cargarReferenciaDeAtencion($atencion);
     }
 
     private function validarUsuarioMedico(): void
@@ -2071,10 +2439,13 @@ class HcEmergenciaPanel extends Component
         $this->normalizarCampoEnum('fuente', FuenteAtencion::class);
         $this->normalizarCampoEnum('en_shock_trauma', SiNo::class, SiNo::No->value);
         $this->normalizarCampoEnum('unidad_tiempo_enfermedad', UnidadTiempoEnfermedad::class);
+        $this->normalizarCampoEnum('destino_dentro_ipress', DestinoDentroIpress::class);
+        $this->normalizarCampoEnum('destino_fuera_ipress', DestinoFueraIpress::class);
+        $this->normalizarCampoEnum('condicion_egreso', CondicionEgreso::class);
         $this->normalizarCampoEnum('estado_atencion', EstadoAtencion::class, EstadoAtencion::Abierta->value);
         $this->normalizarCampoPrioridad();
 
-        foreach (['profesional_salud_id', 'profesional_triaje_id', 'tiempo_enfermedad', 'eg_ocular', 'eg_verbal', 'eg_motora', 'eg_total'] as $campo) {
+        foreach (['profesional_salud_id', 'profesional_triaje_id', 'profesional_egreso_id', 'tiempo_enfermedad', 'eg_ocular', 'eg_verbal', 'eg_motora', 'eg_total'] as $campo) {
             $this->normalizarCampoId($campo);
         }
 
@@ -2171,11 +2542,12 @@ class HcEmergenciaPanel extends Component
     private function reglas(): array
     {
         return [
-            'form.numero_atencion' => ['required', 'integer'],
+            'form.numero_atencion' => ['nullable', 'integer'],
             'form.fecha_hora_inicio_episodio' => ['nullable', 'date'],
             'form.fecha_hora_atencion' => ['nullable', 'date'],
             'form.topico' => ['nullable', Rule::in(array_map(fn (BackedEnum $enum): string => $enum->value, TopicoAtencion::cases()))],
             'form.ambiente' => ['nullable', 'string', 'max:150'],
+            'form.alias' => ['nullable', 'string', 'max:100'],
             'form.acompanante' => ['nullable', 'string', 'max:255'],
             'form.parentesco' => ['nullable', 'string', 'max:100'],
             'form.telefono' => ['nullable', 'string', 'max:50'],
@@ -2222,6 +2594,12 @@ class HcEmergenciaPanel extends Component
             'form.shock_trauma_resultado' => ['nullable', 'string'],
             'form.shock_trauma_destino' => ['nullable', 'string', 'max:150'],
             'form.registro_especializado' => ['nullable', 'string'],
+            'form.destino_dentro_ipress' => ['nullable', Rule::in(array_map(fn (BackedEnum $enum): string => $enum->value, DestinoDentroIpress::cases()))],
+            'form.destino_fuera_ipress' => ['nullable', Rule::in(array_map(fn (BackedEnum $enum): string => $enum->value, DestinoFueraIpress::cases()))],
+            'form.condicion_egreso' => ['nullable', Rule::in(array_map(fn (BackedEnum $enum): string => $enum->value, CondicionEgreso::cases()))],
+            'form.fecha_hora_egreso' => ['nullable', 'date'],
+            'form.profesional_egreso_id' => ['nullable', 'integer', Rule::exists('profesionales_salud', 'id')->whereNull('deleted_at')],
+            'form.indicaciones_finales' => ['nullable', 'string'],
             'form.estado_atencion' => ['required', Rule::in(array_map(fn (BackedEnum $enum): string => $enum->value, EstadoAtencion::cases()))],
             'form.profesional_salud_id' => ['required', 'integer', Rule::exists('profesionales_salud', 'id')->whereNull('deleted_at')],
         ];
@@ -2240,6 +2618,12 @@ class HcEmergenciaPanel extends Component
             [],
             $this->atributosFormulario()
         );
+
+        $validador->after(function ($validador): void {
+            if ($this->paciente === null && blank($this->form['alias'] ?? null)) {
+                $validador->errors()->add('form.alias', 'Debe registrar un alias cuando la historia no tiene paciente asignado.');
+            }
+        });
 
         if ($validador->fails()) {
             $this->resetErrorBag();
@@ -2265,6 +2649,142 @@ class HcEmergenciaPanel extends Component
     }
 
     /**
+     * Valida los datos de referencia que se guardan como extension unica de la atencion.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function validarReferenciaParaGuardado(): ?array
+    {
+        foreach (['ups_origen_id', 'ups_destino_id'] as $campo) {
+            if (($this->referenciaForm[$campo] ?? null) === '') {
+                $this->referenciaForm[$campo] = null;
+            }
+        }
+
+        $validador = Validator::make(
+            ['referenciaForm' => $this->referenciaForm],
+            [
+                'referenciaForm.ipress_origen' => ['nullable', 'string', 'max:255'],
+                'referenciaForm.ups_origen_id' => ['nullable', 'integer', Rule::exists('ups', 'id')],
+                'referenciaForm.ipress_referencia' => ['nullable', 'string', 'max:255'],
+                'referenciaForm.ups_destino_id' => ['nullable', 'integer', Rule::exists('ups', 'id')],
+                'referenciaForm.motivo_referencia' => ['nullable', 'string'],
+                'referenciaForm.fecha_hora_solicitud' => ['nullable', 'date'],
+                'referenciaForm.respuesta_solicitud' => ['nullable', 'string'],
+                'referenciaForm.fecha_hora_respuesta' => ['nullable', 'date'],
+            ],
+            [],
+            [
+                'referenciaForm.ipress_origen' => 'IPRESS origen',
+                'referenciaForm.ups_origen_id' => 'UPS origen',
+                'referenciaForm.ipress_referencia' => 'IPRESS destino',
+                'referenciaForm.ups_destino_id' => 'UPS destino',
+                'referenciaForm.motivo_referencia' => 'motivo de referencia',
+                'referenciaForm.fecha_hora_solicitud' => 'fecha y hora de solicitud',
+                'referenciaForm.respuesta_solicitud' => 'estado de respuesta',
+                'referenciaForm.fecha_hora_respuesta' => 'fecha y hora de respuesta',
+            ]
+        );
+
+        if ($validador->fails()) {
+            $this->resetErrorBag();
+
+            foreach ($validador->errors()->messages() as $campo => $mensajes) {
+                foreach ($mensajes as $mensaje) {
+                    $this->addError($campo, $mensaje);
+                }
+            }
+
+            $this->erroresGuardado = collect($validador->errors()->all())->values()->all();
+            $this->panelErroresAbierto = true;
+            $this->panelConfirmacionGuardadoAbierto = false;
+
+            return null;
+        }
+
+        return $validador->validated()['referenciaForm'];
+    }
+
+    /**
+     * Guarda la referencia como registro 1:1 de la historia clinica de emergencia.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    private function guardarReferenciaExtension(HcEmergencia $atencion, array $datos, ?int $usuarioId): void
+    {
+        $referenciaExistente = HcReferencia::query()
+            ->where('hc_emergencia_id', $atencion->id)
+            ->first();
+
+        if (! $referenciaExistente && ! $this->referenciaTieneDatos($datos)) {
+            return;
+        }
+
+        HcReferencia::query()->updateOrCreate(
+            ['hc_emergencia_id' => $atencion->id],
+            [
+                'ipress_origen' => $datos['ipress_origen'],
+                'ups_origen_id' => $datos['ups_origen_id'] ?: null,
+                'ipress_referencia' => $datos['ipress_referencia'],
+                'ups_destino_id' => $datos['ups_destino_id'] ?: null,
+                'motivo_referencia' => $datos['motivo_referencia'],
+                'fecha_hora_solicitud' => $datos['fecha_hora_solicitud'],
+                'respuesta_solicitud' => $datos['respuesta_solicitud'],
+                'fecha_hora_respuesta' => $datos['fecha_hora_respuesta'],
+                'registrado_por' => $referenciaExistente?->registrado_por ?: $usuarioId,
+                'actualizado_por' => $usuarioId,
+            ]
+        );
+    }
+
+    private function cargarReferenciaDeAtencion(HcEmergencia $atencion): void
+    {
+        $referencia = HcReferencia::query()
+            ->with(['upsOrigen', 'upsDestino'])
+            ->where('hc_emergencia_id', $atencion->id)
+            ->first();
+
+        $this->referenciaForm = $referencia ? [
+            'ipress_origen' => $referencia->ipress_origen,
+            'ups_origen_id' => $referencia->ups_origen_id,
+            'ipress_referencia' => $referencia->ipress_referencia,
+            'ups_destino_id' => $referencia->ups_destino_id,
+            'motivo_referencia' => $referencia->motivo_referencia,
+            'fecha_hora_solicitud' => $referencia->fecha_hora_solicitud?->format('Y-m-d\TH:i'),
+            'respuesta_solicitud' => $referencia->respuesta_solicitud,
+            'fecha_hora_respuesta' => $referencia->fecha_hora_respuesta?->format('Y-m-d\TH:i'),
+        ] : $this->referenciaVacia();
+
+        $this->upsOrigenBusqueda = $referencia?->upsOrigen ? $this->etiquetaUps($referencia->upsOrigen) : '';
+        $this->upsDestinoBusqueda = $referencia?->upsDestino ? $this->etiquetaUps($referencia->upsDestino) : '';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function referenciaVacia(): array
+    {
+        return [
+            'ipress_origen' => '',
+            'ups_origen_id' => '',
+            'ipress_referencia' => '',
+            'ups_destino_id' => '',
+            'motivo_referencia' => '',
+            'fecha_hora_solicitud' => '',
+            'respuesta_solicitud' => '',
+            'fecha_hora_respuesta' => '',
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $datos
+     */
+    private function referenciaTieneDatos(array $datos): bool
+    {
+        return collect($datos)->contains(fn (mixed $valor): bool => filled($valor));
+    }
+
+    /**
      * Nombres visibles usados por Laravel al construir los mensajes de validacion.
      *
      * @return array<string, string>
@@ -2277,6 +2797,7 @@ class HcEmergenciaPanel extends Component
             'form.fecha_hora_atencion' => 'fecha y hora de ingreso',
             'form.topico' => 'topico',
             'form.ambiente' => 'ambiente',
+            'form.alias' => 'alias del paciente',
             'form.acompanante' => 'acompanante',
             'form.parentesco' => 'parentesco',
             'form.telefono' => 'telefono',
@@ -2323,6 +2844,12 @@ class HcEmergenciaPanel extends Component
             'form.shock_trauma_resultado' => 'resultado de la atencion en Trauma Shock',
             'form.shock_trauma_destino' => 'destino post Trauma Shock',
             'form.registro_especializado' => 'registro especializado',
+            'form.destino_dentro_ipress' => 'destino dentro de la IPRESS',
+            'form.destino_fuera_ipress' => 'destino fuera de la IPRESS',
+            'form.condicion_egreso' => 'condicion de egreso',
+            'form.fecha_hora_egreso' => 'fecha y hora de egreso',
+            'form.profesional_egreso_id' => 'profesional responsable del egreso',
+            'form.indicaciones_finales' => 'indicaciones finales',
             'form.estado_atencion' => 'estado de la atencion',
             'form.profesional_salud_id' => 'profesional responsable',
         ];
@@ -2333,6 +2860,17 @@ class HcEmergenciaPanel extends Component
      */
     private function datosPaciente(): array
     {
+        if ($this->paciente === null) {
+            return [
+                'nombre' => $this->form['alias'] ?: 'Paciente sin asignar',
+                'sexo' => 'No definido',
+                'edad' => '--',
+                'historia' => '--',
+                'documento' => '--',
+                'telefono' => '--',
+            ];
+        }
+
         return [
             'nombre' => $this->paciente->nombre,
             'sexo' => $this->paciente->sexo ?: 'No definido',
@@ -2378,6 +2916,10 @@ class HcEmergenciaPanel extends Component
     {
         if ($this->atencion !== null) {
             return $this->atencion->signosVitalesTriaje()->with('signoVital')->latest()->get();
+        }
+
+        if ($this->paciente === null) {
+            return collect();
         }
 
         $ultimoSigno = TriajeSignoVital::query()
@@ -2671,6 +3213,36 @@ class HcEmergenciaPanel extends Component
         ])->filter()->implode(' - ');
     }
 
+    private function buscarUps(string $busqueda): Collection
+    {
+        return Ups::query()
+            ->where('estado', true)
+            ->when($busqueda !== '', function ($consulta) use ($busqueda): void {
+                $consulta->where(function ($grupo) use ($busqueda): void {
+                    $grupo
+                        ->where('denominacion', 'like', "%{$busqueda}%")
+                        ->orWhere('codigo', 'like', "%{$busqueda}%");
+                });
+            })
+            ->orderBy('denominacion')
+            ->limit(12)
+            ->get(['id', 'codigo', 'denominacion']);
+    }
+
+    private function etiquetaUpsId(?int $upsId): string
+    {
+        return $this->etiquetaUps(Ups::query()->find($upsId));
+    }
+
+    private function etiquetaUps(?Ups $ups): string
+    {
+        if ($ups === null) {
+            return '';
+        }
+
+        return collect([$ups->denominacion, $ups->codigo])->filter()->implode(' · ');
+    }
+
     private function diagnosticosCie10Ingreso(): Collection
     {
         return $this->buscarDiagnosticosCie10($this->diagnosticoIngresoCie10Busqueda);
@@ -2738,6 +3310,25 @@ class HcEmergenciaPanel extends Component
         return Medicamento::query()
             ->when($this->prescripcionMedicamentoBusqueda !== '', function ($consulta): void {
                 $busqueda = $this->prescripcionMedicamentoBusqueda;
+
+                $consulta->where(function ($grupo) use ($busqueda): void {
+                    $grupo
+                        ->where('descripcion', 'like', "%{$busqueda}%")
+                        ->orWhere('presentacion', 'like', "%{$busqueda}%")
+                        ->orWhere('generico', 'like', "%{$busqueda}%");
+                });
+            })
+            ->where('estado', 'Activo')
+            ->orderBy('descripcion')
+            ->limit(12)
+            ->get(['id', 'descripcion', 'presentacion', 'generico', 'stock']);
+    }
+
+    private function medicamentosAlta(): Collection
+    {
+        return Medicamento::query()
+            ->when($this->altaMedicamentoBusqueda !== '', function ($consulta): void {
+                $busqueda = $this->altaMedicamentoBusqueda;
 
                 $consulta->where(function ($grupo) use ($busqueda): void {
                     $grupo
@@ -3039,6 +3630,112 @@ class HcEmergenciaPanel extends Component
             ]);
     }
 
+    private function altaMedicamentos(): Collection
+    {
+        $atencion = $this->resolverAtencionPersistida();
+
+        if ($atencion === null) {
+            return collect();
+        }
+
+        return AltaMedicamento::query()
+            ->with('medicamentoCatalogo')
+            ->where('hc_emergencia_id', $atencion->id)
+            ->latest('id')
+            ->get()
+            ->map(fn (AltaMedicamento $registro): array => [
+                'id' => $registro->id,
+                'medicamento' => $registro->medicamento,
+                'presentacion' => $registro->presentacion ?: '-',
+                'dosis' => $registro->dosis ?: '-',
+                'via' => $registro->via ?: '-',
+                'cantidad' => $registro->cantidad ?: '-',
+                'indicaciones' => $registro->indicaciones ?: '-',
+                'origen' => $registro->medicamento_id ? 'Catalogado' : 'No catalogado',
+            ]);
+    }
+
+    private function documentosAdjuntos(): Collection
+    {
+        $atencion = $this->resolverAtencionPersistida();
+
+        if ($atencion === null) {
+            return collect();
+        }
+
+        return DocumentoAdjunto::query()
+            ->with('registradoPor')
+            ->where('hc_emergencia_id', $atencion->id)
+            ->when($this->busquedaDocumentoAdjunto !== '', function ($consulta): void {
+                $consulta->where(function ($subconsulta): void {
+                    $subconsulta
+                        ->where('contenido', 'like', '%'.$this->busquedaDocumentoAdjunto.'%')
+                        ->orWhere('tipo', 'like', '%'.$this->busquedaDocumentoAdjunto.'%');
+                });
+            })
+            ->latest('id')
+            ->get()
+            ->map(function (DocumentoAdjunto $documento): array {
+                $nombreArchivo = $documento->contenido ?: basename((string) $documento->ruta_archivo);
+
+                return [
+                    'id' => $documento->id,
+                    'tipo' => $documento->tipo?->value ?: TipoDocumentoAdjunto::Otro->value,
+                    'icono' => $this->iconoDocumentoAdjunto($documento->tipo),
+                    'clase_icono' => $this->claseIconoDocumentoAdjunto($documento->tipo),
+                    'nombre' => $nombreArchivo,
+                    'tamano' => $this->tamanoDocumentoAdjunto((string) $documento->ruta_archivo),
+                    'fecha_carga' => $documento->created_at?->format('d/m/Y H:i') ?: '--',
+                    'cargado_por' => $documento->registradoPor?->name ?: 'Sistema',
+                    'iniciales' => $this->inicialesProfesional($documento->registradoPor?->name ?: 'Sistema'),
+                    'url' => Storage::disk('public')->url((string) $documento->ruta_archivo),
+                ];
+            });
+    }
+
+    private function resolverAtencionPersistida(): ?HcEmergencia
+    {
+        if ($this->atencion instanceof HcEmergencia && $this->atencion->exists) {
+            $this->atencionId = $this->atencion->id;
+
+            return $this->atencion;
+        }
+
+        $atencion = null;
+
+        if ($this->atencionId !== null) {
+            $atencion = HcEmergencia::query()
+                ->when($this->paciente !== null, fn ($consulta) => $consulta->where('paciente_id', $this->paciente->id))
+                ->find($this->atencionId);
+        }
+
+        if ($atencion === null && $this->paciente !== null && filled($this->form['numero_atencion'] ?? null)) {
+            $atencion = HcEmergencia::query()
+                ->where('paciente_id', $this->paciente->id)
+                ->where('numero_atencion', $this->form['numero_atencion'])
+                ->latest('id')
+                ->first();
+        }
+
+        if ($atencion !== null) {
+            $this->atencion = $atencion;
+            $this->atencionId = $atencion->id;
+        }
+
+        return $atencion;
+    }
+
+    private function redirigirAlListadoOrigen(): void
+    {
+        if ($this->paciente !== null) {
+            $this->redirectRoute('historia-clinica.atenciones-paciente.historia', $this->paciente);
+
+            return;
+        }
+
+        $this->redirectRoute('historia-clinica.historias-abiertas.index');
+    }
+
     private function notasEnfermeria(): Collection
     {
         if ($this->atencion === null) {
@@ -3103,30 +3800,6 @@ class HcEmergenciaPanel extends Component
                 'motivo' => $registro->motivo ?: '-',
                 'responsable' => $registro->responsable ?: 'Sin responsable',
                 'iniciales' => $this->inicialesProfesional($registro->responsable),
-            ]);
-    }
-
-    private function referenciasClinicas(): Collection
-    {
-        if ($this->atencion === null) {
-            return collect();
-        }
-
-        return HcReferencia::query()
-            ->with(['upsOrigen', 'upsDestino'])
-            ->where('hc_emergencia_id', $this->atencion->id)
-            ->latest('fecha_hora_solicitud')
-            ->latest('id')
-            ->get()
-            ->map(fn (HcReferencia $registro): array => [
-                'id' => $registro->id,
-                'ipress_origen' => $registro->ipress_origen ?: '-',
-                'ups_origen' => $registro->upsOrigen?->denominacion ?: '-',
-                'ipress_referencia' => $registro->ipress_referencia ?: '-',
-                'ups_destino' => $registro->upsDestino?->denominacion ?: '-',
-                'fecha_hora_solicitud' => $registro->fecha_hora_solicitud?->format('d/m/Y H:i') ?: '--',
-                'respuesta_solicitud' => $registro->respuesta_solicitud ?: 'Pendiente',
-                'fecha_hora_respuesta' => $registro->fecha_hora_respuesta?->format('d/m/Y H:i') ?: '--',
             ]);
     }
 
@@ -3210,6 +3883,28 @@ class HcEmergenciaPanel extends Component
             ->findOrFail($procedimientoRealizadoId);
     }
 
+    private function consultaAltaMedicamento(int $altaMedicamentoId): AltaMedicamento
+    {
+        $atencion = $this->resolverAtencionPersistida();
+
+        abort_if($atencion === null, 404);
+
+        return AltaMedicamento::query()
+            ->where('hc_emergencia_id', $atencion->id)
+            ->findOrFail($altaMedicamentoId);
+    }
+
+    private function consultaDocumentoAdjunto(int $documentoAdjuntoId): DocumentoAdjunto
+    {
+        $atencion = $this->resolverAtencionPersistida();
+
+        abort_if($atencion === null, 404);
+
+        return DocumentoAdjunto::query()
+            ->where('hc_emergencia_id', $atencion->id)
+            ->findOrFail($documentoAdjuntoId);
+    }
+
     private function consultaNotaEnfermeria(int $notaEnfermeriaId): EnfermeriaNota
     {
         abort_if($this->atencion === null, 404);
@@ -3235,15 +3930,6 @@ class HcEmergenciaPanel extends Component
         return Transferencia::query()
             ->where('hc_emergencia_id', $this->atencion->id)
             ->findOrFail($transferenciaId);
-    }
-
-    private function consultaReferencia(int $referenciaId): HcReferencia
-    {
-        abort_if($this->atencion === null, 404);
-
-        return HcReferencia::query()
-            ->where('hc_emergencia_id', $this->atencion->id)
-            ->findOrFail($referenciaId);
     }
 
     private function cargarNotaEnfermeriaFormulario(int $notaEnfermeriaId, bool $soloLectura): void
@@ -3297,26 +3983,6 @@ class HcEmergenciaPanel extends Component
         $this->resetValidation(['transferenciaForm.fecha_hora', 'transferenciaForm.origen', 'transferenciaForm.destino', 'transferenciaForm.motivo', 'transferenciaForm.responsable']);
     }
 
-    private function cargarReferenciaFormulario(int $referenciaId, bool $soloLectura): void
-    {
-        $registro = $this->consultaReferencia($referenciaId);
-
-        $this->referenciaEditandoId = $registro->id;
-        $this->referenciaSoloLectura = $soloLectura;
-        $this->referenciaForm = [
-            'ipress_origen' => $registro->ipress_origen,
-            'ups_origen_id' => $registro->ups_origen_id,
-            'ipress_referencia' => $registro->ipress_referencia,
-            'ups_destino_id' => $registro->ups_destino_id,
-            'motivo_referencia' => $registro->motivo_referencia,
-            'fecha_hora_solicitud' => $registro->fecha_hora_solicitud?->format('Y-m-d\TH:i'),
-            'respuesta_solicitud' => $registro->respuesta_solicitud,
-            'fecha_hora_respuesta' => $registro->fecha_hora_respuesta?->format('Y-m-d\TH:i'),
-        ];
-        $this->formularioReferenciaAbierto = true;
-        $this->resetValidation(['referenciaForm.ipress_origen', 'referenciaForm.ups_origen_id', 'referenciaForm.ipress_referencia', 'referenciaForm.ups_destino_id', 'referenciaForm.motivo_referencia', 'referenciaForm.fecha_hora_solicitud', 'referenciaForm.respuesta_solicitud', 'referenciaForm.fecha_hora_respuesta']);
-    }
-
     /**
      * @return array<int, string>
      */
@@ -3366,6 +4032,58 @@ class HcEmergenciaPanel extends Component
             ->take(2)
             ->map(fn (string $parte): string => Str::of($parte)->substr(0, 1)->upper()->toString())
             ->implode('');
+    }
+
+    private function tipoDocumentoAdjuntoPorArchivo(string $extension, ?string $mime): TipoDocumentoAdjunto
+    {
+        $extension = strtolower($extension);
+        $mime = strtolower((string) $mime);
+
+        if ($extension === 'pdf' || $mime === 'application/pdf') {
+            return TipoDocumentoAdjunto::Pdf;
+        }
+
+        if (in_array($extension, ['jpg', 'jpeg', 'png'], true) || Str::startsWith($mime, 'image/')) {
+            return TipoDocumentoAdjunto::Imagen;
+        }
+
+        return TipoDocumentoAdjunto::Otro;
+    }
+
+    private function iconoDocumentoAdjunto(TipoDocumentoAdjunto|string|null $tipo): string
+    {
+        return match ($this->valorEnum($tipo)) {
+            TipoDocumentoAdjunto::Pdf->value => 'lucide:file-text',
+            TipoDocumentoAdjunto::Imagen->value => 'lucide:image',
+            default => 'lucide:file',
+        };
+    }
+
+    private function claseIconoDocumentoAdjunto(TipoDocumentoAdjunto|string|null $tipo): string
+    {
+        return match ($this->valorEnum($tipo)) {
+            TipoDocumentoAdjunto::Pdf->value => 'is-pdf',
+            TipoDocumentoAdjunto::Imagen->value => 'is-image',
+            default => 'is-file',
+        };
+    }
+
+    private function tamanoDocumentoAdjunto(string $ruta): string
+    {
+        if (blank($ruta) || ! Storage::disk('public')->exists($ruta)) {
+            return '--';
+        }
+
+        $bytes = Storage::disk('public')->size($ruta);
+        $unidades = ['B', 'KB', 'MB', 'GB'];
+        $indice = 0;
+
+        while ($bytes >= 1024 && $indice < count($unidades) - 1) {
+            $bytes /= 1024;
+            $indice++;
+        }
+
+        return number_format($bytes, $indice === 0 ? 0 : 1).' '.$unidades[$indice];
     }
 
     /**
@@ -3438,15 +4156,9 @@ class HcEmergenciaPanel extends Component
         return "PA:\nFC:\nT°:\nSoP2:\nGlasgow:";
     }
 
-    private function generarNumeroAtencion(): int
-    {
-        $ultimoNumero = (int) HcEmergencia::query()->max('numero_atencion');
-
-        return $ultimoNumero > 0 ? $ultimoNumero + 1 : 100001;
-    }
-
     private function valorEnum(mixed $valor): ?string
     {
         return $valor instanceof BackedEnum ? $valor->value : ($valor !== null ? (string) $valor : null);
     }
 }
+

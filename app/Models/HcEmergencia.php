@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class HcEmergencia extends Model
@@ -89,9 +90,24 @@ class HcEmergencia extends Model
         return $this->hasMany(IngresoDiagnostico::class);
     }
 
+    public function solicitudesExamenes(): HasMany
+    {
+        return $this->hasMany(SolicitudExamen::class);
+    }
+
+    public function ordenes(): HasMany
+    {
+        return $this->hasMany(Orden::class);
+    }
+
     public function prescripciones(): HasMany
     {
         return $this->hasMany(Prescripcion::class);
+    }
+
+    public function procedimientosRealizados(): HasMany
+    {
+        return $this->hasMany(ProcedimientoRealizado::class);
     }
 
     public function evoluciones(): HasMany
@@ -114,8 +130,28 @@ class HcEmergencia extends Model
         return $this->hasMany(Transferencia::class);
     }
 
-    public function referencias(): HasMany
+    public function altaMedicamentos(): HasMany
     {
-        return $this->hasMany(HcReferencia::class);
+        return $this->hasMany(AltaMedicamento::class);
+    }
+
+    public function documentosAdjuntos(): HasMany
+    {
+        return $this->hasMany(DocumentoAdjunto::class);
+    }
+
+    public function profesionalEgreso(): BelongsTo
+    {
+        return $this->belongsTo(ProfesionalSalud::class, 'profesional_egreso_id');
+    }
+
+    public function referencia(): HasOne
+    {
+        return $this->hasOne(HcReferencia::class);
+    }
+
+    public function diagnosticosEgreso(): HasMany
+    {
+        return $this->hasMany(EgresoDiagnostico::class);
     }
 }

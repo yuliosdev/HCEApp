@@ -4,6 +4,6 @@ namespace App\Enums;
 
 enum TopicoAtencion: string
 {
-    case Topico = 'Topico';
-    case SalaReanimacion = 'Sala de reanimacion';
+    case Topico = 'Tópico';
+    case SalaReanimacion = 'Sala de reanimación';
 }

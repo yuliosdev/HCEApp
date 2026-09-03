@@ -208,7 +208,7 @@
     </article>
 
     @if ($modalAbierto)
-        <div class="catalog-modal-backdrop" wire:click.self="cerrarModal">
+        <div class="catalog-modal-backdrop">
             <section class="catalog-modal {{ $catalogo === 'signos-vitales' ? 'catalog-vital-signs-modal' : '' }}" role="dialog" aria-modal="true" aria-labelledby="catalogo-modal-title">
                 <header>
                     <div>

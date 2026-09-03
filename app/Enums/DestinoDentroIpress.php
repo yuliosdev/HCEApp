@@ -4,10 +4,11 @@ namespace App\Enums;
 
 enum DestinoDentroIpress: string
 {
-    case Hospitalizacion = 'Hospitalizacion';
+    case No = 'No';
+    case Hospitalizacion = 'Hospitalización';
     case Uci = 'UCI';
-    case CentroQuirurgico = 'Centro quirurgico';
-    case CentroObstetrico = 'Centro obstetrico';
+    case CentroQuirurgico = 'Centro quirúrgico';
+    case CentroObstetrico = 'Centro obstétrico';
     case OtraUpss = 'Otra UPSS';
-    case Desercion = '6.DESERCION';
+    case Otro = 'Otro';
 }

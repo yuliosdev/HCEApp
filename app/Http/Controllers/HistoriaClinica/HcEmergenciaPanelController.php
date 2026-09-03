@@ -35,6 +35,18 @@ class HcEmergenciaPanelController
     }
 
     /**
+     * Presenta una atencion existente sin exigir paciente en la ruta.
+     */
+    public function verGeneral(Request $request, HcEmergencia $atencion)
+    {
+        return view('historia-clinica.atenciones-paciente.emergencia', [
+            'paciente' => $atencion->paciente,
+            'atencion' => $atencion,
+            'modo' => 'ver',
+        ]);
+    }
+
+    /**
      * Presenta una atencion existente en modo edicion.
      */
     public function editar(Request $request, Paciente $paciente, HcEmergencia $atencion)
@@ -43,6 +55,18 @@ class HcEmergenciaPanelController
 
         return view('historia-clinica.atenciones-paciente.emergencia', [
             'paciente' => $paciente,
+            'atencion' => $atencion,
+            'modo' => 'editar',
+        ]);
+    }
+
+    /**
+     * Presenta una atencion existente en modo edicion sin exigir paciente en la ruta.
+     */
+    public function editarGeneral(Request $request, HcEmergencia $atencion)
+    {
+        return view('historia-clinica.atenciones-paciente.emergencia', [
+            'paciente' => $atencion->paciente,
             'atencion' => $atencion,
             'modo' => 'editar',
         ]);

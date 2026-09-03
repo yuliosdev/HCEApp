@@ -143,7 +143,10 @@
                                 <span class="patient-history-type">Emergencia</span>
                             </td>
                             <td>
-                                <strong class="patient-history-number">{{ $atencion->numero_atencion }}</strong>
+                                <div class="patient-history-attention-number">
+                                    <strong class="patient-history-number">{{ $atencion->id }}</strong>
+                                    <span>Adm: {{ $atencion->numero_atencion ?: '--' }}</span>
+                                </div>
                             </td>
                             <td>
                                 @if ($atencion->profesionalResponsable)
@@ -179,13 +182,44 @@
                                 </span>
                             </td>
                             <td>
-                                <nav class="patient-history-row-actions" aria-label="Acciones de atencion {{ $atencion->numero_atencion }}">
+                                <nav class="patient-history-row-actions" aria-label="Acciones de atencion {{ $atencion->numero_atencion ?: $atencion->id }}">
                                     <button type="button" wire:click="verAtencion({{ $atencion->id }})" aria-label="Ver atencion" title="Ver atencion">
                                         <iconify-icon icon="lucide:eye" aria-hidden="true"></iconify-icon>
                                     </button>
-                                    <button type="button" wire:click="editarAtencion({{ $atencion->id }})" aria-label="Editar atencion" title="Editar atencion">
-                                        <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
-                                    </button>
+                                    <a
+                                        href="{{ route('historia-clinica.atenciones-paciente.emergencia.ticket', [$pacienteActual, $atencion]) }}"
+                                        target="_blank"
+                                        rel="noopener"
+                                        aria-label="Ticket de historia"
+                                        title="Ticket de historia"
+                                    >
+                                        <iconify-icon icon="lucide:ticket-check" aria-hidden="true"></iconify-icon>
+                                    </a>
+                                    @if ($abierta)
+                                        <button type="button" wire:click="editarAtencion({{ $atencion->id }})" aria-label="Editar atencion" title="Editar atencion">
+                                            <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
+                                        </button>
+                                    @endif
+                                    @if ($esAdministrador)
+                                        <button
+                                            type="button"
+                                            wire:click="cambiarEstadoAtencion({{ $atencion->id }})"
+                                            aria-label="Cambiar estado de historia"
+                                            title="Cambiar estado de historia"
+                                        >
+                                            <iconify-icon icon="{{ $abierta ? 'lucide:lock' : 'lucide:lock-open' }}" aria-hidden="true"></iconify-icon>
+                                        </button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            class="is-disabled"
+                                            disabled
+                                            aria-label="Cambiar estado de historia solo disponible para administradores"
+                                            title="Solo Administrador puede cambiar el estado"
+                                        >
+                                            <iconify-icon icon="lucide:lock-keyhole" aria-hidden="true"></iconify-icon>
+                                        </button>
+                                    @endif
                                 </nav>
                             </td>
                         </tr>
@@ -200,7 +234,7 @@
     </article>
 
     @if ($modal['abierto'])
-        <div class="catalog-modal-backdrop patient-history-modal-backdrop" wire:click.self="cerrarModalResumen">
+        <div class="catalog-modal-backdrop patient-history-modal-backdrop">
             <section class="catalog-modal patient-history-modal" role="dialog" aria-modal="true" aria-labelledby="historia-resumen-modal-title">
                 <header>
                     <div>

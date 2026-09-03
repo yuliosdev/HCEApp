@@ -167,7 +167,7 @@ return new class extends Migration
      */
     private function tiposReaccionAdversaMedicamento(): array
     {
-        return ['1 Reaccion adversa', '2 Error de medicacion', '3 Problema de calidad', '4 Otro'];
+        return ['1 Reaccion adversa', '2 Error de medicación', '3 Problema de calidad', '4 Otro'];
     }
 
     /**
@@ -205,7 +205,7 @@ return new class extends Migration
      */
     private function topicosAtencion(): array
     {
-        return ['Topico', 'Sala de reanimacion'];
+        return ['Tópico', 'Sala de reanimación'];
     }
 
     /**
@@ -215,7 +215,7 @@ return new class extends Migration
      */
     private function fuentesAtencion(): array
     {
-        return ['Servicio medico de emergencia', 'Otro'];
+        return ['Servicio médico de emergencia', 'Otro'];
     }
 
     /**
@@ -265,7 +265,7 @@ return new class extends Migration
      */
     private function destinosDentroIpress(): array
     {
-        return ['Hospitalizacion', 'UCI', 'Centro quirurgico', 'Centro obstetrico', 'Otra UPSS', '6.DESERCION'];
+        return ['No','Hospitalización', 'UCI', 'Centro quirúrgico', 'Centro obstétrico', 'Otra UPSS', 'Otro'];
     }
 
     /**
@@ -275,7 +275,7 @@ return new class extends Migration
      */
     private function destinosFueraIpress(): array
     {
-        return ['Transferencia a otra IPRESS', 'Otro destino no configurado'];
+        return ['No','Transferencia a otra IPRESS','Alta voluntaria', 'Alta médica', 'Fallecido', 'Deserción','Otro'];
     }
 
     /**
@@ -325,7 +325,7 @@ return new class extends Migration
      */
     private function prioridadesOrden(): array
     {
-        return ['Urgente', 'Emergencia', 'Inmediata'];
+        return ['Regular','Urgente', 'Emergencia', 'Inmediata'];
     }
 
     /**
@@ -435,7 +435,7 @@ return new class extends Migration
             $table->string('cmp', 30)->nullable()->index();
             $table->string('rne', 30)->nullable()->index();
             $table->enum('estado', $this->estadosCatalogo())->default('Activo');
-            $table->string('codigo_servicio', 50)->nullable();
+            $table->string('codigo_servicio', 50)->nullable()->unique();
             $this->auditoriaBasica($table, true);
         });
 
@@ -483,7 +483,7 @@ return new class extends Migration
             $table->string('numero_documento', 30)->nullable();
             $table->enum('grupo_sanguineo', $this->gruposSanguineos())->default('No conocido');
             $table->enum('factor_rh', $this->factoresRh())->default('No conocido');
-            $table->unsignedBigInteger('id_paciente_externo')->nullable();
+            $table->unsignedBigInteger('id_paciente_externo')->nullable()->unique();
             $this->auditoriaBasica($table, true);
             $table->unique(['tipo_documento', 'numero_documento']);
             $table->index('nombre');
@@ -566,12 +566,13 @@ return new class extends Migration
     {
         Schema::create('hc_emergencia', function (Blueprint $table) {
             $table->id();
-            $table->integer('numero_atencion')->index();
+            $table->integer('numero_atencion')->nullable()->index();
             $table->dateTime('fecha_hora_inicio_episodio')->nullable();
             $table->dateTime('fecha_hora_atencion')->nullable()->index();
             $table->enum('topico', $this->topicosAtencion())->nullable();
             $table->string('ambiente', 150)->nullable();
-            $table->foreignId('paciente_id')->constrained('pacientes')->restrictOnDelete();
+            $table->foreignId('paciente_id')->nullable()->constrained('pacientes')->nullOnDelete();
+            $table->string('alias', 100)->nullable();
             $table->enum('sin_identificacion', $this->siNo())->default('No');
             $table->string('acompanante')->nullable();
             $table->string('parentesco', 100)->nullable();
@@ -630,6 +631,8 @@ return new class extends Migration
             $table->enum('destino_dentro_ipress', $this->destinosDentroIpress())->nullable();
             $table->enum('destino_fuera_ipress', $this->destinosFueraIpress())->nullable();
             $table->dateTime('fecha_hora_egreso')->nullable();
+            $table->foreignId('profesional_egreso_id')->nullable()->constrained('profesionales_salud')->nullOnDelete();
+            $table->text('indicaciones_finales')->nullable();
             $table->enum('estado_atencion', $this->estadosAtencion())->default('Abierta')->index();
             $this->auditoriaBasica($table, true);
         });
@@ -774,7 +777,7 @@ return new class extends Migration
             $table->text('respuesta_solicitud')->nullable();
             $table->dateTime('fecha_hora_respuesta')->nullable();
             $this->auditoriaBasica($table);
-            $table->index(['hc_emergencia_id', 'fecha_hora_solicitud']);
+            $table->unique('hc_emergencia_id');
         });
 
         Schema::create('egreso_diagnosticos', function (Blueprint $table) {

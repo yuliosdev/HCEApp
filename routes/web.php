@@ -13,6 +13,10 @@ use App\Http\Controllers\GestionClinica\RegistroClinicoController;
 use App\Http\Controllers\GestionClinica\RegistrosClinicosArchivoController;
 use App\Http\Controllers\HistoriaClinica\AtencionesPacienteController;
 use App\Http\Controllers\HistoriaClinica\HcEmergenciaPanelController;
+use App\Http\Controllers\HistoriaClinica\HcEmergenciaPdfController;
+use App\Http\Controllers\HistoriaClinica\HcEmergenciaTicketController;
+use App\Http\Controllers\HistoriaClinica\HistoriasAbiertasArchivoController;
+use App\Http\Controllers\HistoriaClinica\HistoriasAbiertasController;
 use App\Http\Controllers\HistoriaClinica\HistoriaClinicaPacienteController;
 use App\Http\Controllers\HistoriaClinica\PacienteDashboardController;
 use App\Http\Controllers\Seguridad\RolesPermisosController;
@@ -63,6 +67,34 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
         ->name('historia-clinica.atenciones-paciente.index');
 
+    Route::get('/historia-clinica/historias-abiertas', HistoriasAbiertasController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.historias-abiertas.index');
+
+    Route::get('/historia-clinica/historias-abiertas/exportar/xlsx', [HistoriasAbiertasArchivoController::class, 'exportarExcel'])
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.historias-abiertas.exportar.xlsx');
+
+    Route::get('/historia-clinica/historias-abiertas/exportar/pdf', [HistoriasAbiertasArchivoController::class, 'exportarPdf'])
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.historias-abiertas.exportar.pdf');
+
+    Route::get('/historia-clinica/emergencia/{atencion}/ver', [HcEmergenciaPanelController::class, 'verGeneral'])
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.emergencia.ver');
+
+    Route::get('/historia-clinica/emergencia/{atencion}/editar', [HcEmergenciaPanelController::class, 'editarGeneral'])
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.emergencia.editar');
+
+    Route::get('/historia-clinica/emergencia/{atencion}/imprimir', [HcEmergenciaPdfController::class, 'imprimirGeneral'])
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.emergencia.imprimir');
+
+    Route::get('/historia-clinica/emergencia/{atencion}/ticket', [HcEmergenciaTicketController::class, 'general'])
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.emergencia.ticket');
+
     Route::get('/historia-clinica/atenciones-paciente/{paciente}/dashboard', PacienteDashboardController::class)
         ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
         ->name('historia-clinica.atenciones-paciente.dashboard');
@@ -82,6 +114,14 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/historia-clinica/atenciones-paciente/{paciente}/emergencia/{atencion}/editar', [HcEmergenciaPanelController::class, 'editar'])
         ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
         ->name('historia-clinica.atenciones-paciente.emergencia.editar');
+
+    Route::get('/historia-clinica/atenciones-paciente/{paciente}/emergencia/{atencion}/imprimir', HcEmergenciaPdfController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.atenciones-paciente.emergencia.imprimir');
+
+    Route::get('/historia-clinica/atenciones-paciente/{paciente}/emergencia/{atencion}/ticket', HcEmergenciaTicketController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.atenciones-paciente.emergencia.ticket');
 
     foreach ([
         'pacientes' => 'pacientes',

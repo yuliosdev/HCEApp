@@ -71,7 +71,7 @@
     .theme-dark {
         color-scheme: dark;
         --hce-color-primary: #001340;
-        --hce-color-accent: #10669a;
+        --hce-color-accent: #1599eb;
         --hce-color-highlight: #17a2b8;
         --hce-color-surface: #192e4c;
         --hce-color-muted: #415a77;
@@ -115,7 +115,7 @@
         :root {
             color-scheme: dark;
             --hce-color-primary: #001340;
-            --hce-color-accent: #10669a;
+            --hce-color-accent: #1599eb;
             --hce-color-highlight: #17a2b8;
             --hce-color-surface: #192e4c;
             --hce-color-muted: #415a77;
@@ -202,7 +202,7 @@
     html[data-applied-theme='dark'] {
         color-scheme: dark;
         --hce-color-primary: #001340;
-        --hce-color-accent: #10669a;
+        --hce-color-accent: #1599eb;
         --hce-color-highlight: #17a2b8;
         --hce-color-surface: #192e4c;
         --hce-color-muted: #415a77;
@@ -2002,17 +2002,37 @@
         grid-template-columns: auto minmax(0, 1fr) auto;
         min-height: 44px;
         padding: 0 14px;
+        transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .patient-search-input:focus-within {
+        background: #ffffff;
+        border-color: var(--hce-color-highlight);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
     }
 
     .patient-search-input input {
+        appearance: none;
         background: transparent;
         border: 0;
+        box-shadow: none;
         color: var(--hce-app-heading);
         font-size: 0.95rem;
         min-width: 0;
-        outline: 0;
+        outline: none;
         padding: 11px 0;
         width: 100%;
+    }
+
+    .patient-search-input input:focus,
+    .patient-search-input input:focus-visible {
+        box-shadow: none;
+        outline: none;
+    }
+
+    .patient-search-input input::-webkit-search-cancel-button,
+    .patient-search-input input::-webkit-search-decoration {
+        appearance: none;
     }
 
     .patient-search-input input::placeholder {
@@ -2183,7 +2203,7 @@
     }
 
     .patient-sex-badge.is-female {
-        background: color-mix(in srgb, #e83e8c 10%, #e5e7eb 90%);
+        background: #ffeefe;
         border-color: #e83e8c;
         color: #e83e8c;
     }
@@ -2311,6 +2331,13 @@
         border-color: color-mix(in srgb, var(--hce-color-highlight) 24%, #415a77);
     }
 
+    .theme-dark .patient-search-input:focus-within,
+    html[data-applied-theme='dark'] .patient-search-input:focus-within {
+        background: color-mix(in srgb, #183052 82%, transparent);
+        border-color: var(--hce-color-accent);
+        box-shadow: 0 0 0 3px rgba(21, 153, 235, 0.2);
+    }
+
     .theme-dark .patient-card-main h3,
     html[data-applied-theme='dark'] .patient-card-main h3,
     .theme-dark .patient-card-data dd,
@@ -2336,7 +2363,7 @@
 
     .theme-dark .patient-sex-badge.is-female,
     html[data-applied-theme='dark'] .patient-sex-badge.is-female {
-        background: color-mix(in srgb, #e83e8c 14%, #4b5563 86%);
+        background: #69525f54;
         border-color: #ff9ac8;
         color: #ff9ac8;
     }
@@ -3449,6 +3476,7 @@
         gap: 8px;
         min-height: 42px;
         padding: 0 16px;
+        text-decoration: none;
         transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
     }
 
@@ -3462,6 +3490,126 @@
         background: linear-gradient(90deg, transparent, var(--hce-app-divider), transparent);
         height: 1px;
         width: 100%;
+    }
+
+    .open-histories-header > div > span {
+        color: var(--hce-app-muted);
+        display: block;
+        font-family: var(--hce-font-ui);
+        font-size: 0.9rem;
+        margin-top: 4px;
+    }
+
+    .open-histories-filters {
+        align-items: end;
+        background: var(--hce-app-panel-bg);
+        border: 1px solid var(--hce-app-panel-border);
+        border-radius: 12px;
+        box-shadow: var(--hce-app-panel-shadow);
+        display: grid;
+        gap: 14px;
+        grid-template-columns: minmax(160px, 190px) minmax(160px, 190px) minmax(170px, 210px) auto;
+        padding: 16px;
+    }
+
+    .open-histories-filters label {
+        color: var(--hce-app-heading);
+        display: grid;
+        font-family: var(--hce-font-ui);
+        font-size: 0.8rem;
+        font-weight: 500;
+        gap: 7px;
+        min-width: 0;
+    }
+
+    .open-histories-filters input,
+    .open-histories-filters select {
+        background: #ffffff;
+        border: 1px solid color-mix(in srgb, var(--hce-app-divider) 88%, var(--hce-color-muted) 12%);
+        border-radius: 8px;
+        color: #0f172a;
+        font-family: var(--hce-font-ui);
+        font-size: 0.88rem;
+        min-height: 36px;
+        outline: none;
+        padding: 0 12px;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        width: 100%;
+    }
+
+    .open-histories-filters input:focus,
+    .open-histories-filters select:focus {
+        border-color: var(--hce-color-highlight);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
+    }
+
+    .open-histories-stats {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .open-history-stat {
+        --stat-accent: var(--hce-color-accent);
+
+        align-items: center;
+        background: var(--hce-app-panel-bg);
+        border-color: color-mix(in srgb, var(--stat-accent) 28%, var(--hce-app-panel-border));
+        display: flex;
+        gap: 14px;
+        min-height: 94px;
+        padding: 16px;
+    }
+
+    .open-history-stat.is-open {
+        --stat-accent: #10b981;
+    }
+
+    .open-history-stat.is-closed {
+        --stat-accent: #ef4444;
+    }
+
+    .open-history-stat.is-triage {
+        --stat-accent: #0ea5e9;
+    }
+
+    .open-history-stat > span {
+        align-items: center;
+        background: color-mix(in srgb, var(--stat-accent) 14%, transparent);
+        border: 1px solid color-mix(in srgb, var(--stat-accent) 42%, transparent);
+        border-radius: 10px;
+        color: var(--stat-accent);
+        display: inline-flex;
+        flex: 0 0 42px;
+        height: 42px;
+        justify-content: center;
+        width: 42px;
+    }
+
+    .open-history-stat iconify-icon {
+        font-size: 1.28rem;
+    }
+
+    .open-history-stat p {
+        color: var(--hce-app-muted);
+        font-family: var(--hce-font-ui);
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin: 0;
+        text-transform: uppercase;
+    }
+
+    .open-history-stat strong {
+        color: var(--hce-app-heading);
+        display: block;
+        font-family: var(--hce-font-heading);
+        font-size: 1.64rem;
+        line-height: 1;
+        margin-top: 4px;
+    }
+
+    .open-histories-table {
+        min-width: 1320px;
     }
 
     .patient-history-summary {
@@ -3711,6 +3859,10 @@
         font-size: 0.8rem;
     }
 
+    .patient-history-table td > span {
+        display: flex;
+    }
+
     .patient-history-muted.is-italic {
         font-style: italic;
     }
@@ -3726,8 +3878,61 @@
         padding: 5px 10px;
     }
 
+    .patient-history-patient-name {
+        align-items: center;
+        display: inline-flex;
+        gap: 8px;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .patient-history-patient-name strong {
+        color: var(--hce-app-heading);
+        font-family: var(--hce-font-ui);
+        font-size: 0.9rem;
+        font-weight: 700;
+        min-width: 0;
+    }
+
+    .patient-history-patient-name span {
+        background: color-mix(in srgb, #f59e0b 14%, transparent);
+        border: 1px solid color-mix(in srgb, #f59e0b 34%, transparent);
+        border-radius: 999px;
+        color: #9a3412;
+        display: inline-flex;
+        flex: 0 0 auto;
+        font-family: var(--hce-font-ui);
+        font-size: 0.68rem;
+        font-weight: 600;
+        line-height: 1;
+        padding: 4px 8px;
+    }
+
     .patient-history-number {
         color: var(--hce-color-primary) !important;
+    }
+
+    .patient-history-attention-number {
+        align-items: center;
+        display: grid;
+        gap: 2px;
+        justify-items: center;
+        min-width: 82px;
+    }
+
+    .patient-history-attention-number .patient-history-number {
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.1;
+    }
+
+    .patient-history-attention-number span {
+        color: #111827;
+        display: block;
+        font-family: var(--hce-font-ui);
+        font-size: 0.68rem;
+        font-weight: 600;
+        line-height: 1.1;
     }
 
     .patient-history-professional {
@@ -3793,37 +3998,45 @@
 
     .patient-history-status {
         align-items: center;
+        border: 1px solid currentColor;
         border-radius: 999px;
         display: inline-flex;
         font-family: var(--hce-font-ui);
-        font-size: 0.82rem;
-        gap: 7px;
-        padding: 6px 10px;
+        font-size: 0.72rem;
+        font-weight: 400;
+        gap: 5px;
+        justify-content: center;
+        line-height: 1;
+        min-height: 23px;
+        min-width: 88px;
+        padding: 3px 10px;
+        width: 85px;
     }
 
     .patient-history-status i {
         border-radius: 999px;
         display: block;
-        height: 7px;
-        width: 7px;
+        flex: 0 0 5px;
+        height: 5px;
+        width: 5px;
     }
 
     .patient-history-status.is-open {
-        background: color-mix(in srgb, #0077b6 11%, transparent);
-        color: #0077b6;
+        background: #dcfce79c;
+        color: #217a5dad;
     }
 
     .patient-history-status.is-open i {
-        background: #0077b6;
+        background: #00c853;
     }
 
     .patient-history-status.is-closed {
-        background: color-mix(in srgb, var(--hce-app-muted) 12%, transparent);
-        color: var(--hce-app-muted);
+        background: #fee2e280;
+        color: #f37a7a;
     }
 
     .patient-history-status.is-closed i {
-        background: var(--hce-app-muted);
+        background: #ef4444;
     }
 
     .patient-history-row-actions {
@@ -3832,21 +4045,39 @@
         gap: 8px;
     }
 
-    .patient-history-row-actions button {
+    .patient-history-row-actions button,
+    .patient-history-row-actions a {
         align-items: center;
         border-radius: 8px;
         color: var(--hce-color-primary);
         display: inline-grid;
         height: 34px;
         place-items: center;
+        text-decoration: none;
         transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
         width: 34px;
     }
 
-    .patient-history-row-actions button:hover {
+    .patient-history-row-actions button:hover,
+    .patient-history-row-actions a:hover {
         background: color-mix(in srgb, var(--hce-color-highlight) 12%, transparent);
         color: var(--hce-color-highlight);
         transform: translateY(-1px);
+    }
+
+    .patient-history-row-actions button:disabled,
+    .patient-history-row-actions button.is-disabled,
+    .patient-history-row-actions a.is-disabled {
+        cursor: not-allowed;
+        opacity: 0.42;
+    }
+
+    .patient-history-row-actions button:disabled:hover,
+    .patient-history-row-actions button.is-disabled:hover,
+    .patient-history-row-actions a.is-disabled:hover {
+        background: transparent;
+        color: var(--hce-color-primary);
+        transform: none;
     }
 
     .patient-history-empty {
@@ -3903,12 +4134,140 @@
         min-width: 720px;
     }
 
+    .open-history-create-modal {
+        max-width: min(760px, calc(100vw - 32px));
+    }
+
+    .open-history-create-backdrop {
+        height: calc(100dvh / var(--hce-ui-scale));
+        left: 0;
+        min-height: calc(100dvh / var(--hce-ui-scale));
+        min-width: calc(100vw / var(--hce-ui-scale));
+        position: fixed;
+        top: 0;
+        width: calc(100vw / var(--hce-ui-scale));
+        z-index: 1600;
+    }
+
+    .open-history-create-form {
+        display: grid;
+        gap: 18px;
+        padding: 20px 22px 22px;
+    }
+
+    .open-history-create-form label,
+    .open-history-autocomplete {
+        color: var(--hce-app-heading);
+        display: grid;
+        font-family: var(--hce-font-ui);
+        font-size: 0.8rem;
+        font-weight: 600;
+        gap: 7px;
+        min-width: 0;
+        position: relative;
+    }
+
+    .open-history-create-form input {
+        background: #ffffff;
+        border: 1px solid color-mix(in srgb, var(--hce-app-divider) 88%, var(--hce-color-muted) 12%);
+        border-radius: 8px;
+        color: #0f172a;
+        font-family: var(--hce-font-ui);
+        font-size: 0.9rem;
+        min-height: 38px;
+        outline: none;
+        padding: 0 12px;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        width: 100%;
+    }
+
+    .open-history-create-form input:focus {
+        border-color: var(--hce-color-highlight);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
+    }
+
+    .open-history-create-form small {
+        color: #ef4444;
+        font-size: 0.74rem;
+        font-weight: 600;
+    }
+
+    .open-history-patient-fields {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: minmax(260px, 1fr) minmax(220px, 0.72fr);
+    }
+
+    .open-history-autocomplete-list {
+        background: var(--hce-app-panel-bg);
+        border: 1px solid var(--hce-app-panel-border);
+        border-radius: 10px;
+        box-shadow: var(--hce-app-panel-shadow);
+        display: grid;
+        left: 0;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 6px;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 30;
+    }
+
+    .open-history-autocomplete-list button {
+        background: transparent;
+        border: 0;
+        border-radius: 8px;
+        color: var(--hce-app-heading);
+        cursor: pointer;
+        display: grid;
+        font-family: var(--hce-font-ui);
+        gap: 2px;
+        padding: 9px 10px;
+        text-align: left;
+        transition: background-color 150ms ease, color 150ms ease;
+    }
+
+    .open-history-autocomplete-list button:hover {
+        background: color-mix(in srgb, var(--hce-color-highlight) 12%, transparent);
+        color: var(--hce-color-primary);
+    }
+
+    .open-history-autocomplete-list strong {
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    .open-history-autocomplete-list span {
+        color: var(--hce-app-muted);
+        font-size: 0.76rem;
+    }
+
+    .open-history-create-form footer {
+        align-items: center;
+        border-top: 1px solid var(--hce-app-divider);
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin: 4px -22px -22px;
+        padding: 16px 22px;
+    }
+
     .theme-dark .patient-history-secondary,
     html[data-applied-theme='dark'] .patient-history-secondary,
     .theme-dark .patient-history-panel-header select,
-    html[data-applied-theme='dark'] .patient-history-panel-header select {
+    html[data-applied-theme='dark'] .patient-history-panel-header select,
+    .theme-dark .open-histories-filters input,
+    .theme-dark .open-histories-filters select,
+    html[data-applied-theme='dark'] .open-histories-filters input,
+    html[data-applied-theme='dark'] .open-histories-filters select {
         background: #183052;
         border-color: #415a77;
+        color: #ffffff;
+    }
+
+    .theme-dark .open-history-stat > span,
+    html[data-applied-theme='dark'] .open-history-stat > span {
         color: #ffffff;
     }
 
@@ -3945,6 +4304,13 @@
         color: #caf0f8;
     }
 
+    .theme-dark .patient-history-patient-name span,
+    html[data-applied-theme='dark'] .patient-history-patient-name span {
+        background: rgba(245, 158, 11, 0.18);
+        border-color: rgba(251, 191, 36, 0.42);
+        color: #fde68a;
+    }
+
     .theme-dark .patient-history-professional > span,
     html[data-applied-theme='dark'] .patient-history-professional > span,
     .theme-dark .patient-history-check.is-checked,
@@ -3952,9 +4318,87 @@
         color: #caf0f8;
     }
 
+    .theme-dark .patient-history-attention-number span,
+    html[data-applied-theme='dark'] .patient-history-attention-number span {
+        color: #ffffff;
+    }
+
+    .theme-dark .patient-history-attention-number .patient-history-number,
+    html[data-applied-theme='dark'] .patient-history-attention-number .patient-history-number,
+    .theme-dark .patient-history-row-actions button,
+    html[data-applied-theme='dark'] .patient-history-row-actions button,
+    .theme-dark .patient-history-row-actions a,
+    html[data-applied-theme='dark'] .patient-history-row-actions a {
+        color: #ffffff !important;
+    }
+
+    .theme-dark .patient-history-row-actions button:hover,
+    html[data-applied-theme='dark'] .patient-history-row-actions button:hover,
+    .theme-dark .patient-history-row-actions a:hover,
+    html[data-applied-theme='dark'] .patient-history-row-actions a:hover {
+        background: rgba(21, 153, 235, 0.18);
+        color: #ffffff !important;
+    }
+
+    .theme-dark .patient-history-row-actions button:disabled:hover,
+    .theme-dark .patient-history-row-actions button.is-disabled:hover,
+    .theme-dark .patient-history-row-actions a.is-disabled:hover,
+    html[data-applied-theme='dark'] .patient-history-row-actions button:disabled:hover,
+    html[data-applied-theme='dark'] .patient-history-row-actions button.is-disabled:hover,
+    html[data-applied-theme='dark'] .patient-history-row-actions a.is-disabled:hover {
+        background: transparent;
+        color: #ffffff !important;
+    }
+
     .theme-dark .patient-history-status.is-open,
     html[data-applied-theme='dark'] .patient-history-status.is-open {
-        color: #caf0f8;
+        background: #009c6824;
+        color: #6ba593;
+    }
+
+    .theme-dark .patient-history-status.is-open i,
+    html[data-applied-theme='dark'] .patient-history-status.is-open i {
+        background: #00e79f;
+    }
+
+    .theme-dark .patient-history-status.is-closed,
+    html[data-applied-theme='dark'] .patient-history-status.is-closed {
+        background: #7f1d1d36;
+        color: #a96464;
+    }
+
+    .theme-dark .patient-history-status.is-closed i,
+    html[data-applied-theme='dark'] .patient-history-status.is-closed i {
+        background: #ff5757;
+    }
+
+    .theme-dark .open-history-create-form input,
+    html[data-applied-theme='dark'] .open-history-create-form input {
+        background: #183052;
+        border-color: #415a77;
+        color: #ffffff;
+    }
+
+    .theme-dark .open-history-create-form input::placeholder,
+    html[data-applied-theme='dark'] .open-history-create-form input::placeholder {
+        color: #8ea6c3;
+    }
+
+    .theme-dark .open-history-autocomplete-list,
+    html[data-applied-theme='dark'] .open-history-autocomplete-list {
+        background: #0f172a;
+        border-color: #415a77;
+    }
+
+    .theme-dark .open-history-autocomplete-list button:hover,
+    html[data-applied-theme='dark'] .open-history-autocomplete-list button:hover {
+        background: #1380a7;
+        color: #ffffff;
+    }
+
+    .theme-dark .open-history-autocomplete-list button:hover span,
+    html[data-applied-theme='dark'] .open-history-autocomplete-list button:hover span {
+        color: #ffffff;
     }
 
     @media (max-width: 1180px) {
@@ -3964,6 +4408,14 @@
 
         .patient-history-summary {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .open-histories-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .open-history-patient-fields {
+            grid-template-columns: 1fr;
         }
 
         .patient-trends-panel {
@@ -4028,6 +4480,7 @@
         }
 
         .patient-history-actions,
+        .patient-history-actions a,
         .patient-history-actions button,
         .patient-history-panel-header label {
             width: 100%;
@@ -4039,6 +4492,15 @@
 
         .patient-history-summary {
             grid-template-columns: 1fr;
+        }
+
+        .open-histories-filters,
+        .open-histories-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .open-histories-filters .patient-history-secondary {
+            width: 100%;
         }
     }
 }
@@ -4507,6 +4969,13 @@
         display: flex;
         gap: 8px;
         padding: 0 12px;
+        transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .catalog-search:focus-within {
+        background: #ffffff;
+        border-color: var(--hce-color-highlight);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
     }
 
     .theme-dark .catalog-search iconify-icon {
@@ -4514,18 +4983,38 @@
     }
 
     .catalog-search input {
+        appearance: none;
         background: transparent;
         border: 0;
+        box-shadow: none;
         color: var(--hce-app-text);
         flex: 1;
         font-size: 0.88rem;
         min-width: 0;
-        outline: 0;
+        outline: none;
         padding: 0;
+    }
+
+    .catalog-search input:focus,
+    .catalog-search input:focus-visible {
+        box-shadow: none;
+        outline: none;
+    }
+
+    .catalog-search input::-webkit-search-cancel-button,
+    .catalog-search input::-webkit-search-decoration {
+        appearance: none;
     }
 
     .theme-dark .catalog-search input {
         color: #f8fafc;
+    }
+
+    .theme-dark .catalog-search:focus-within,
+    html[data-applied-theme='dark'] .catalog-search:focus-within {
+        background: #183052;
+        border-color: var(--hce-color-accent);
+        box-shadow: 0 0 0 3px rgba(21, 153, 235, 0.2);
     }
 
     .theme-dark .catalog-search input::placeholder {
@@ -4795,16 +5284,18 @@
         backdrop-filter: blur(10px);
         background: rgba(17, 24, 39, 0.68);
         display: grid;
-        height: 100dvh;
+        height: calc(100dvh / var(--hce-ui-scale));
         inset: 0;
         justify-items: center;
         left: 0;
+        min-height: calc(100dvh / var(--hce-ui-scale));
+        min-width: calc(100vw / var(--hce-ui-scale));
         overflow-y: auto;
         overscroll-behavior: contain;
         padding: 18px;
         position: fixed;
         top: 0;
-        width: 100vw;
+        width: calc(100vw / var(--hce-ui-scale));
         z-index: 1200;
         -webkit-backdrop-filter: blur(10px);
     }
@@ -5748,6 +6239,12 @@ a.dashboard-primary-action,
         overflow: hidden;
     }
 
+    .theme-dark .security-panel,
+    html[data-applied-theme='dark'] .security-panel {
+        background: #101827;
+        border-color: #ffffff;
+    }
+
     .security-panel-header {
         align-items: center;
         border-bottom: 1px solid var(--hce-app-divider);
@@ -5783,17 +6280,42 @@ a.dashboard-primary-action,
         min-height: 40px;
         min-width: min(300px, 100%);
         padding: 0 12px;
+        transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .security-search:focus-within {
+        background: #ffffff;
+        border-color: var(--hce-color-highlight);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
+    }
+
+    .theme-dark .security-search,
+    html[data-applied-theme='dark'] .security-search {
+        background: color-mix(in srgb, var(--hce-app-bg), #1d2034 36%);
     }
 
     .security-search input {
+        appearance: none;
         background: transparent;
         border: 0;
+        box-shadow: none;
         color: var(--hce-app-text);
         flex: 1;
         font-size: 0.88rem;
         min-width: 0;
-        outline: 0;
+        outline: none;
         padding: 0;
+    }
+
+    .security-search input:focus,
+    .security-search input:focus-visible {
+        box-shadow: none;
+        outline: none;
+    }
+
+    .security-search input::-webkit-search-cancel-button,
+    .security-search input::-webkit-search-decoration {
+        appearance: none;
     }
 
     .security-search button,
@@ -5836,6 +6358,11 @@ a.dashboard-primary-action,
         padding: 12px 16px;
         text-align: left;
         text-transform: uppercase;
+    }
+
+    .theme-dark .security-table th,
+    html[data-applied-theme='dark'] .security-table th {
+        background: color-mix(in srgb, #000b50, #5e6874 42%);
     }
 
     .security-table td {
@@ -5983,6 +6510,13 @@ a.dashboard-primary-action,
         grid-template-columns: auto minmax(0, 1fr) auto;
         min-height: 42px;
         padding: 0 12px;
+        transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .security-professional-search:focus-within {
+        background: #ffffff;
+        border-color: var(--hce-color-highlight);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
     }
 
     .security-professional-selected {
@@ -5991,11 +6525,24 @@ a.dashboard-primary-action,
     }
 
     .security-professional-search input {
+        appearance: none;
         background: transparent !important;
         border: 0 !important;
+        box-shadow: none !important;
         min-height: 40px !important;
         padding: 0 !important;
-        outline: 0;
+        outline: none;
+    }
+
+    .security-professional-search input:focus,
+    .security-professional-search input:focus-visible {
+        box-shadow: none !important;
+        outline: none;
+    }
+
+    .security-professional-search input::-webkit-search-cancel-button,
+    .security-professional-search input::-webkit-search-decoration {
+        appearance: none;
     }
 
     .security-professional-results {
@@ -6066,6 +6613,15 @@ a.dashboard-primary-action,
     .theme-dark .security-form select,
     html[data-applied-theme='dark'] .security-form select {
         color-scheme: dark;
+    }
+
+    .theme-dark .security-search:focus-within,
+    .theme-dark .security-professional-search:focus-within,
+    html[data-applied-theme='dark'] .security-search:focus-within,
+    html[data-applied-theme='dark'] .security-professional-search:focus-within {
+        background: color-mix(in srgb, var(--hce-app-bg), #1d2034 36%);
+        border-color: var(--hce-color-accent);
+        box-shadow: 0 0 0 3px rgba(21, 153, 235, 0.2);
     }
 
     .theme-dark .security-professional-picker,
@@ -6174,6 +6730,11 @@ a.dashboard-primary-action,
         padding: 14px;
         text-align: left;
         transition: border-color 160ms ease, background 160ms ease;
+    }
+
+    .theme-dark .security-role-list button,
+    html[data-applied-theme='dark'] .security-role-list button {
+        background: color-mix(in srgb, var(--hce-app-bg), #243954 36%);
     }
 
     .security-role-list button.is-selected,
@@ -6294,6 +6855,39 @@ a.dashboard-primary-action,
         min-width: 0;
     }
 
+    .emergency-patient-heading {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .emergency-back-link {
+        align-items: center;
+        background: color-mix(in srgb, var(--hce-color-surface) 58%, #ffffff 42%);
+        border: 1px solid color-mix(in srgb, var(--hce-color-highlight) 42%, transparent);
+        border-radius: 999px;
+        color: var(--hce-color-accent);
+        display: inline-flex;
+        flex: 0 0 30px;
+        height: 30px;
+        justify-content: center;
+        text-decoration: none;
+        transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        width: 30px;
+    }
+
+    .emergency-back-link iconify-icon {
+        font-size: 1.12rem;
+    }
+
+    .emergency-back-link:hover {
+        background: var(--hce-color-accent);
+        border-color: var(--hce-color-accent);
+        color: #ffffff;
+        transform: translateX(-2px);
+    }
+
     .emergency-patient-avatar {
         align-items: center;
         background: color-mix(in srgb, var(--hce-color-soft) 40%, #ffffff 60%);
@@ -6350,6 +6944,51 @@ a.dashboard-primary-action,
         vertical-align: -0.12em;
     }
 
+    .emergency-patient-alias {
+        display: grid;
+        gap: 6px;
+        margin-top: 8px;
+        max-width: 494px;
+        width: min(100%, 494px);
+    }
+
+    .emergency-patient-alias span {
+        color: var(--hce-app-heading);
+        font-family: var(--hce-font-ui);
+        font-size: 0.78rem;
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    .emergency-patient-alias input {
+        background: #ffffff;
+        border: 1px solid color-mix(in srgb, var(--hce-app-divider) 88%, var(--hce-color-muted) 12%);
+        border-radius: 8px;
+        color: #0f172a;
+        font-family: var(--hce-font-ui);
+        font-size: 0.88rem;
+        min-height: 34px;
+        outline: none;
+        padding: 0 12px;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        width: 100%;
+    }
+
+    .emergency-patient-alias input:focus {
+        border-color: var(--hce-color-highlight);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
+    }
+
+    .emergency-patient-alias input[readonly] {
+        cursor: not-allowed;
+        opacity: 0.74;
+    }
+
+    .emergency-patient-alias small {
+        color: #dc2626;
+        font-size: 0.72rem;
+    }
+
     .emergency-header-actions {
         display: grid;
         gap: 8px;
@@ -6398,11 +7037,11 @@ a.dashboard-primary-action,
     }
 
     .emergency-vitals-summary .is-priority {
-        --priority-bg: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%);
+        --priority-bg: linear-gradient(320deg, #e2e8f0 0%, #cbd5e1 100%);
         --priority-border: #64748b;
         --priority-glow: rgba(100, 116, 139, 0.18);
-        --priority-label: #334155;
-        --priority-text: #0f172a;
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
 
         background: var(--priority-bg);
         border-color: var(--priority-border);
@@ -6411,7 +7050,7 @@ a.dashboard-primary-action,
     }
 
     .emergency-vitals-summary .priority-level-1 {
-        --priority-bg: linear-gradient(145deg, #ff5a5f 0%, #dc2626 52%, #991b1b 100%);
+        --priority-bg: linear-gradient(320deg, #ff5a5f 0%, #dc2626 52%, #991b1b 100%);
         --priority-border: #b91c1c;
         --priority-glow: rgba(220, 38, 38, 0.28);
         --priority-label: #ffffff;
@@ -6419,31 +7058,31 @@ a.dashboard-primary-action,
     }
 
     .emergency-vitals-summary .priority-level-2 {
-        --priority-bg: linear-gradient(145deg, #ffb347 0%, #f97316 54%, #c2410c 100%);
+        --priority-bg: linear-gradient(320deg, #ffb347 0%, #f97316 54%, #c2410c 100%);
         --priority-border: #ea580c;
         --priority-glow: rgba(249, 115, 22, 0.3);
-        --priority-label: #111827;
-        --priority-text: #111827;
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
     }
 
     .emergency-vitals-summary .priority-level-3 {
-        --priority-bg: linear-gradient(145deg, #fff176 0%, #facc15 54%, #ca8a04 100%);
+        --priority-bg: linear-gradient(320deg, #fde047 0%, #ad8404 54%, #a16207 100%);
         --priority-border: #ca8a04;
         --priority-glow: rgba(234, 179, 8, 0.32);
-        --priority-label: #111827;
-        --priority-text: #111827;
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
     }
 
     .emergency-vitals-summary .priority-level-4 {
-        --priority-bg: linear-gradient(145deg, #86efac 0%, #22c55e 52%, #15803d 100%);
+        --priority-bg: linear-gradient(320deg, #86efac 0%, #22c55e 52%, #15803d 100%);
         --priority-border: #16a34a;
         --priority-glow: rgba(34, 197, 94, 0.3);
-        --priority-label: #052e16;
-        --priority-text: #052e16;
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
     }
 
     .emergency-vitals-summary .priority-level-5 {
-        --priority-bg: linear-gradient(145deg, #38bdf8 0%, #0ea5e9 52%, #1d4ed8 100%);
+        --priority-bg: linear-gradient(320deg, #38bdf8 0%, #0ea5e9 52%, #1d4ed8 100%);
         --priority-border: #0284c7;
         --priority-glow: rgba(14, 165, 233, 0.32);
         --priority-label: #ffffff;
@@ -6523,23 +7162,23 @@ a.dashboard-primary-action,
     }
 
     .emergency-status.is-open {
-        background: rgba(16, 185, 129, 0.12);
-        border: 1px solid rgba(16, 185, 129, 0.24);
-        color: #059669;
+        background: #10b9811f;
+        border: 1px solid #00e79f;
+        color: #00e79f;
     }
 
     .emergency-status.is-open i {
-        background: #10b981;
+        background: #00e79f;
     }
 
     .emergency-status.is-closed {
-        background: rgba(65, 90, 119, 0.12);
-        border: 1px solid rgba(65, 90, 119, 0.24);
-        color: var(--hce-color-muted);
+        background: #415a771f;
+        border: 1px solid #ff7f7f;
+        color: #ff7f7f;
     }
 
     .emergency-status.is-closed i {
-        background: var(--hce-color-muted);
+        background: #ff5757;
     }
 
     .emergency-doctor-card {
@@ -7122,7 +7761,8 @@ a.dashboard-primary-action,
         gap: 6px;
     }
 
-    .emergency-row-actions button {
+    .emergency-row-actions button,
+    .emergency-row-actions a {
         align-items: center;
         border: 0;
         border-radius: 8px;
@@ -7134,11 +7774,13 @@ a.dashboard-primary-action,
         width: 30px;
     }
 
-    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions button {
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions button,
+    .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions a {
         color: #03045e;
     }
 
-    .emergency-row-actions button:hover {
+    .emergency-row-actions button:hover,
+    .emergency-row-actions a:hover {
         background: var(--hce-app-hover);
         color: var(--hce-color-accent);
         transform: translateY(-1px);
@@ -7395,6 +8037,10 @@ a.dashboard-primary-action,
         min-width: 1080px;
     }
 
+    .emergency-discharge-medications-table {
+        min-width: 1120px;
+    }
+
     .emergency-code-chip,
     .emergency-table-badge {
         align-items: center;
@@ -7574,6 +8220,72 @@ a.dashboard-primary-action,
         grid-template-columns: minmax(260px, 280px) minmax(360px, 1fr) auto;
     }
 
+    .emergency-egress-destination-form {
+        display: grid;
+        gap: 14px 18px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .emergency-egress-destination-form label,
+    .emergency-egress-data-form label {
+        color: var(--hce-app-heading);
+        display: grid;
+        font-family: var(--hce-font-ui);
+        font-size: 0.8rem;
+        font-weight: 500;
+        gap: 7px;
+        min-width: 0;
+    }
+
+    .emergency-egress-destination-form span,
+    .emergency-egress-data-form span {
+        text-transform: uppercase;
+    }
+
+    .emergency-discharge-medication-form {
+        align-items: end;
+        grid-template-columns: minmax(330px, 1.35fr) minmax(180px, 0.7fr) minmax(150px, 0.55fr) minmax(130px, 0.48fr) minmax(110px, 0.35fr) auto;
+    }
+
+    .emergency-discharge-medication-form label.is-full {
+        grid-column: 1 / -2;
+    }
+
+    .emergency-discharge-medication-form textarea {
+        min-height: 62px;
+    }
+
+    .emergency-discharge-medication-form-actions {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        min-width: 190px;
+    }
+
+    .emergency-discharge-medication-name-field,
+    .emergency-egress-professional-field {
+        position: relative;
+    }
+
+    .emergency-egress-data-form {
+        display: grid;
+        gap: 14px 18px;
+        grid-template-columns: minmax(260px, 0.52fr) minmax(420px, 1fr);
+    }
+
+    .emergency-egress-data-form label.is-full {
+        grid-column: 1 / -1;
+    }
+
+    .emergency-egress-data-form textarea {
+        min-height: 82px;
+    }
+
+    .emergency-egress-professional-list {
+        max-height: 280px;
+    }
+
     .emergency-nursing-form label.is-full {
         grid-column: 1 / -1;
     }
@@ -7612,6 +8324,473 @@ a.dashboard-primary-action,
 
     .emergency-interconsultation-professional-list {
         max-height: 280px;
+    }
+
+    .emergency-documents-stack {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(300px, 0.52fr) minmax(520px, 1fr);
+        padding-top: 18px;
+    }
+
+    .emergency-documents-title {
+        grid-column: 1 / -1;
+    }
+
+    .emergency-documents-title h2 {
+        align-items: center;
+        color: var(--hce-app-heading);
+        display: flex;
+        font-family: var(--hce-font-heading);
+        font-size: 1.34rem;
+        font-weight: 700;
+        gap: 10px;
+        line-height: 1.15;
+        margin: 0;
+    }
+
+    .emergency-documents-title iconify-icon {
+        color: var(--hce-color-primary);
+        font-size: 1.45rem;
+    }
+
+    .emergency-documents-upload-card {
+        align-self: start;
+    }
+
+    .emergency-document-dropzone {
+        align-items: center;
+        border: 2px dashed color-mix(in srgb, var(--hce-app-panel-border) 78%, var(--hce-color-soft));
+        border-radius: 10px;
+        display: grid;
+        gap: 9px;
+        justify-items: center;
+        min-height: 208px;
+        padding: 22px 18px;
+        text-align: center;
+        transition: background-color 160ms ease, border-color 160ms ease;
+    }
+
+    .emergency-document-dropzone:hover {
+        background: color-mix(in srgb, var(--hce-color-soft) 22%, transparent);
+        border-color: var(--hce-color-highlight);
+    }
+
+    .emergency-document-dropzone input {
+        height: 1px;
+        opacity: 0;
+        overflow: hidden;
+        position: absolute;
+        width: 1px;
+    }
+
+    .emergency-document-dropzone > iconify-icon {
+        color: var(--hce-app-muted);
+        font-size: 2rem;
+    }
+
+    .emergency-document-dropzone p,
+    .emergency-document-dropzone span,
+    .emergency-document-dropzone small {
+        margin: 0;
+    }
+
+    .emergency-document-dropzone p {
+        color: var(--hce-app-heading);
+        font-size: 0.9rem;
+    }
+
+    .emergency-document-dropzone span,
+    .emergency-document-dropzone small {
+        color: var(--hce-app-muted);
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .emergency-document-select-action {
+        align-items: center;
+        border: 1px solid var(--hce-color-primary);
+        border-radius: 2px;
+        color: var(--hce-color-primary);
+        cursor: pointer;
+        display: inline-flex;
+        font-family: var(--hce-font-ui);
+        font-size: 0.82rem;
+        font-weight: 500;
+        justify-content: center;
+        min-height: 36px;
+        min-width: 190px;
+        padding: 0 18px;
+        transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .emergency-document-select-action:hover {
+        background: var(--hce-color-primary);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .emergency-document-selected-list {
+        display: grid;
+        gap: 7px;
+        list-style: none;
+        margin: 12px 0 0;
+        padding: 0;
+    }
+
+    .emergency-document-selected-list li {
+        align-items: center;
+        background: color-mix(in srgb, var(--hce-color-soft) 36%, transparent);
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        color: var(--hce-app-text);
+        display: flex;
+        font-size: 0.78rem;
+        gap: 7px;
+        min-width: 0;
+        padding: 7px 9px;
+    }
+
+    .emergency-document-error {
+        color: #dc2626;
+        display: block;
+        font-size: 0.74rem;
+        margin-top: 8px;
+    }
+
+    .emergency-document-upload-action {
+        align-items: center;
+        background: linear-gradient(135deg, var(--hce-color-primary), var(--hce-color-accent));
+        border: 0;
+        border-radius: 4px;
+        color: #ffffff;
+        display: inline-flex;
+        font-family: var(--hce-font-ui);
+        font-size: 0.88rem;
+        font-weight: 500;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 18px;
+        min-height: 42px;
+        width: 100%;
+        transition: box-shadow 160ms ease, opacity 160ms ease, transform 160ms ease;
+    }
+
+    .emergency-document-upload-action:hover:not(:disabled) {
+        box-shadow: 0 12px 26px color-mix(in srgb, var(--hce-color-primary) 24%, transparent);
+        transform: translateY(-1px);
+    }
+
+    .emergency-document-upload-action:disabled {
+        cursor: not-allowed;
+        opacity: 0.52;
+    }
+
+    .emergency-documents-toolbar {
+        gap: 16px;
+    }
+
+    .emergency-documents-search {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+    }
+
+    .emergency-documents-search label {
+        align-items: center;
+        border: 1px solid var(--hce-app-divider);
+        display: grid;
+        grid-template-columns: auto minmax(180px, 260px);
+        min-height: 36px;
+        padding: 0 10px;
+    }
+
+    .emergency-documents-search label iconify-icon {
+        color: var(--hce-app-muted);
+        font-size: 1rem;
+    }
+
+    .emergency-documents-search input {
+        background: transparent;
+        border: 0;
+        color: var(--hce-app-text);
+        font-family: var(--hce-font-ui);
+        font-size: 0.82rem;
+        min-width: 0;
+        outline: none;
+        padding: 0 8px;
+    }
+
+    .emergency-documents-search button {
+        align-items: center;
+        background: color-mix(in srgb, var(--hce-app-panel-bg), #ffffff 8%);
+        border: 1px solid var(--hce-app-divider);
+        color: var(--hce-color-primary);
+        display: inline-flex;
+        height: 36px;
+        justify-content: center;
+        width: 38px;
+    }
+
+    .emergency-documents-table {
+        min-width: 920px;
+    }
+
+    .emergency-document-type {
+        align-items: center;
+        border-radius: 2px;
+        display: inline-grid;
+        height: 30px;
+        place-items: center;
+        width: 30px;
+    }
+
+    .emergency-document-type iconify-icon {
+        font-size: 1rem;
+    }
+
+    .emergency-document-type.is-pdf {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .emergency-document-type.is-image {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .emergency-document-type.is-file {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .emergency-document-name-cell {
+        display: grid;
+        gap: 2px;
+    }
+
+    .emergency-document-name-cell em {
+        color: var(--hce-app-muted);
+        font-size: 0.72rem;
+        font-style: normal;
+    }
+
+    .emergency-documents-footer {
+        border-top: 1px solid var(--hce-app-divider);
+        color: var(--hce-app-heading);
+        font-family: var(--hce-font-ui);
+        font-size: 0.74rem;
+        font-weight: 600;
+        margin-top: 0;
+        padding: 14px 12px 4px;
+    }
+
+    @media (max-width: 980px) {
+        .emergency-documents-stack {
+            grid-template-columns: 1fr;
+        }
+
+        .emergency-documents-toolbar {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .emergency-documents-search {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .emergency-documents-search label {
+            grid-template-columns: auto minmax(0, 1fr);
+            width: 100%;
+        }
+    }
+
+    .emergency-movements-stack {
+        padding-top: 18px;
+    }
+
+    .emergency-trauma-form {
+        display: grid;
+        gap: 14px 16px;
+        grid-template-columns: minmax(190px, 0.7fr) minmax(260px, 1fr) minmax(320px, 1.1fr) minmax(260px, 1fr);
+    }
+
+    .emergency-trauma-form label,
+    .emergency-transfer-form label,
+    .emergency-reference-form label {
+        color: var(--hce-app-heading);
+        display: grid;
+        font-family: var(--hce-font-ui);
+        font-size: 0.8rem;
+        font-weight: 500;
+        gap: 7px;
+        min-width: 0;
+    }
+
+    .emergency-trauma-form label.is-wide {
+        grid-column: span 2;
+    }
+
+    .emergency-trauma-form label.is-full,
+    .emergency-transfer-form label.is-full,
+    .emergency-reference-form label.is-full {
+        grid-column: 1 / -1;
+    }
+
+    .emergency-trauma-form span,
+    .emergency-transfer-form span,
+    .emergency-reference-form span {
+        align-items: center;
+        display: inline-flex;
+        gap: 7px;
+    }
+
+    .emergency-trauma-form span em,
+    .emergency-reference-form span em {
+        background: color-mix(in srgb, var(--hce-color-soft) 48%, #ffffff 52%);
+        border-radius: 4px;
+        color: var(--hce-app-muted);
+        font-size: 0.68rem;
+        font-style: normal;
+        font-weight: 600;
+        padding: 2px 7px;
+    }
+
+    .emergency-trauma-form input,
+    .emergency-trauma-form select,
+    .emergency-trauma-form textarea,
+    .emergency-transfer-form input,
+    .emergency-transfer-form select,
+    .emergency-transfer-form textarea,
+    .emergency-reference-form input,
+    .emergency-reference-form select,
+    .emergency-reference-form textarea,
+    .emergency-egress-destination-form input,
+    .emergency-egress-destination-form select,
+    .emergency-egress-destination-form textarea,
+    .emergency-egress-data-form input,
+    .emergency-egress-data-form select,
+    .emergency-egress-data-form textarea {
+        background: color-mix(in srgb, var(--hce-app-panel-bg), #ffffff 8%);
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        color: var(--hce-app-text);
+        font-family: var(--hce-font-ui);
+        font-size: 0.88rem;
+        outline: none;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        width: 100%;
+    }
+
+    .emergency-trauma-form input,
+    .emergency-trauma-form select,
+    .emergency-transfer-form input,
+    .emergency-transfer-form select,
+    .emergency-reference-form input,
+    .emergency-reference-form select,
+    .emergency-egress-destination-form input,
+    .emergency-egress-destination-form select,
+    .emergency-egress-data-form input,
+    .emergency-egress-data-form select {
+        min-height: 38px;
+        padding: 0 12px;
+    }
+
+    .emergency-trauma-form textarea,
+    .emergency-transfer-form textarea,
+    .emergency-reference-form textarea,
+    .emergency-egress-destination-form textarea,
+    .emergency-egress-data-form textarea {
+        line-height: 1.45;
+        min-height: 84px;
+        padding: 10px 12px;
+        resize: vertical;
+    }
+
+    .emergency-trauma-form input:focus,
+    .emergency-trauma-form select:focus,
+    .emergency-trauma-form textarea:focus,
+    .emergency-transfer-form input:focus,
+    .emergency-transfer-form select:focus,
+    .emergency-transfer-form textarea:focus,
+    .emergency-reference-form input:focus,
+    .emergency-reference-form select:focus,
+    .emergency-reference-form textarea:focus,
+    .emergency-egress-destination-form input:focus,
+    .emergency-egress-destination-form select:focus,
+    .emergency-egress-destination-form textarea:focus,
+    .emergency-egress-data-form input:focus,
+    .emergency-egress-data-form select:focus,
+    .emergency-egress-data-form textarea:focus {
+        border-color: var(--hce-color-highlight);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
+    }
+
+    .emergency-trauma-form input[readonly],
+    .emergency-trauma-form textarea[readonly],
+    .emergency-trauma-form select:disabled,
+    .emergency-transfer-form input[readonly],
+    .emergency-transfer-form textarea[readonly],
+    .emergency-transfer-form select:disabled,
+    .emergency-reference-form input[readonly],
+    .emergency-reference-form textarea[readonly],
+    .emergency-reference-form select:disabled,
+    .emergency-egress-destination-form input[readonly],
+    .emergency-egress-destination-form textarea[readonly],
+    .emergency-egress-destination-form select:disabled,
+    .emergency-egress-data-form input[readonly],
+    .emergency-egress-data-form textarea[readonly],
+    .emergency-egress-data-form select:disabled {
+        cursor: not-allowed;
+        opacity: 0.74;
+    }
+
+    .emergency-trauma-form small,
+    .emergency-transfer-form small,
+    .emergency-reference-form small {
+        color: #dc2626;
+        font-size: 0.74rem;
+    }
+
+    .emergency-transfers-table {
+        min-width: 1120px;
+    }
+
+    .emergency-references-table {
+        min-width: 1280px;
+    }
+
+    .emergency-transfer-form {
+        grid-template-columns: minmax(270px, 280px) minmax(300px, 310px) minmax(300px, 310px) minmax(300px, 1fr) auto;
+    }
+
+    .emergency-transfer-form-actions,
+    .emergency-reference-form-actions {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        min-width: 190px;
+    }
+
+    .emergency-free-professional-list {
+        max-height: 280px;
+    }
+
+    .emergency-reference-form {
+        border: 1px dashed var(--hce-app-panel-border);
+        border-radius: 12px;
+        display: grid;
+        gap: 14px 16px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-bottom: 16px;
+        padding: 16px;
+    }
+
+    .emergency-reference-form-actions {
+        grid-column: 1 / -1;
     }
 
     .emergency-water-balance-card {
@@ -7824,6 +9003,11 @@ a.dashboard-primary-action,
         max-height: 280px;
     }
 
+    .emergency-order-professional-list,
+    .emergency-lab-professional-list {
+        max-height: 280px;
+    }
+
     .emergency-lab-form-actions {
         align-items: center;
         display: flex;
@@ -7889,11 +9073,13 @@ a.dashboard-primary-action,
     }
 
     .emergency-medication-list,
+    .emergency-medication-professional-list,
     .emergency-procedure-list {
         max-height: 280px;
     }
 
     .emergency-medication-list button,
+    .emergency-medication-professional-list button,
     .emergency-procedure-list button {
         gap: 4px;
         padding: 10px 12px;
@@ -8004,6 +9190,12 @@ a.dashboard-primary-action,
         background: #fef2f2;
         border-color: #fecaca;
         color: #dc2626;
+    }
+
+    .emergency-feedback-modal.is-warning .emergency-feedback-icon {
+        background: #fff7ed;
+        border-color: #fed7aa;
+        color: #ea580c;
     }
 
     .emergency-feedback-modal.is-success .emergency-feedback-icon {
@@ -8178,10 +9370,29 @@ a.dashboard-primary-action,
     html[data-applied-theme='dark'] .emergency-vitals-summary article,
     .theme-dark .emergency-patient-avatar,
     html[data-applied-theme='dark'] .emergency-patient-avatar,
+    .theme-dark .emergency-back-link,
+    html[data-applied-theme='dark'] .emergency-back-link,
     .theme-dark .emergency-doctor-card > span,
     html[data-applied-theme='dark'] .emergency-doctor-card > span {
         background: #183052;
         border-color: rgba(152, 193, 217, 0.34);
+    }
+
+    .theme-dark .emergency-patient-alias input,
+    html[data-applied-theme='dark'] .emergency-patient-alias input {
+        background: #183052;
+        border-color: rgba(152, 193, 217, 0.42);
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-patient-alias input::placeholder,
+    html[data-applied-theme='dark'] .emergency-patient-alias input::placeholder {
+        color: rgba(202, 240, 248, 0.64);
+    }
+
+    .theme-dark .emergency-patient-alias span,
+    html[data-applied-theme='dark'] .emergency-patient-alias span {
+        color: #ffffff;
     }
 
     .theme-dark .emergency-vitals-summary strong,
@@ -8195,10 +9406,10 @@ a.dashboard-primary-action,
 
     .theme-dark .emergency-vitals-summary .is-priority,
     html[data-applied-theme='dark'] .emergency-vitals-summary .is-priority {
-        --priority-bg: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+        --priority-bg: linear-gradient(320deg, #334155 0%, #1e293b 100%);
         --priority-border: rgba(152, 193, 217, 0.34);
         --priority-glow: rgba(152, 193, 217, 0.16);
-        --priority-label: #caf0f8;
+        --priority-label: #ffffff;
         --priority-text: #ffffff;
 
         background: var(--priority-bg);
@@ -8208,7 +9419,7 @@ a.dashboard-primary-action,
 
     .theme-dark .emergency-vitals-summary .priority-level-1,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-1 {
-        --priority-bg: linear-gradient(145deg, #ef4444 0%, #b91c1c 54%, #7f1d1d 100%);
+        --priority-bg: linear-gradient(320deg, #ef4444 0%, #b91c1c 54%, #7f1d1d 100%);
         --priority-border: #f87171;
         --priority-glow: rgba(248, 113, 113, 0.28);
         --priority-label: #ffffff;
@@ -8217,11 +9428,11 @@ a.dashboard-primary-action,
 
     .theme-dark .emergency-vitals-summary .priority-level-2,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-2 {
-        --priority-bg: linear-gradient(145deg, #fb923c 0%, #ea580c 54%, #9a3412 100%);
+        --priority-bg: linear-gradient(320deg, #fb923c 0%, #ea580c 54%, #9a3412 100%);
         --priority-border: #fb923c;
         --priority-glow: rgba(251, 146, 60, 0.3);
-        --priority-label: #111827;
-        --priority-text: #111827;
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
     }
 
     .theme-dark .emergency-vitals-summary .priority-level-2 strong,
@@ -8230,16 +9441,16 @@ a.dashboard-primary-action,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-2 strong,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-2 select,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-2 > span {
-        color: #111827;
+        color: #ffffff;
     }
 
     .theme-dark .emergency-vitals-summary .priority-level-3,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-3 {
-        --priority-bg: linear-gradient(145deg, #fde047 0%, #eab308 54%, #a16207 100%);
+        --priority-bg: linear-gradient(320deg, #fde047 0%, #eab308 54%, #a16207 100%);
         --priority-border: #fde047;
         --priority-glow: rgba(253, 224, 71, 0.3);
-        --priority-label: #111827;
-        --priority-text: #111827;
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
     }
 
     .theme-dark .emergency-vitals-summary .priority-level-3 strong,
@@ -8248,16 +9459,16 @@ a.dashboard-primary-action,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-3 strong,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-3 select,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-3 > span {
-        color: #111827;
+        color: #ffffff;
     }
 
     .theme-dark .emergency-vitals-summary .priority-level-4,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-4 {
-        --priority-bg: linear-gradient(145deg, #4ade80 0%, #22c55e 52%, #166534 100%);
+        --priority-bg: linear-gradient(320deg, #4ade80 0%, #22c55e 52%, #166534 100%);
         --priority-border: #86efac;
         --priority-glow: rgba(74, 222, 128, 0.28);
-        --priority-label: #052e16;
-        --priority-text: #052e16;
+        --priority-label: #ffffff;
+        --priority-text: #ffffff;
     }
 
     .theme-dark .emergency-vitals-summary .priority-level-4 strong,
@@ -8266,12 +9477,12 @@ a.dashboard-primary-action,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-4 strong,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-4 select,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-4 > span {
-        color: #052e16;
+        color: #ffffff;
     }
 
     .theme-dark .emergency-vitals-summary .priority-level-5,
     html[data-applied-theme='dark'] .emergency-vitals-summary .priority-level-5 {
-        --priority-bg: linear-gradient(145deg, #38bdf8 0%, #0284c7 52%, #1e40af 100%);
+        --priority-bg: linear-gradient(320deg, #38bdf8 0%, #0284c7 52%, #1e40af 100%);
         --priority-border: #7dd3fc;
         --priority-glow: rgba(56, 189, 248, 0.3);
         --priority-label: #ffffff;
@@ -8302,12 +9513,48 @@ a.dashboard-primary-action,
     .theme-dark .emergency-vital-form input,
     .theme-dark .emergency-vital-form select,
     .theme-dark .emergency-vital-form textarea,
+    .theme-dark .emergency-trauma-form input,
+    .theme-dark .emergency-trauma-form select,
+    .theme-dark .emergency-trauma-form textarea,
+    .theme-dark .emergency-transfer-form input,
+    .theme-dark .emergency-transfer-form select,
+    .theme-dark .emergency-transfer-form textarea,
+    .theme-dark .emergency-reference-form input,
+    .theme-dark .emergency-reference-form select,
+    .theme-dark .emergency-reference-form textarea,
+    .theme-dark .emergency-egress-destination-form input,
+    .theme-dark .emergency-egress-destination-form select,
+    .theme-dark .emergency-egress-destination-form textarea,
+    .theme-dark .emergency-discharge-medication-form input,
+    .theme-dark .emergency-discharge-medication-form select,
+    .theme-dark .emergency-discharge-medication-form textarea,
+    .theme-dark .emergency-egress-data-form input,
+    .theme-dark .emergency-egress-data-form select,
+    .theme-dark .emergency-egress-data-form textarea,
     html[data-applied-theme='dark'] .emergency-attention-form input,
     html[data-applied-theme='dark'] .emergency-attention-form select,
     html[data-applied-theme='dark'] .emergency-attention-form textarea,
     html[data-applied-theme='dark'] .emergency-vital-form input,
     html[data-applied-theme='dark'] .emergency-vital-form select,
-    html[data-applied-theme='dark'] .emergency-vital-form textarea {
+    html[data-applied-theme='dark'] .emergency-vital-form textarea,
+    html[data-applied-theme='dark'] .emergency-trauma-form input,
+    html[data-applied-theme='dark'] .emergency-trauma-form select,
+    html[data-applied-theme='dark'] .emergency-trauma-form textarea,
+    html[data-applied-theme='dark'] .emergency-transfer-form input,
+    html[data-applied-theme='dark'] .emergency-transfer-form select,
+    html[data-applied-theme='dark'] .emergency-transfer-form textarea,
+    html[data-applied-theme='dark'] .emergency-reference-form input,
+    html[data-applied-theme='dark'] .emergency-reference-form select,
+    html[data-applied-theme='dark'] .emergency-reference-form textarea,
+    html[data-applied-theme='dark'] .emergency-egress-destination-form input,
+    html[data-applied-theme='dark'] .emergency-egress-destination-form select,
+    html[data-applied-theme='dark'] .emergency-egress-destination-form textarea,
+    html[data-applied-theme='dark'] .emergency-discharge-medication-form input,
+    html[data-applied-theme='dark'] .emergency-discharge-medication-form select,
+    html[data-applied-theme='dark'] .emergency-discharge-medication-form textarea,
+    html[data-applied-theme='dark'] .emergency-egress-data-form input,
+    html[data-applied-theme='dark'] .emergency-egress-data-form select,
+    html[data-applied-theme='dark'] .emergency-egress-data-form textarea {
         background: #183052;
         border-color: rgba(152, 193, 217, 0.42);
         color: #f8fafc;
@@ -8328,21 +9575,69 @@ a.dashboard-primary-action,
     }
 
     .theme-dark .emergency-attention-form select option,
-    html[data-applied-theme='dark'] .emergency-attention-form select option {
+    .theme-dark .emergency-trauma-form select option,
+    .theme-dark .emergency-transfer-form select option,
+    .theme-dark .emergency-reference-form select option,
+    .theme-dark .emergency-egress-destination-form select option,
+    .theme-dark .emergency-discharge-medication-form select option,
+    .theme-dark .emergency-egress-data-form select option,
+    html[data-applied-theme='dark'] .emergency-attention-form select option,
+    html[data-applied-theme='dark'] .emergency-trauma-form select option,
+    html[data-applied-theme='dark'] .emergency-transfer-form select option,
+    html[data-applied-theme='dark'] .emergency-reference-form select option,
+    html[data-applied-theme='dark'] .emergency-egress-destination-form select option,
+    html[data-applied-theme='dark'] .emergency-discharge-medication-form select option,
+    html[data-applied-theme='dark'] .emergency-egress-data-form select option {
         background: #183052;
         color: #f8fafc;
     }
 
     .theme-dark .emergency-attention-form select option:checked,
-    html[data-applied-theme='dark'] .emergency-attention-form select option:checked {
+    .theme-dark .emergency-trauma-form select option:checked,
+    .theme-dark .emergency-transfer-form select option:checked,
+    .theme-dark .emergency-reference-form select option:checked,
+    .theme-dark .emergency-egress-destination-form select option:checked,
+    .theme-dark .emergency-discharge-medication-form select option:checked,
+    .theme-dark .emergency-egress-data-form select option:checked,
+    html[data-applied-theme='dark'] .emergency-attention-form select option:checked,
+    html[data-applied-theme='dark'] .emergency-trauma-form select option:checked,
+    html[data-applied-theme='dark'] .emergency-transfer-form select option:checked,
+    html[data-applied-theme='dark'] .emergency-reference-form select option:checked,
+    html[data-applied-theme='dark'] .emergency-egress-destination-form select option:checked,
+    html[data-applied-theme='dark'] .emergency-discharge-medication-form select option:checked,
+    html[data-applied-theme='dark'] .emergency-egress-data-form select option:checked {
         background: #415a77;
         color: #ffffff;
     }
 
     .theme-dark .emergency-attention-form label > span em,
-    html[data-applied-theme='dark'] .emergency-attention-form label > span em {
+    .theme-dark .emergency-trauma-form span em,
+    .theme-dark .emergency-reference-form span em,
+    html[data-applied-theme='dark'] .emergency-attention-form label > span em,
+    html[data-applied-theme='dark'] .emergency-trauma-form span em,
+    html[data-applied-theme='dark'] .emergency-reference-form span em {
         background: rgba(152, 193, 217, 0.14);
         color: #caf0f8;
+    }
+
+    .theme-dark .emergency-trauma-form label,
+    .theme-dark .emergency-transfer-form label,
+    .theme-dark .emergency-reference-form label,
+    .theme-dark .emergency-egress-destination-form label,
+    .theme-dark .emergency-discharge-medication-form label,
+    .theme-dark .emergency-egress-data-form label,
+    html[data-applied-theme='dark'] .emergency-trauma-form label,
+    html[data-applied-theme='dark'] .emergency-transfer-form label,
+    html[data-applied-theme='dark'] .emergency-reference-form label,
+    html[data-applied-theme='dark'] .emergency-egress-destination-form label,
+    html[data-applied-theme='dark'] .emergency-discharge-medication-form label,
+    html[data-applied-theme='dark'] .emergency-egress-data-form label {
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-reference-form,
+    html[data-applied-theme='dark'] .emergency-reference-form {
+        border-color: rgba(152, 193, 217, 0.24);
     }
 
     .theme-dark .emergency-combobox-list,
@@ -8363,6 +9658,75 @@ a.dashboard-primary-action,
     html[data-applied-theme='dark'] .emergency-timeline-card:hover {
         border-color: rgba(202, 240, 248, 0.42);
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.22);
+    }
+
+    .theme-dark .emergency-documents-title h2,
+    html[data-applied-theme='dark'] .emergency-documents-title h2 {
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-document-dropzone,
+    html[data-applied-theme='dark'] .emergency-document-dropzone {
+        border-color: rgba(152, 193, 217, 0.34);
+        background: rgba(13, 17, 28, 0.55);
+    }
+
+    .theme-dark .emergency-document-dropzone:hover,
+    html[data-applied-theme='dark'] .emergency-document-dropzone:hover {
+        background: rgba(24, 48, 82, 0.54);
+        border-color: rgba(202, 240, 248, 0.48);
+    }
+
+    .theme-dark .emergency-document-dropzone p,
+    .theme-dark .emergency-document-selected-list li,
+    .theme-dark .emergency-documents-footer,
+    html[data-applied-theme='dark'] .emergency-document-dropzone p,
+    html[data-applied-theme='dark'] .emergency-document-selected-list li,
+    html[data-applied-theme='dark'] .emergency-documents-footer {
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-document-selected-list li,
+    html[data-applied-theme='dark'] .emergency-document-selected-list li {
+        background: rgba(24, 48, 82, 0.78);
+        border-color: rgba(152, 193, 217, 0.24);
+    }
+
+    .theme-dark .emergency-documents-search label,
+    .theme-dark .emergency-documents-search button,
+    html[data-applied-theme='dark'] .emergency-documents-search label,
+    html[data-applied-theme='dark'] .emergency-documents-search button {
+        background: #183052;
+        border-color: rgba(152, 193, 217, 0.42);
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-documents-search input,
+    html[data-applied-theme='dark'] .emergency-documents-search input {
+        color: #f8fafc;
+    }
+
+    .theme-dark .emergency-documents-search input::placeholder,
+    html[data-applied-theme='dark'] .emergency-documents-search input::placeholder {
+        color: rgba(202, 240, 248, 0.64);
+    }
+
+    .theme-dark .emergency-document-name-cell em,
+    html[data-applied-theme='dark'] .emergency-document-name-cell em {
+        color: #caf0f8;
+    }
+
+    .theme-dark .emergency-document-select-action,
+    html[data-applied-theme='dark'] .emergency-document-select-action {
+        border-color: #ffffff;
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-document-select-action:hover,
+    html[data-applied-theme='dark'] .emergency-document-select-action:hover {
+        background: #1276a2;
+        border-color: #1276a2;
+        color: #ffffff;
     }
 
     .theme-dark .emergency-glasgow-score-card,
@@ -8440,17 +9804,23 @@ a.dashboard-primary-action,
     }
 
     .theme-dark .emergency-row-actions button,
-    html[data-applied-theme='dark'] .emergency-row-actions button {
+    .theme-dark .emergency-row-actions a,
+    html[data-applied-theme='dark'] .emergency-row-actions button,
+    html[data-applied-theme='dark'] .emergency-row-actions a {
         color: #f8fafc;
     }
 
     .theme-dark .emergency-row-actions button iconify-icon,
-    html[data-applied-theme='dark'] .emergency-row-actions button iconify-icon {
+    .theme-dark .emergency-row-actions a iconify-icon,
+    html[data-applied-theme='dark'] .emergency-row-actions button iconify-icon,
+    html[data-applied-theme='dark'] .emergency-row-actions a iconify-icon {
         color: #ffffff;
     }
 
     .theme-dark .emergency-row-actions button:hover,
-    html[data-applied-theme='dark'] .emergency-row-actions button:hover {
+    .theme-dark .emergency-row-actions a:hover,
+    html[data-applied-theme='dark'] .emergency-row-actions button:hover,
+    html[data-applied-theme='dark'] .emergency-row-actions a:hover {
         background: rgba(152, 193, 217, 0.14);
         color: #caf0f8;
     }
@@ -8509,13 +9879,15 @@ a.dashboard-primary-action,
     .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-detail em,
     .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-vital-state,
     .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions button,
+    .theme-dark .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions a,
     html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) strong,
     html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-main-cell span,
     html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-inline,
     html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-detail b,
     html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-professional-detail em,
     html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-vital-state,
-    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions button {
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions button,
+    html[data-applied-theme='dark'] .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) .emergency-row-actions a {
         color: #ffffff;
     }
 
@@ -8648,6 +10020,13 @@ a.dashboard-primary-action,
         color: #fca5a5;
     }
 
+    .theme-dark .emergency-feedback-modal.is-warning .emergency-feedback-icon,
+    html[data-applied-theme='dark'] .emergency-feedback-modal.is-warning .emergency-feedback-icon {
+        background: rgba(234, 88, 12, 0.16);
+        border-color: rgba(251, 146, 60, 0.38);
+        color: #fdba74;
+    }
+
     .theme-dark .emergency-feedback-modal.is-success .emergency-feedback-icon,
     html[data-applied-theme='dark'] .emergency-feedback-modal.is-success .emergency-feedback-icon {
         background: rgba(5, 150, 105, 0.14);
@@ -8674,6 +10053,15 @@ a.dashboard-primary-action,
 
         .emergency-nursing-grid {
             grid-template-columns: 1fr;
+        }
+
+        .emergency-trauma-form,
+        .emergency-transfer-form {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .emergency-transfer-form-actions {
+            grid-column: 1 / -1;
         }
 
         .emergency-header-actions,
@@ -8793,13 +10181,26 @@ a.dashboard-primary-action,
         .emergency-medication-form,
         .emergency-procedure-form,
         .emergency-nursing-form,
-        .emergency-interconsultation-form {
+        .emergency-interconsultation-form,
+        .emergency-trauma-form,
+        .emergency-transfer-form,
+        .emergency-reference-form,
+        .emergency-egress-destination-form,
+        .emergency-discharge-medication-form,
+        .emergency-egress-data-form {
             grid-template-columns: 1fr;
         }
 
         .emergency-evolution-form label.is-full,
         .emergency-nursing-form label.is-full,
-        .emergency-interconsultation-form label.is-full {
+        .emergency-interconsultation-form label.is-full,
+        .emergency-trauma-form label.is-wide,
+        .emergency-trauma-form label.is-full,
+        .emergency-transfer-form label.is-full,
+        .emergency-reference-form label.is-full,
+        .emergency-discharge-medication-form label.is-full,
+        .emergency-egress-data-form label.is-full,
+        .emergency-reference-form-actions {
             grid-column: 1 / -1;
         }
 
@@ -8809,6 +10210,11 @@ a.dashboard-primary-action,
 
         .emergency-order-form-row {
             grid-template-columns: 1fr;
+        }
+
+        .emergency-order-professional-field {
+            margin-left: 0;
+            width: 100%;
         }
 
         .emergency-lab-form-row.is-primary,
@@ -8848,7 +10254,11 @@ a.dashboard-primary-action,
         .emergency-medication-form-actions,
         .emergency-procedure-name-field,
         .emergency-procedure-form > label,
-        .emergency-procedure-form-actions {
+        .emergency-procedure-form-actions,
+        .emergency-discharge-medication-name-field,
+        .emergency-discharge-medication-form > label,
+        .emergency-discharge-medication-form-actions,
+        .emergency-egress-professional-field {
             flex: 1 1 auto;
             max-width: none;
             min-width: 0;
@@ -8879,7 +10289,10 @@ a.dashboard-primary-action,
         .emergency-medication-form-actions,
         .emergency-procedure-form-actions,
         .emergency-nursing-form-actions,
-        .emergency-interconsultation-form-actions {
+        .emergency-interconsultation-form-actions,
+        .emergency-transfer-form-actions,
+        .emergency-reference-form-actions,
+        .emergency-discharge-medication-form-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
             min-width: 0;

@@ -58,7 +58,7 @@
                             'icono' => 'historia-clinica',
                             'subitems' => [
                                 ['texto' => 'Atenciones del Paciente', 'url' => route('historia-clinica.atenciones-paciente.index'), 'activo' => request()->routeIs('historia-clinica.atenciones-paciente.*'), 'permiso' => $permiso::HISTORIA_CLINICA_VER],
-                                ['texto' => 'Historias abiertas', 'url' => '#', 'permiso' => $permiso::HISTORIA_CLINICA_VER],
+                                ['texto' => 'Historias abiertas', 'url' => route('historia-clinica.historias-abiertas.index'), 'activo' => request()->routeIs('historia-clinica.historias-abiertas.*'), 'permiso' => $permiso::HISTORIA_CLINICA_VER],
                             ],
                         ],
                         [

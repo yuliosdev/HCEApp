@@ -14,6 +14,7 @@ use App\Models\TriajeSignoVital;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -84,6 +85,23 @@ class HistoriaClinicaPaciente extends Component
         ]);
     }
 
+    public function cambiarEstadoAtencion(int $atencionId): void
+    {
+        abort_unless($this->esAdministrador(), 403);
+
+        $atencion = $this->buscarAtencionDelPaciente($atencionId);
+        $nuevoEstado = $this->estadoAbierto($atencion)
+            ? EstadoAtencion::Cerrada
+            : EstadoAtencion::Abierta;
+
+        $atencion->forceFill([
+            'estado_atencion' => $nuevoEstado,
+            'actualizado_por' => Auth::id(),
+        ])->save();
+
+        flash()->success('Estado de la historia clinica actualizado correctamente.', [], 'Historia clinica');
+    }
+
     public function render()
     {
         $paciente = Paciente::query()
@@ -112,6 +130,7 @@ class HistoriaClinicaPaciente extends Component
             'ultimosSignos' => $this->ultimosSignosVitales(),
             'atenciones' => $atenciones,
             'modal' => $this->datosModalResumen(),
+            'esAdministrador' => $this->esAdministrador(),
         ]);
     }
 
@@ -336,6 +355,11 @@ class HistoriaClinicaPaciente extends Component
         return HcEmergencia::query()
             ->where('paciente_id', $this->paciente->id)
             ->findOrFail($atencionId);
+    }
+
+    private function esAdministrador(): bool
+    {
+        return Auth::user()?->hasRole('Administrador') ?? false;
     }
 
     private function claseSexo(?string $sexo): string
