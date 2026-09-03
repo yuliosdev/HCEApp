@@ -2064,8 +2064,12 @@ class HcEmergenciaPanel extends Component
     private function normalizarFormularioAntesDeValidar(): void
     {
         $this->recalcularBalanceHidrico();
+        $this->form['shock_trauma_responsable'] = filled($this->form['shock_trauma_responsable'])
+            ? $this->form['shock_trauma_responsable']
+            : $this->shockTraumaResponsableBusqueda;
         $this->normalizarCampoEnum('topico', TopicoAtencion::class, TopicoAtencion::Topico->value);
         $this->normalizarCampoEnum('fuente', FuenteAtencion::class);
+        $this->normalizarCampoEnum('en_shock_trauma', SiNo::class, SiNo::No->value);
         $this->normalizarCampoEnum('unidad_tiempo_enfermedad', UnidadTiempoEnfermedad::class);
         $this->normalizarCampoEnum('estado_atencion', EstadoAtencion::class, EstadoAtencion::Abierta->value);
         $this->normalizarCampoPrioridad();
