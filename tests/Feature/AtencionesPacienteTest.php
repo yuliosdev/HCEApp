@@ -2,13 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Livewire\HistoriaClinica\AtencionesPacientePanel;
-use App\Livewire\HistoriaClinica\HcEmergenciaPanel;
-use App\Livewire\HistoriaClinica\HistoriasAbiertasPanel;
-use App\Livewire\HistoriaClinica\HistoriaClinicaPaciente;
-use App\Livewire\HistoriaClinica\PacienteDashboard;
-use App\Enums\ColorTriaje;
 use App\Enums\ClasificacionDiagnosticoEgreso;
+use App\Enums\ColorTriaje;
 use App\Enums\CondicionEgreso;
 use App\Enums\DestinoDentroIpress;
 use App\Enums\DestinoFueraIpress;
@@ -21,16 +16,23 @@ use App\Enums\TipoDiagnostico;
 use App\Enums\TipoDocumentoAdjunto;
 use App\Enums\TipoReaccionAdversaMedicamento;
 use App\Enums\TopicoAtencion;
+use App\Livewire\HistoriaClinica\AtencionesPacientePanel;
+use App\Livewire\HistoriaClinica\HcEmergenciaPanel;
+use App\Livewire\HistoriaClinica\HistoriaClinicaPaciente;
+use App\Livewire\HistoriaClinica\HistoriasAbiertasPanel;
+use App\Livewire\HistoriaClinica\PacienteDashboard;
 use App\Models\Alergia;
 use App\Models\AntecedentePatologico;
 use App\Models\DiagnosticoCie10;
 use App\Models\DocumentoAdjunto;
+use App\Models\EgresoDiagnostico;
 use App\Models\Especialidad;
 use App\Models\Examen;
 use App\Models\Glasgow;
 use App\Models\HcEmergencia;
 use App\Models\IngresoDiagnostico;
 use App\Models\Medicamento;
+use App\Models\Orden;
 use App\Models\Paciente;
 use App\Models\PacienteAlergia;
 use App\Models\Prioridad;
@@ -46,6 +48,7 @@ use App\Support\Seguridad\Permisos;
 use Database\Seeders\RolesPermisosSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -422,6 +425,8 @@ class AtencionesPacienteTest extends TestCase
             ->assertSee('editarAtencion('.$atencionAbierta->id.')', false)
             ->assertDontSee('editarAtencion('.$atencionCerrada->id.')', false)
             ->assertSee('Editar atencion')
+            ->assertSee(route('historia-clinica.atenciones-paciente.emergencia.imprimir', [$paciente, $atencionAbierta]), false)
+            ->assertSee(route('historia-clinica.atenciones-paciente.emergencia.imprimir', [$paciente, $atencionCerrada]), false)
             ->assertSee('lucide:printer', false)
             ->assertSee('Solo Administrador puede cambiar el estado')
             ->assertDontSee('cambiarEstadoAtencion(', false);
@@ -487,7 +492,41 @@ class AtencionesPacienteTest extends TestCase
             ->assertHeader('content-type', 'application/pdf');
     }
 
-    public function test_panel_historias_abiertas_filtra_por_defecto_fecha_actual_y_estado_abierta(): void
+    public function test_boton_ver_examenes_laboratorio_consulta_api_externa_en_modo_test(): void
+    {
+        $usuario = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER);
+        $atencion = HcEmergencia::factory()->create([
+            'numero_atencion' => 391399,
+        ]);
+
+        config([
+            'services.external_api.url' => 'https://api.csr.net.pe',
+            'services.external_api.token' => 'token-test',
+        ]);
+
+        Http::fake([
+            'https://api.csr.net.pe/api/external/sislab/admisiones/391399/guialab-pdf*' => Http::response('%PDF-1.4 test', 200, [
+                'Content-Type' => 'application/pdf',
+            ]),
+        ]);
+
+        Livewire::actingAs($usuario)
+            ->test(HcEmergenciaPanel::class, ['paciente' => null, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->set('tabActiva', 'ordenes')
+            ->assertSee('Ver exámenes')
+            ->assertSee(route('historia-clinica.emergencia.laboratorio.pdf', $atencion), false);
+
+        $this->actingAs($usuario)
+            ->get(route('historia-clinica.emergencia.laboratorio.pdf', $atencion))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        Http::assertSent(fn ($request): bool => $request->url() === 'https://api.csr.net.pe/api/external/sislab/admisiones/391399/guialab-pdf?origen=test'
+            && $request->hasHeader('Authorization', 'Bearer token-test')
+            && $request->hasHeader('Accept', 'application/pdf'));
+    }
+
+    public function test_panel_historias_abiertas_muestra_todas_las_abiertas_por_defecto(): void
     {
         $usuario = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER);
         $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Dra. Guardia Emergencia']);
@@ -543,8 +582,8 @@ class AtencionesPacienteTest extends TestCase
 
         Livewire::actingAs($usuario)
             ->test(HistoriasAbiertasPanel::class)
-            ->assertSet('fechaDesde', now()->toDateString())
-            ->assertSet('fechaHasta', now()->toDateString())
+            ->assertSet('fechaDesde', '')
+            ->assertSet('fechaHasta', '')
             ->assertSet('estado', EstadoAtencion::Abierta->value)
             ->assertSet('porPagina', 5)
             ->assertSee('Historial de Atenciones')
@@ -556,9 +595,11 @@ class AtencionesPacienteTest extends TestCase
             ->assertSee('Shock Trauma')
             ->assertSee('Dra. Guardia Emergencia')
             ->assertSee('Nivel 1')
+            ->assertSee(route('historia-clinica.atenciones-paciente.emergencia.imprimir', [$pacienteAbierto, $atencionAbierta]), false)
+            ->assertSee('lucide:printer', false)
             ->assertSee(route('historia-clinica.atenciones-paciente.emergencia.ticket', [$pacienteAbierto, $atencionAbierta]), false)
             ->assertDontSee('Paciente Cerrado Hoy')
-            ->assertDontSee('Paciente Abierto Ayer')
+            ->assertSee('Paciente Abierto Ayer')
             ->set('estado', 'Todos')
             ->assertSee('Paciente Cerrado Hoy')
             ->set('porPagina', 10)
@@ -610,7 +651,7 @@ class AtencionesPacienteTest extends TestCase
             ->assertSee('Debe seleccionar un paciente o ingresar un alias.');
     }
 
-    public function test_modal_crea_historia_con_alias_y_abre_panel_de_emergencia(): void
+    public function test_modal_crea_historia_con_alias_y_permanece_en_historial_de_atenciones(): void
     {
         $usuario = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER);
         $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Dr. Nueva Guardia']);
@@ -621,13 +662,19 @@ class AtencionesPacienteTest extends TestCase
             ->set('profesionalBusqueda', 'Nueva Guardia')
             ->call('seleccionarProfesional', $profesional->id)
             ->set('nuevaHistoriaForm.alias', 'Paciente NN Trauma')
+            ->set('nuevaHistoriaForm.tipo', 'Médica')
             ->call('crearHistoriaDesdeModal')
-            ->assertRedirect(route('historia-clinica.emergencia.editar', HcEmergencia::query()->latest('id')->firstOrFail()));
+            ->assertSet('modalNuevaHistoriaAbierto', false)
+            ->assertSet('nuevaHistoriaForm.alias', '')
+            ->assertSet('nuevaHistoriaForm.tipo', 'Accidental')
+            ->assertNoRedirect()
+            ->assertSee('Paciente NN Trauma');
 
         $this->assertDatabaseHas('hc_emergencia', [
             'paciente_id' => null,
             'alias' => 'Paciente NN Trauma',
             'profesional_salud_id' => $profesional->id,
+            'tipo' => 'Médica',
             'estado_atencion' => EstadoAtencion::Abierta->value,
         ]);
     }
@@ -646,7 +693,13 @@ class AtencionesPacienteTest extends TestCase
 
         Livewire::actingAs($usuario)
             ->test(HistoriasAbiertasPanel::class)
+            ->assertSee(route('historia-clinica.emergencia.imprimir', $atencion), false)
             ->assertSee(route('historia-clinica.emergencia.ticket', $atencion), false);
+
+        $this->actingAs($usuario)
+            ->get(route('historia-clinica.emergencia.imprimir', $atencion))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
 
         $this->actingAs($usuario)
             ->get(route('historia-clinica.emergencia.ticket', $atencion))
@@ -731,7 +784,8 @@ class AtencionesPacienteTest extends TestCase
             ->assertOk()
             ->assertSee('Maria Elena Garcia')
             ->assertSee('Atencion Abierta')
-            ->assertSee('Triaje / Anamnesis');
+            ->assertSee('Triaje')
+            ->assertSee('Anamnesis');
     }
 
     public function test_panel_nuevo_registro_crea_hc_emergencia_con_paciente_y_medico(): void
@@ -758,7 +812,8 @@ class AtencionesPacienteTest extends TestCase
             ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'modo' => 'nuevo'])
             ->assertSee('Maria Elena Garcia')
             ->assertSee('Dr. Roel Carreno Cisneros')
-            ->assertSee('Triaje / Anamnesis')
+            ->assertSee('Triaje')
+            ->assertSee('Anamnesis')
             ->set('form.prioridad_id', $prioridad->id)
             ->call('guardar')
             ->assertHasNoErrors()
@@ -869,6 +924,73 @@ class AtencionesPacienteTest extends TestCase
             ->assertSee('Atencion Cerrada')
             ->assertDontSee('Cerrar Atención')
             ->assertDontSee('Guardar');
+    }
+
+    public function test_panel_permite_cambiar_profesional_tratante_en_atencion_abierta_y_edicion(): void
+    {
+        $profesionalActual = ProfesionalSalud::factory()->create(['nombres' => 'Dr. Roel Carreno Cisneros']);
+        $profesionalNuevo = ProfesionalSalud::factory()->create(['nombres' => 'Dra. Ana Ruiz Mendoza']);
+        $medico = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Médico',
+            'profesional_salud_id' => $profesionalActual->id,
+        ]);
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $atencion = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'profesional_salud_id' => $profesionalActual->id,
+            'estado_atencion' => EstadoAtencion::Abierta,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+
+        Livewire::actingAs($medico)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->assertSee('Cambiar Profesional Tratante')
+            ->call('abrirModalCambiarProfesionalTratante')
+            ->assertSet('modalProfesionalTratanteAbierto', true)
+            ->assertSet('profesionalTratanteId', $profesionalActual->id)
+            ->set('profesionalTratanteBusqueda', 'Ana Ruiz')
+            ->call('seleccionarProfesionalTratante', $profesionalNuevo->id)
+            ->assertSet('profesionalTratanteId', $profesionalNuevo->id)
+            ->call('guardarProfesionalTratante')
+            ->assertHasNoErrors()
+            ->assertSet('modalProfesionalTratanteAbierto', false)
+            ->assertSee('Dra. Ana Ruiz Mendoza');
+
+        $this->assertDatabaseHas('hc_emergencia', [
+            'id' => $atencion->id,
+            'profesional_salud_id' => $profesionalNuevo->id,
+            'actualizado_por' => $medico->id,
+        ]);
+    }
+
+    public function test_panel_no_permite_cambiar_profesional_tratante_en_atencion_cerrada(): void
+    {
+        $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Dr. Roel Carreno Cisneros']);
+        $medico = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Médico',
+            'profesional_salud_id' => $profesional->id,
+        ]);
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $atencion = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'profesional_salud_id' => $profesional->id,
+            'estado_atencion' => EstadoAtencion::Cerrada,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+
+        Livewire::actingAs($medico)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->assertDontSee('Cambiar Profesional Tratante')
+            ->call('abrirModalCambiarProfesionalTratante')
+            ->assertForbidden();
     }
 
     public function test_panel_registra_medicamento_del_alta_despues_de_guardar_historia_nueva(): void
@@ -1017,6 +1139,157 @@ class AtencionesPacienteTest extends TestCase
             ->assertHasErrors(['form.fecha_hora_triaje'])
             ->assertSee('No se pudo guardar la historia clinica')
             ->assertSee('fecha y hora de triaje');
+    }
+
+    public function test_panel_carga_signos_vitales_favoritos_en_triaje(): void
+    {
+        $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Dr. Roel Carreno Cisneros']);
+        $medico = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Médico',
+            'profesional_salud_id' => $profesional->id,
+        ]);
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $atencion = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'profesional_salud_id' => $profesional->id,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $favorito = SignoVital::query()->create([
+            'descripcion' => 'Frecuencia cardiaca',
+            'unidad' => 'lpm',
+            'favorito' => true,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $noFavorito = SignoVital::query()->create([
+            'descripcion' => 'Peso',
+            'unidad' => 'kg',
+            'favorito' => false,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+
+        Livewire::actingAs($medico)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'modo' => 'nuevo'])
+            ->call('cargarSignosVitalesFavoritos')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseMissing('triaje_signos_vitales', [
+            'signo_vital_id' => $favorito->id,
+        ]);
+
+        Livewire::actingAs($medico)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->set('tabActiva', 'triaje')
+            ->assertSee('Cargar Signos Vitales')
+            ->call('cargarSignosVitalesFavoritos')
+            ->assertHasNoErrors()
+            ->assertSee('Frecuencia cardiaca');
+
+        $this->assertDatabaseHas('triaje_signos_vitales', [
+            'hc_emergencia_id' => $atencion->id,
+            'signo_vital_id' => $favorito->id,
+            'valor' => '',
+        ]);
+        $this->assertDatabaseMissing('triaje_signos_vitales', [
+            'hc_emergencia_id' => $atencion->id,
+            'signo_vital_id' => $noFavorito->id,
+        ]);
+
+        Livewire::actingAs($medico)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->call('cargarSignosVitalesFavoritos')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, TriajeSignoVital::query()->where('hc_emergencia_id', $atencion->id)->count());
+    }
+
+    public function test_panel_triaje_gestiona_antecedentes_medicos_desde_drawer(): void
+    {
+        $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Dr. Roel Carreno Cisneros']);
+        $medico = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Médico',
+            'profesional_salud_id' => $profesional->id,
+        ]);
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $atencion = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'profesional_salud_id' => $profesional->id,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $alergia = Alergia::query()->create([
+            'nombre' => 'Penicilina',
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+
+        Livewire::actingAs($medico)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->set('tabActiva', 'triaje')
+            ->assertSee('Antecedentes Médicos')
+            ->assertSee('Alergias')
+            ->assertSee('Reacción Adversa')
+            ->assertSee('Antecedentes Familiares')
+            ->assertSee('Cirugías')
+            ->assertSee('Hospitalizaciones')
+            ->assertSee('Medicamentos Habituales')
+            ->assertSee('Antecedentes Patológicos')
+            ->call('abrirDrawerAntecedente', 'alergias')
+            ->set('antecedenteFormulario.alergia_id', (string) $alergia->id)
+            ->set('antecedenteFormulario.agente_causal', 'Penicilina')
+            ->set('antecedenteFormulario.periodo', 'Infancia')
+            ->call('guardarAntecedenteRegistro')
+            ->assertHasNoErrors()
+            ->assertSee('Penicilina');
+
+        $this->assertDatabaseHas('paciente_alergias', [
+            'paciente_id' => $paciente->id,
+            'alergia_id' => $alergia->id,
+            'agente_causal' => 'Penicilina',
+            'periodo' => 'Infancia',
+        ]);
+    }
+
+    public function test_panel_triaje_permite_drawer_antecedentes_a_profesional_de_salud(): void
+    {
+        $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Lic. Rosa Perez']);
+        $usuario = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Profesional de Salud',
+            'profesional_salud_id' => $profesional->id,
+        ]);
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $usuario->id,
+            'actualizado_por' => $usuario->id,
+        ]);
+        $atencion = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'profesional_salud_id' => $profesional->id,
+            'registrado_por' => $usuario->id,
+            'actualizado_por' => $usuario->id,
+        ]);
+
+        Livewire::actingAs($usuario)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->set('tabActiva', 'triaje')
+            ->call('abrirDrawerAntecedente', 'medicamentos')
+            ->assertSet('antecedenteSeccionActiva', 'medicamentos')
+            ->set('antecedenteFormulario.medicacion', 'Losartan 50 mg')
+            ->call('guardarAntecedenteRegistro')
+            ->assertHasNoErrors()
+            ->assertSee('Losartan 50 mg');
+
+        $this->assertDatabaseHas('medicamentos_habituales', [
+            'paciente_id' => $paciente->id,
+            'medicacion' => 'Losartan 50 mg',
+        ]);
     }
 
     public function test_panel_guarda_examenes_clinicos_y_calcula_glasgow(): void
@@ -1175,6 +1448,19 @@ class AtencionesPacienteTest extends TestCase
             'registrado_por' => $medico->id,
             'actualizado_por' => $medico->id,
         ]);
+        $diagnostico = DiagnosticoCie10::query()->create([
+            'codigo' => 'I10',
+            'nombre' => 'Hipertension esencial',
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        IngresoDiagnostico::query()->create([
+            'hc_emergencia_id' => $atencion->id,
+            'diagnostico_cie10_id' => $diagnostico->id,
+            'tipo_diagnostico' => TipoDiagnostico::Presuntivo,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
         $examen = Examen::query()->create([
             'descripcion' => 'Hemograma completo',
             'registrado_por' => $medico->id,
@@ -1185,13 +1471,17 @@ class AtencionesPacienteTest extends TestCase
             ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
             ->set('tabActiva', 'ordenes')
             ->assertSee('Ordenes')
+            ->assertSee('Genera Receta')
+            ->assertSee(route('historia-clinica.emergencia.ordenes.pdf', $atencion), false)
             ->assertSee('Examenes de Laboratorio')
+            ->assertSee(route('historia-clinica.emergencia.examenes.pdf', $atencion), false)
             ->call('abrirNuevaOrden')
             ->set('ordenForm.tipo_orden_id', $tipoOrden->id)
-            ->set('ordenForm.detalle', 'Rayos X de torax')
+            ->set('ordenProcedimientoBusqueda', 'Rayos X de torax')
             ->set('ordenForm.prioridad', PrioridadOrden::Urgente->value)
             ->set('ordenForm.fecha_hora_solicitud', '2026-08-24T12:15')
             ->set('ordenForm.resultado', 'Pendiente')
+            ->set('ordenForm.estado', EstadoSolicitudExamen::EnProceso->value)
             ->set('ordenProfesionalBusqueda', 'Carreno')
             ->call('seleccionarProfesionalOrden', $profesional->id)
             ->call('guardarOrden')
@@ -1215,7 +1505,12 @@ class AtencionesPacienteTest extends TestCase
             'detalle' => 'Rayos X de torax',
             'prioridad' => PrioridadOrden::Urgente->value,
             'resultado' => 'Pendiente',
+            'estado' => EstadoSolicitudExamen::EnProceso->value,
             'profesional_salud_id' => $profesional->id,
+        ]);
+        $this->assertDatabaseHas('procedimientos', [
+            'denominacion' => 'Rayos X de torax',
+            'estado' => 'Activo',
         ]);
         $this->assertDatabaseHas('solicitud_examenes', [
             'hc_emergencia_id' => $atencion->id,
@@ -1225,6 +1520,100 @@ class AtencionesPacienteTest extends TestCase
             'estado' => EstadoSolicitudExamen::Terminado->value,
             'profesional_salud_id' => $profesional->id,
         ]);
+
+        $this->actingAs($medico)
+            ->get(route('historia-clinica.emergencia.ordenes.pdf', $atencion))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $this->actingAs($medico)
+            ->get(route('historia-clinica.emergencia.examenes.pdf', $atencion))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_panel_carga_lista_y_elimina_documentos_adjuntos_de_orden(): void
+    {
+        Storage::fake('public');
+
+        $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Dr. Roel Carreno Cisneros']);
+        $medico = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Médico',
+            'profesional_salud_id' => $profesional->id,
+        ]);
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $atencion = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'profesional_salud_id' => $profesional->id,
+            'estado_atencion' => EstadoAtencion::Abierta,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $tipoOrden = TipoOrden::query()->create([
+            'descripcion' => 'Imagenologia',
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $orden = Orden::query()->create([
+            'hc_emergencia_id' => $atencion->id,
+            'tipo_orden_id' => $tipoOrden->id,
+            'detalle' => 'Radiografia de torax',
+            'prioridad' => PrioridadOrden::Urgente,
+            'estado' => EstadoSolicitudExamen::Solicitado,
+            'profesional_salud_id' => $profesional->id,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        DocumentoAdjunto::query()->create([
+            'hc_emergencia_id' => $atencion->id,
+            'tipo' => TipoDocumentoAdjunto::Pdf,
+            'contenido' => 'documento-general.pdf',
+            'ruta_archivo' => 'historias-clinicas/'.$atencion->id.'/documentos/documento-general.pdf',
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+
+        $archivo = UploadedFile::fake()->create('resultado-orden.pdf', 180, 'application/pdf');
+
+        Livewire::actingAs($medico)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->set('tabActiva', 'ordenes')
+            ->assertSee('Cargar archivos de la orden')
+            ->call('abrirModalDocumentosOrden', $orden->id)
+            ->assertSet('modalDocumentosOrdenAbierto', true)
+            ->assertDontSee('documento-general.pdf')
+            ->set('ordenDocumentosArchivos', [$archivo])
+            ->call('guardarDocumentosOrden')
+            ->assertHasNoErrors()
+            ->assertSee('resultado-orden.pdf');
+
+        $documento = DocumentoAdjunto::query()
+            ->where('orden_id', $orden->id)
+            ->firstOrFail();
+
+        $this->assertDatabaseHas('documentos_adjuntos', [
+            'id' => $documento->id,
+            'hc_emergencia_id' => $atencion->id,
+            'orden_id' => $orden->id,
+            'contenido' => 'resultado-orden.pdf',
+            'tipo' => TipoDocumentoAdjunto::Pdf->value,
+        ]);
+        Storage::disk('public')->assertExists($documento->ruta_archivo);
+
+        Livewire::actingAs($medico)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->call('abrirModalDocumentosOrden', $orden->id)
+            ->call('eliminarDocumentoOrden', $documento->id)
+            ->assertHasNoErrors()
+            ->assertDontSee('resultado-orden.pdf');
+
+        $this->assertDatabaseMissing('documentos_adjuntos', [
+            'id' => $documento->id,
+        ]);
+        Storage::disk('public')->assertMissing($documento->ruta_archivo);
     }
 
     public function test_panel_registra_prescripciones_y_procedimientos_realizados(): void
@@ -1241,6 +1630,19 @@ class AtencionesPacienteTest extends TestCase
         $atencion = HcEmergencia::factory()->create([
             'paciente_id' => $paciente->id,
             'profesional_salud_id' => $profesional->id,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $diagnostico = DiagnosticoCie10::query()->create([
+            'codigo' => 'J18',
+            'nombre' => 'Neumonia no especificada',
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        IngresoDiagnostico::query()->create([
+            'hc_emergencia_id' => $atencion->id,
+            'diagnostico_cie10_id' => $diagnostico->id,
+            'tipo_diagnostico' => TipoDiagnostico::Presuntivo,
             'registrado_por' => $medico->id,
             'actualizado_por' => $medico->id,
         ]);
@@ -1263,6 +1665,8 @@ class AtencionesPacienteTest extends TestCase
             ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
             ->set('tabActiva', 'medicamentos')
             ->assertSee('Prescripción de Medicamentos')
+            ->assertSee('Genera Receta')
+            ->assertSee(route('historia-clinica.emergencia.medicamentos.pdf', $atencion), false)
             ->assertSee('Procedimientos Realizados')
             ->call('abrirNuevaPrescripcion')
             ->set('prescripcionMedicamentoBusqueda', 'Ceftriaxona')
@@ -1272,6 +1676,7 @@ class AtencionesPacienteTest extends TestCase
             ->set('prescripcionForm.duracion', '7 dias')
             ->set('prescripcionForm.cantidad', '2')
             ->set('prescripcionForm.fecha_hora', '2026-08-24T15:00')
+            ->set('prescripcionForm.estado', EstadoSolicitudExamen::Terminado->value)
             ->set('prescripcionProfesionalBusqueda', 'Carreno')
             ->call('seleccionarProfesionalPrescripcion', $profesional->id)
             ->call('guardarPrescripcion')
@@ -1281,6 +1686,7 @@ class AtencionesPacienteTest extends TestCase
             ->set('procedimientoBusqueda', 'Sutura simple de herida')
             ->set('procedimientoForm.sesiones', '1')
             ->set('procedimientoForm.fecha_hora', '2026-08-24T15:30')
+            ->set('procedimientoForm.estado', EstadoSolicitudExamen::Terminado->value)
             ->call('guardarProcedimiento')
             ->assertHasNoErrors()
             ->assertSee('Sutura simple de herida');
@@ -1294,6 +1700,7 @@ class AtencionesPacienteTest extends TestCase
             'via' => 'EV',
             'duracion' => '7 dias',
             'cantidad' => 2,
+            'estado' => EstadoSolicitudExamen::Terminado->value,
             'profesional_salud_id' => $profesional->id,
         ]);
         $this->assertDatabaseHas('procedimientos_realizados', [
@@ -1301,7 +1708,13 @@ class AtencionesPacienteTest extends TestCase
             'procedimiento_id' => null,
             'denominacion' => 'Sutura simple de herida',
             'sesiones' => 1,
+            'estado' => EstadoSolicitudExamen::Terminado->value,
         ]);
+
+        $this->actingAs($medico)
+            ->get(route('historia-clinica.emergencia.medicamentos.pdf', $atencion))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 
     public function test_panel_registra_notas_de_enfermeria_y_balance_hidrico(): void
@@ -1524,6 +1937,35 @@ class AtencionesPacienteTest extends TestCase
             'registrado_por' => $medico->id,
             'actualizado_por' => $medico->id,
         ]);
+        $diagnosticoIngreso = DiagnosticoCie10::query()->create([
+            'codigo' => 'S01',
+            'nombre' => 'Herida de cabeza',
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        $diagnosticoEgreso = DiagnosticoCie10::query()->create([
+            'codigo' => 'Z54',
+            'nombre' => 'Convalecencia',
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        IngresoDiagnostico::query()->create([
+            'hc_emergencia_id' => $atencion->id,
+            'diagnostico_cie10_id' => $diagnosticoIngreso->id,
+            'tipo_diagnostico' => TipoDiagnostico::Presuntivo,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
+        EgresoDiagnostico::query()->create([
+            'hc_emergencia_id' => $atencion->id,
+            'diagnostico_cie10_id' => $diagnosticoEgreso->id,
+            'codigo_cie10' => 'Z54',
+            'denominacion' => 'Convalecencia',
+            'clasificacion' => ClasificacionDiagnosticoEgreso::Principal,
+            'tipo_diagnostico' => TipoDiagnostico::Definitivo,
+            'registrado_por' => $medico->id,
+            'actualizado_por' => $medico->id,
+        ]);
 
         Livewire::actingAs($medico)
             ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
@@ -1531,6 +1973,8 @@ class AtencionesPacienteTest extends TestCase
             ->assertSee('Destino del Paciente y condición')
             ->assertSee('Medicamentos del Alta')
             ->assertSee('Datos del Egreso')
+            ->assertSee('Genera Ficha de Alta')
+            ->assertSee(route('historia-clinica.emergencia.alta.pdf', $atencion), false)
             ->call('abrirNuevoAltaMedicamento')
             ->set('altaMedicamentoBusqueda', 'Paracetamol')
             ->call('seleccionarMedicamentoAlta', $medicamento->id)
@@ -1570,6 +2014,11 @@ class AtencionesPacienteTest extends TestCase
             'profesional_egreso_id' => $profesional->id,
             'indicaciones_finales' => 'Control por emergencia si presenta signos de alarma.',
         ]);
+
+        $this->actingAs($medico)
+            ->get(route('historia-clinica.emergencia.alta.pdf', $atencion))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 
     public function test_panel_carga_lista_y_elimina_documentos_adjuntos(): void
@@ -1577,7 +2026,7 @@ class AtencionesPacienteTest extends TestCase
         Storage::fake('public');
 
         $usuario = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
-            'tipo_usuario' => 'Administrativo',
+            'tipo_usuario' => 'Supervisor',
         ]);
         $paciente = Paciente::factory()->create([
             'registrado_por' => $usuario->id,
@@ -1624,10 +2073,73 @@ class AtencionesPacienteTest extends TestCase
         Storage::disk('public')->assertMissing($documento->ruta_archivo);
     }
 
-    public function test_panel_ver_y_editar_atencion_es_accesible_para_cualquier_tipo_de_usuario(): void
+    public function test_edicion_de_historia_clinica_solo_es_accesible_para_tipos_autorizados(): void
     {
-        $usuario = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+        $usuarioAdministrativo = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
             'tipo_usuario' => 'Administrativo',
+        ]);
+        $usuarioSupervisor = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Supervisor',
+        ]);
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $usuarioAdministrativo->id,
+            'actualizado_por' => $usuarioAdministrativo->id,
+        ]);
+        $atencion = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'estado_atencion' => EstadoAtencion::Abierta,
+            'registrado_por' => $usuarioAdministrativo->id,
+            'actualizado_por' => $usuarioAdministrativo->id,
+        ]);
+
+        Livewire::actingAs($usuarioAdministrativo)
+            ->test(HistoriaClinicaPaciente::class, ['paciente' => $paciente])
+            ->call('verAtencion', $atencion->id)
+            ->assertRedirect(route('historia-clinica.atenciones-paciente.emergencia.ver', [$paciente, $atencion]));
+
+        Livewire::actingAs($usuarioAdministrativo)
+            ->test(HistoriaClinicaPaciente::class, ['paciente' => $paciente])
+            ->call('editarAtencion', $atencion->id)
+            ->assertForbidden();
+
+        Livewire::actingAs($usuarioAdministrativo)
+            ->test(HistoriaClinicaPaciente::class, ['paciente' => $paciente])
+            ->assertDontSee('wire:click="editarAtencion('.$atencion->id.')"', false);
+
+        Livewire::actingAs($usuarioAdministrativo)
+            ->test(HistoriasAbiertasPanel::class)
+            ->assertDontSee('wire:click="editarAtencion('.$atencion->id.')"', false)
+            ->call('editarAtencion', $atencion->id)
+            ->assertForbidden();
+
+        $this->actingAs($usuarioAdministrativo)
+            ->get(route('historia-clinica.atenciones-paciente.emergencia.editar', [$paciente, $atencion]))
+            ->assertForbidden();
+
+        Livewire::actingAs($usuarioSupervisor)
+            ->test(HistoriaClinicaPaciente::class, ['paciente' => $paciente])
+            ->call('editarAtencion', $atencion->id)
+            ->assertRedirect(route('historia-clinica.atenciones-paciente.emergencia.editar', [$paciente, $atencion]));
+
+        Livewire::actingAs($usuarioSupervisor)
+            ->test(HistoriasAbiertasPanel::class)
+            ->assertSee('wire:click="editarAtencion('.$atencion->id.')"', false)
+            ->call('editarAtencion', $atencion->id)
+            ->assertRedirect(route('historia-clinica.atenciones-paciente.emergencia.editar', [$paciente, $atencion]));
+
+        Livewire::actingAs($usuarioSupervisor)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->assertSee('Atencion de emergencia')
+            ->assertSee('AT:')
+            ->assertSee('--');
+    }
+
+    public function test_panel_historia_clinica_advierte_cambios_sin_guardar_antes_de_salir(): void
+    {
+        $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Dr. Guardia Emergencia']);
+        $usuario = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Médico',
+            'profesional_salud_id' => $profesional->id,
         ]);
         $paciente = Paciente::factory()->create([
             'registrado_por' => $usuario->id,
@@ -1635,32 +2147,100 @@ class AtencionesPacienteTest extends TestCase
         ]);
         $atencion = HcEmergencia::factory()->create([
             'paciente_id' => $paciente->id,
+            'profesional_salud_id' => $profesional->id,
+            'alias' => 'Alias original',
+            'estado_atencion' => EstadoAtencion::Abierta,
             'registrado_por' => $usuario->id,
             'actualizado_por' => $usuario->id,
         ]);
 
         Livewire::actingAs($usuario)
-            ->test(HistoriaClinicaPaciente::class, ['paciente' => $paciente])
-            ->call('verAtencion', $atencion->id)
-            ->assertRedirect(route('historia-clinica.atenciones-paciente.emergencia.ver', [$paciente, $atencion]));
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->assertSet('hayCambiosSinGuardar', false)
+            ->set('form.alias', 'Alias modificado')
+            ->assertSet('hayCambiosSinGuardar', true)
+            ->call('solicitarSalidaDelPanel')
+            ->assertSet('panelSalidaSinGuardarAbierto', true)
+            ->assertSee('¿Desea guardar los cambios antes de salir?')
+            ->call('cancelarSalidaDelPanel')
+            ->assertSet('panelSalidaSinGuardarAbierto', false)
+            ->call('solicitarSalidaDelPanel')
+            ->call('salirSinGuardarCambios')
+            ->assertRedirect(route('historia-clinica.atenciones-paciente.historia', $paciente));
 
-        Livewire::actingAs($usuario)
-            ->test(HistoriaClinicaPaciente::class, ['paciente' => $paciente])
-            ->call('editarAtencion', $atencion->id)
-            ->assertRedirect(route('historia-clinica.atenciones-paciente.emergencia.editar', [$paciente, $atencion]));
+        $this->assertDatabaseHas('hc_emergencia', [
+            'id' => $atencion->id,
+            'alias' => 'Alias original',
+        ]);
+    }
+
+    public function test_panel_historia_clinica_guarda_cambios_antes_de_salir(): void
+    {
+        $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Dr. Guardia Emergencia']);
+        $usuario = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Médico',
+            'profesional_salud_id' => $profesional->id,
+        ]);
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $usuario->id,
+            'actualizado_por' => $usuario->id,
+        ]);
+        $atencion = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'profesional_salud_id' => $profesional->id,
+            'alias' => 'Alias original',
+            'estado_atencion' => EstadoAtencion::Abierta,
+            'registrado_por' => $usuario->id,
+            'actualizado_por' => $usuario->id,
+        ]);
 
         Livewire::actingAs($usuario)
             ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
-            ->assertSee('Atencion de emergencia')
-            ->assertSee('AT:')
-            ->assertSee('--');
+            ->set('form.alias', 'Alias guardado antes de salir')
+            ->call('solicitarSalidaDelPanel')
+            ->assertSet('panelSalidaSinGuardarAbierto', true)
+            ->call('guardarYSalirDelPanel')
+            ->assertRedirect(route('historia-clinica.atenciones-paciente.historia', $paciente));
+
+        $this->assertDatabaseHas('hc_emergencia', [
+            'id' => $atencion->id,
+            'alias' => 'Alias guardado antes de salir',
+        ]);
+    }
+
+    public function test_panel_historia_clinica_advierte_cambios_detectados_en_cliente_antes_de_sincronizar(): void
+    {
+        $profesional = ProfesionalSalud::factory()->create(['nombres' => 'Dr. Guardia Emergencia']);
+        $usuario = $this->crearUsuarioConPermiso(Permisos::HISTORIA_CLINICA_VER, [
+            'tipo_usuario' => 'Médico',
+            'profesional_salud_id' => $profesional->id,
+        ]);
+        $paciente = Paciente::factory()->create([
+            'registrado_por' => $usuario->id,
+            'actualizado_por' => $usuario->id,
+        ]);
+        $atencion = HcEmergencia::factory()->create([
+            'paciente_id' => $paciente->id,
+            'profesional_salud_id' => $profesional->id,
+            'estado_atencion' => EstadoAtencion::Abierta,
+            'registrado_por' => $usuario->id,
+            'actualizado_por' => $usuario->id,
+        ]);
+
+        Livewire::actingAs($usuario)
+            ->test(HcEmergenciaPanel::class, ['paciente' => $paciente, 'atencion' => $atencion, 'modo' => 'editar'])
+            ->assertSet('hayCambiosSinGuardar', false)
+            ->call('solicitarSalidaAUrl', route('historia-clinica.atenciones-paciente.index'), true)
+            ->assertSet('hayCambiosSinGuardar', true)
+            ->assertSet('panelSalidaSinGuardarAbierto', true)
+            ->assertSee('¿Desea guardar los cambios antes de salir?');
     }
 
     private function crearUsuarioConPermiso(string $permiso, array $atributos = []): User
     {
         $this->seed(RolesPermisosSeeder::class);
 
-        $usuario = User::factory()->create(array_merge(['activo' => true], $atributos));
+        $usuario = User::factory()->create(array_merge(['activo' => true, 'tipo_usuario' => 'Médico'], $atributos));
         $usuario->givePermissionTo($permiso);
 
         return $usuario;

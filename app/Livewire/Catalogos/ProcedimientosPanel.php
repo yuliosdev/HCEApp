@@ -124,7 +124,7 @@ class ProcedimientosPanel extends Component
         abort_unless($this->esAdministrador(), 403);
 
         $this->validate([
-            'archivoImportacion' => ['required', 'file', 'mimes:xlsx', 'max:5120'],
+            'archivoImportacion' => ['required', 'file', 'mimes:xlsx', 'max:20480'],
         ], [], [
             'archivoImportacion' => 'archivo de importacion',
         ]);
@@ -135,15 +135,19 @@ class ProcedimientosPanel extends Component
         $this->archivoImportacion = null;
         $this->resetPage();
 
-        $mensaje = "Importacion finalizada. Creados: {$resultado['creados']}. Actualizados: {$resultado['actualizados']}. Omitidos: {$resultado['omitidos']}.";
+        $mensaje = "Importación completada. Creados: {$resultado['creados']}, actualizados: {$resultado['actualizados']}, omitidos: {$resultado['omitidos']}.";
 
         if ($resultado['errores'] !== []) {
-            flash()->warning($mensaje.' Revisa el archivo: '.implode(' ', array_slice($resultado['errores'], 0, 3)), [], 'Catalogos');
+            sweetalert()->warning(
+                $mensaje.' Revisa el archivo: '.implode(' ', array_slice($resultado['errores'], 0, 3)),
+                [],
+                'Importación terminada',
+            );
 
             return;
         }
 
-        flash()->success($mensaje, [], 'Catalogos');
+        sweetalert()->success($mensaje, [], 'Importación terminada');
     }
 
     public function cambiarEstado(int $procedimientoId): void

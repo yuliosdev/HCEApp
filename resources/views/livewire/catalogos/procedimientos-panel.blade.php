@@ -72,13 +72,14 @@
                 <form wire:submit.prevent="importarDesdeExcel" class="catalog-import-form">
                     <label>
                         <span class="sr-only">Archivo Excel</span>
-                        <input type="file" wire:model="archivoImportacion" accept=".xlsx">
+                        <input type="file" wire:model="archivoImportacion" accept=".xlsx" wire:loading.attr="disabled" wire:target="archivoImportacion,importarDesdeExcel">
                         @error('archivoImportacion') <small>{{ $message }}</small> @enderror
                     </label>
 
                     <button type="submit" class="catalog-primary-action" wire:loading.attr="disabled" wire:target="archivoImportacion,importarDesdeExcel">
                         <iconify-icon icon="lucide:upload" aria-hidden="true"></iconify-icon>
-                        Importar
+                        <span wire:loading.remove wire:target="archivoImportacion,importarDesdeExcel">Importar</span>
+                        <span wire:loading wire:target="archivoImportacion,importarDesdeExcel">Importando...</span>
                     </button>
                 </form>
             </div>

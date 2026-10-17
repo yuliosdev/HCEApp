@@ -22,6 +22,11 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'external_api' => [
+        'url' => env('EXTERNAL_API_URL', env('CSR_API_URL', 'https://api.csr.net.pe')),
+        'token' => env('EXTERNAL_API_TOKEN', env('CSR_API_TOKEN')),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

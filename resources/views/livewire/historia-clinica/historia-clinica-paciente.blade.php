@@ -187,6 +187,15 @@
                                         <iconify-icon icon="lucide:eye" aria-hidden="true"></iconify-icon>
                                     </button>
                                     <a
+                                        href="{{ route('historia-clinica.atenciones-paciente.emergencia.imprimir', [$pacienteActual, $atencion]) }}"
+                                        target="_blank"
+                                        rel="noopener"
+                                        aria-label="Imprimir historia clinica"
+                                        title="Imprimir historia clinica"
+                                    >
+                                        <iconify-icon icon="lucide:printer" aria-hidden="true"></iconify-icon>
+                                    </a>
+                                    <a
                                         href="{{ route('historia-clinica.atenciones-paciente.emergencia.ticket', [$pacienteActual, $atencion]) }}"
                                         target="_blank"
                                         rel="noopener"
@@ -195,7 +204,7 @@
                                     >
                                         <iconify-icon icon="lucide:ticket-check" aria-hidden="true"></iconify-icon>
                                     </a>
-                                    @if ($abierta)
+                                    @if ($this->puedeEditarAtencion($atencion))
                                         <button type="button" wire:click="editarAtencion({{ $atencion->id }})" aria-label="Editar atencion" title="Editar atencion">
                                             <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
                                         </button>

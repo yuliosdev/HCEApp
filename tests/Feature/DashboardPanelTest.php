@@ -53,6 +53,7 @@ class DashboardPanelTest extends TestCase
         $response->assertSee('Procedimientos');
         $response->assertSee('CIE10');
         $response->assertSee('Examenes');
+        $response->assertSee('Ambientes');
         $response->assertSee('Atenciones por Prioridad');
         $response->assertSee('Parametros Generales');
         $response->assertSee('data-dropdown-toggle', false);

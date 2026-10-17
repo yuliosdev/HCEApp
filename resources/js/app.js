@@ -444,6 +444,25 @@ const prepararAnimacionesDashboard = () => {
     document.querySelectorAll('[data-count-target]').forEach(animarConteo);
 };
 
+const repararIconosAccionesCatalogo = () => {
+    document.querySelectorAll('.catalog-actions iconify-icon').forEach((icono) => {
+        const nombreIcono = icono.getAttribute('icon');
+
+        if (!nombreIcono) {
+            return;
+        }
+
+        // Livewire puede conservar el custom element sin volver a disparar su render interno.
+        icono.setAttribute('icon', '');
+
+        window.requestAnimationFrame(() => {
+            if (document.contains(icono)) {
+                icono.setAttribute('icon', nombreIcono);
+            }
+        });
+    });
+};
+
 const obtenerSweetAlert = () => window.Swal || window.Sweetalert2 || window.sweetAlert || window.SweetAlert;
 
 const confirmarEliminacionCatalogo = async (boton) => {
@@ -563,6 +582,208 @@ const prepararAutocompletados = () => {
     });
 };
 
+const mostrarErrorLaboratorioPdf = async (mensaje) => {
+    const sweetAlert = obtenerSweetAlert();
+    const temaOscuro = document.documentElement.dataset.appliedTheme === 'dark';
+
+    if (sweetAlert && typeof sweetAlert.fire === 'function') {
+        await sweetAlert.fire({
+            title: 'Exámenes de laboratorio',
+            text: mensaje,
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            background: temaOscuro ? '#121214' : '#ffffff',
+            color: temaOscuro ? '#f8fafc' : '#1f2937',
+            confirmButtonColor: '#1599eb',
+        });
+
+        return;
+    }
+
+    window.alert(mensaje);
+};
+
+const obtenerMensajeErrorPdf = async (respuesta) => {
+    const tipoContenido = respuesta.headers.get('content-type') || '';
+
+    if (tipoContenido.includes('application/json')) {
+        const datos = await respuesta.json().catch(() => null);
+
+        return datos?.message || 'No se pudo obtener el PDF de exámenes.';
+    }
+
+    const texto = await respuesta.text().catch(() => '');
+    const limpio = texto.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+    return limpio || 'No se pudo obtener el PDF de exámenes.';
+};
+
+const prepararVisorLaboratorioPdf = () => {
+    if (document.documentElement.dataset.labPdfViewerReady === 'true') {
+        return;
+    }
+
+    document.documentElement.dataset.labPdfViewerReady = 'true';
+
+    document.addEventListener('click', async (evento) => {
+        const enlace = evento.target instanceof Element
+            ? evento.target.closest('[data-emergency-lab-pdf]')
+            : null;
+
+        if (!enlace) {
+            return;
+        }
+
+        evento.preventDefault();
+
+        if (enlace.dataset.loading === 'true') {
+            return;
+        }
+
+        enlace.dataset.loading = 'true';
+        enlace.classList.add('is-loading');
+        enlace.setAttribute('aria-busy', 'true');
+
+        const etiqueta = enlace.querySelector('.emergency-lab-pdf-label');
+        const textoOriginal = etiqueta?.textContent || 'Ver exámenes';
+
+        if (etiqueta) {
+            etiqueta.textContent = 'Consultando...';
+        }
+
+        try {
+            const respuesta = await window.fetch(enlace.href, {
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/pdf',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!respuesta.ok) {
+                throw new Error(await obtenerMensajeErrorPdf(respuesta));
+            }
+
+            const pdf = await respuesta.blob();
+            const urlPdf = URL.createObjectURL(pdf);
+            const ventanaPdf = window.open(urlPdf, '_blank', 'noopener');
+
+            if (ventanaPdf) {
+                window.setTimeout(() => URL.revokeObjectURL(urlPdf), 60000);
+            } else {
+                URL.revokeObjectURL(urlPdf);
+                await mostrarErrorLaboratorioPdf('El navegador bloqueó la pestaña del PDF. Permite ventanas emergentes para HCEApp e inténtalo nuevamente.');
+            }
+        } catch (error) {
+            await mostrarErrorLaboratorioPdf(error?.message || 'No se pudo obtener el PDF de exámenes.');
+        } finally {
+            enlace.dataset.loading = 'false';
+            enlace.classList.remove('is-loading');
+            enlace.removeAttribute('aria-busy');
+
+            if (etiqueta) {
+                etiqueta.textContent = textoOriginal;
+            }
+        }
+    });
+};
+
+const obtenerPanelHistoriaClinicaConCambios = () => document.querySelector('[data-emergency-unsaved-changes="true"]');
+
+const marcarPanelHistoriaClinicaComoEditado = (elemento) => {
+    const panel = elemento.closest('.emergency-record-page[data-emergency-unsaved-changes]');
+
+    if (!panel) {
+        return;
+    }
+
+    const control = elemento.closest('input, textarea, select');
+
+    if (
+        control?.disabled
+        || control?.readOnly
+        || control?.type === 'file'
+        || control?.closest('[aria-modal="true"]')
+    ) {
+        return;
+    }
+
+    panel.dataset.emergencyUnsavedChanges = 'true';
+};
+
+const confirmarSalidaHistoriaClinica = (evento, enlace, panel) => {
+    const href = enlace.href;
+
+    if (
+        !href
+        || href.startsWith('javascript:')
+        || href === window.location.href
+        || enlace.target === '_blank'
+        || enlace.hasAttribute('download')
+        || evento.metaKey
+        || evento.ctrlKey
+        || evento.shiftKey
+        || evento.altKey
+    ) {
+        return;
+    }
+
+    const componentRoot = panel.closest('[wire\\:id]');
+    const componentId = componentRoot?.getAttribute('wire:id');
+    const instanciaLivewire = componentId ? window.Livewire?.find(componentId) : null;
+
+    if (!instanciaLivewire) {
+        return;
+    }
+
+    evento.preventDefault();
+    evento.stopPropagation();
+    evento.stopImmediatePropagation();
+    instanciaLivewire.call('solicitarSalidaAUrl', href, true);
+};
+
+const prepararProteccionSalidaHistoriaClinica = () => {
+    if (document.documentElement.dataset.emergencyExitGuardReady === 'true') {
+        return;
+    }
+
+    document.documentElement.dataset.emergencyExitGuardReady = 'true';
+
+    document.addEventListener('input', (evento) => {
+        if (evento.target instanceof Element) {
+            marcarPanelHistoriaClinicaComoEditado(evento.target);
+        }
+    }, true);
+
+    document.addEventListener('change', (evento) => {
+        if (evento.target instanceof Element) {
+            marcarPanelHistoriaClinicaComoEditado(evento.target);
+        }
+    }, true);
+
+    window.addEventListener('beforeunload', (evento) => {
+        if (!obtenerPanelHistoriaClinicaConCambios()) {
+            return;
+        }
+
+        evento.preventDefault();
+        evento.returnValue = '';
+    });
+
+    document.addEventListener('click', (evento) => {
+        const enlace = evento.target instanceof Element
+            ? evento.target.closest('a[href]')
+            : null;
+        const panel = obtenerPanelHistoriaClinicaConCambios();
+
+        if (!enlace || !panel) {
+            return;
+        }
+
+        confirmarSalidaHistoriaClinica(evento, enlace, panel);
+    }, true);
+};
+
 const inicializarAplicacion = () => {
     inicializarPreline();
     prepararTransicionSalidaLogin();
@@ -570,6 +791,9 @@ const inicializarAplicacion = () => {
     prepararAnimacionesDashboard();
     prepararConfirmacionesCatalogo();
     prepararAutocompletados();
+    prepararVisorLaboratorioPdf();
+    prepararProteccionSalidaHistoriaClinica();
+    repararIconosAccionesCatalogo();
 };
 
 consultaTemaSistema.addEventListener('change', () => {

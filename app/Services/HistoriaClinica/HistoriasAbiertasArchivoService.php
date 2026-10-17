@@ -24,6 +24,7 @@ class HistoriasAbiertasArchivoService
 
         $this->consulta($desde, $hasta, $estado)
             ->with([
+                'ambiente',
                 'paciente',
                 'profesionalResponsable',
                 'prioridad',
@@ -121,7 +122,7 @@ class HistoriasAbiertasArchivoService
             $atencion->id,
             $atencion->numero_atencion ?? '',
             $atencion->profesionalResponsable?->nombres ?? '',
-            $atencion->destino_topico ?: $atencion->ambiente ?: '',
+            $atencion->destino_topico ?: $atencion->ambiente?->denominacion ?: '',
             $diagnostico?->diagnosticoCie10 ? trim($diagnostico->diagnosticoCie10->nombre.' ('.$diagnostico->diagnosticoCie10->codigo.')') : '',
             $atencion->prioridad?->orden ? 'Nivel '.$atencion->prioridad->orden : '',
             $atencion->triaje ? 'Realizado' : 'Pendiente',

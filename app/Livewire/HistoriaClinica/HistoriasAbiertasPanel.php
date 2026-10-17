@@ -14,6 +14,7 @@ use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
@@ -43,6 +44,7 @@ class HistoriasAbiertasPanel extends Component
         'profesional_salud_id' => null,
         'paciente_id' => null,
         'alias' => '',
+        'tipo' => 'Accidental',
     ];
 
     public string $profesionalBusqueda = '';
@@ -51,10 +53,6 @@ class HistoriasAbiertasPanel extends Component
 
     public function mount(): void
     {
-        $hoy = now()->toDateString();
-
-        $this->fechaDesde = $this->fechaDesde ?: $hoy;
-        $this->fechaHasta = $this->fechaHasta ?: $hoy;
         $this->estado = $this->estado ?: EstadoAtencion::Abierta->value;
     }
 
@@ -80,10 +78,8 @@ class HistoriasAbiertasPanel extends Component
 
     public function limpiarFiltros(): void
     {
-        $hoy = now()->toDateString();
-
-        $this->fechaDesde = $hoy;
-        $this->fechaHasta = $hoy;
+        $this->fechaDesde = '';
+        $this->fechaHasta = '';
         $this->estado = EstadoAtencion::Abierta->value;
         $this->porPagina = 5;
         $this->resetPage();
@@ -142,6 +138,7 @@ class HistoriasAbiertasPanel extends Component
                 'nuevaHistoriaForm.profesional_salud_id' => ['required', 'integer', Rule::exists('profesionales_salud', 'id')->whereNull('deleted_at')],
                 'nuevaHistoriaForm.paciente_id' => ['nullable', 'integer', Rule::exists('pacientes', 'id')->whereNull('deleted_at')],
                 'nuevaHistoriaForm.alias' => ['nullable', 'string', 'max:100', 'required_without:nuevaHistoriaForm.paciente_id'],
+                'nuevaHistoriaForm.tipo' => ['required', Rule::in($this->tiposEmergencia())],
             ],
             [
                 'nuevaHistoriaForm.alias.required_without' => 'Debe seleccionar un paciente o ingresar un alias.',
@@ -150,6 +147,7 @@ class HistoriasAbiertasPanel extends Component
                 'nuevaHistoriaForm.profesional_salud_id' => 'profesional',
                 'nuevaHistoriaForm.paciente_id' => 'paciente',
                 'nuevaHistoriaForm.alias' => 'alias',
+                'nuevaHistoriaForm.tipo' => 'tipo de emergencia',
             ]
         )['nuevaHistoriaForm'];
 
@@ -159,7 +157,7 @@ class HistoriasAbiertasPanel extends Component
             return;
         }
 
-        $atencion = HcEmergencia::query()->create([
+        $datosAtencion = [
             'paciente_id' => $datos['paciente_id'] ?: null,
             'alias' => $datos['alias'] ?: null,
             'fecha_hora_inicio_episodio' => now(),
@@ -169,20 +167,20 @@ class HistoriasAbiertasPanel extends Component
             'sin_identificacion' => blank($datos['paciente_id']) ? SiNo::Si->value : SiNo::No->value,
             'registrado_por' => Auth::id(),
             'actualizado_por' => Auth::id(),
-        ]);
+        ];
 
-        $this->modalNuevaHistoriaAbierto = false;
-
-        if ($atencion->paciente_id !== null) {
-            $this->redirectRoute('historia-clinica.atenciones-paciente.emergencia.editar', [
-                'paciente' => $atencion->paciente_id,
-                'atencion' => $atencion,
-            ]);
-
-            return;
+        if (Schema::hasColumn('hc_emergencia', 'tipo')) {
+            $datosAtencion['tipo'] = $datos['tipo'];
         }
 
-        $this->redirectRoute('historia-clinica.emergencia.editar', $atencion);
+        HcEmergencia::query()->create($datosAtencion);
+
+        $this->modalNuevaHistoriaAbierto = false;
+        $this->resetearFormularioNuevaHistoria();
+        $this->resetPage();
+        $this->resetValidation();
+
+        flash()->success('Historia clínica creada correctamente.', [], 'Historia clínica');
     }
 
     public function verAtencion(int $atencionId): void
@@ -203,6 +201,8 @@ class HistoriasAbiertasPanel extends Component
 
     public function editarAtencion(int $atencionId): void
     {
+        abort_unless($this->usuarioPuedeEditarHistoriaClinica(), 403);
+
         $atencion = $this->buscarAtencion($atencionId);
 
         if (! $this->estadoAbierto($atencion)) {
@@ -227,6 +227,7 @@ class HistoriasAbiertasPanel extends Component
     {
         $atenciones = $this->consultaAtenciones()
             ->with([
+                'ambiente',
                 'paciente',
                 'profesionalResponsable',
                 'prioridad',
@@ -244,6 +245,7 @@ class HistoriasAbiertasPanel extends Component
             'opcionesPorPagina' => [5, 10, 15, 20, 25, 50],
             'profesionalesNuevaHistoria' => $this->profesionalesNuevaHistoria(),
             'pacientesNuevaHistoria' => $this->pacientesNuevaHistoria(),
+            'tiposEmergencia' => $this->tiposEmergencia(),
         ]);
     }
 
@@ -293,6 +295,11 @@ class HistoriasAbiertasPanel extends Component
     public function estadoAbierto(HcEmergencia $atencion): bool
     {
         return $this->valorEnum($atencion->estado_atencion) === EstadoAtencion::Abierta->value;
+    }
+
+    public function puedeEditarAtencion(HcEmergencia $atencion): bool
+    {
+        return $this->estadoAbierto($atencion) && $this->usuarioPuedeEditarHistoriaClinica();
     }
 
     public function parametrosExportacion(): array
@@ -347,12 +354,20 @@ class HistoriasAbiertasPanel extends Component
             ->findOrFail($atencionId);
     }
 
+    private function usuarioPuedeEditarHistoriaClinica(): bool
+    {
+        $tipoUsuario = Str::lower(Str::ascii(trim((string) Auth::user()?->tipo_usuario)));
+
+        return in_array($tipoUsuario, ['supervisor', 'profesional de salud', 'medico'], true);
+    }
+
     private function resetearFormularioNuevaHistoria(): void
     {
         $this->nuevaHistoriaForm = [
             'profesional_salud_id' => null,
             'paciente_id' => null,
             'alias' => '',
+            'tipo' => 'Accidental',
         ];
 
         $this->profesionalBusqueda = '';
@@ -405,6 +420,14 @@ class HistoriasAbiertasPanel extends Component
             ->orderBy('nombre')
             ->limit(8)
             ->get();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function tiposEmergencia(): array
+    {
+        return ['Accidental', 'Médica'];
     }
 
     private function etiquetaProfesional(ProfesionalSalud $profesional): string

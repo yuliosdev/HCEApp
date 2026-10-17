@@ -2,40 +2,52 @@
 
 namespace App\Livewire\HistoriaClinica;
 
+use App\Enums\ClasificacionDiagnosticoEgreso;
 use App\Enums\CondicionEgreso;
 use App\Enums\DestinoDentroIpress;
 use App\Enums\DestinoFueraIpress;
 use App\Enums\EstadoAtencion;
 use App\Enums\EstadoSolicitudExamen;
 use App\Enums\FuenteAtencion;
+use App\Enums\GravedadReaccionAdversaMedicamento;
+use App\Enums\ParentescoFamiliar;
 use App\Enums\PrioridadOrden;
 use App\Enums\PrioridadSolicitudExamen;
 use App\Enums\SiNo;
-use App\Enums\TipoDocumentoAdjunto;
-use App\Enums\TopicoAtencion;
-use App\Enums\ClasificacionDiagnosticoEgreso;
 use App\Enums\TipoDiagnostico;
+use App\Enums\TipoDocumentoAdjunto;
+use App\Enums\TipoReaccionAdversaMedicamento;
+use App\Enums\TopicoAtencion;
 use App\Enums\UnidadTiempoEnfermedad;
+use App\Models\Ambiente;
+use App\Models\Alergia;
 use App\Models\AltaMedicamento;
+use App\Models\AntecedenteFamiliar;
+use App\Models\AntecedentePatologico;
+use App\Models\CirugiaPrevia;
 use App\Models\DiagnosticoCie10;
 use App\Models\DocumentoAdjunto;
 use App\Models\EgresoDiagnostico;
 use App\Models\EnfermeriaNota;
-use App\Models\Examen;
 use App\Models\Evolucion;
+use App\Models\Examen;
 use App\Models\Glasgow;
 use App\Models\HcEmergencia;
 use App\Models\HcReferencia;
+use App\Models\HospitalizacionPrevia;
 use App\Models\IngresoDiagnostico;
 use App\Models\Interconsulta;
 use App\Models\Medicamento;
+use App\Models\MedicamentoHabitual;
 use App\Models\Orden;
 use App\Models\Paciente;
+use App\Models\PacienteAlergia;
 use App\Models\Prescripcion;
 use App\Models\Prioridad;
 use App\Models\Procedimiento;
 use App\Models\ProcedimientoRealizado;
 use App\Models\ProfesionalSalud;
+use App\Models\ReaccionAdversaMedicamento;
 use App\Models\SignoVital;
 use App\Models\SolicitudExamen;
 use App\Models\TipoOrden;
@@ -44,6 +56,7 @@ use App\Models\TriajeSignoVital;
 use App\Models\Ups;
 use BackedEnum;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -51,6 +64,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 class HcEmergenciaPanel extends Component
@@ -73,7 +87,8 @@ class HcEmergenciaPanel extends Component
         'fecha_hora_inicio_episodio' => null,
         'fecha_hora_atencion' => null,
         'topico' => null,
-        'ambiente' => null,
+        'ambiente_id' => null,
+        'tipo' => 'Accidental',
         'alias' => null,
         'acompanante' => null,
         'parentesco' => null,
@@ -86,6 +101,7 @@ class HcEmergenciaPanel extends Component
         'fecha_hora_triaje' => null,
         'profesional_triaje_id' => null,
         'prioridad_id' => null,
+        'motivo_consulta' => null,
         'destino_topico' => null,
         'tiempo_espera_calculado' => null,
         'reevaluacion_programada' => null,
@@ -151,12 +167,28 @@ class HcEmergenciaPanel extends Component
 
     public string $busquedaDocumentoAdjunto = '';
 
-    /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
+    /** @var array<int, TemporaryUploadedFile> */
     public array $documentosAdjuntosArchivos = [];
+
+    public bool $modalDocumentosOrdenAbierto = false;
+
+    public ?int $ordenDocumentosId = null;
+
+    public string $busquedaDocumentoOrden = '';
+
+    /** @var array<int, TemporaryUploadedFile> */
+    public array $ordenDocumentosArchivos = [];
 
     public bool $formularioSignoVitalAbierto = false;
 
     public ?int $signoVitalEditandoId = null;
+
+    public ?string $antecedenteSeccionActiva = null;
+
+    public ?int $antecedenteRegistroEditandoId = null;
+
+    /** @var array<string, mixed> */
+    public array $antecedenteFormulario = [];
 
     /** @var array<string, mixed> */
     public array $signoVitalForm = [
@@ -206,15 +238,19 @@ class HcEmergenciaPanel extends Component
 
     public ?int $ordenEditandoId = null;
 
+    public string $ordenProcedimientoBusqueda = '';
+
     public string $ordenProfesionalBusqueda = '';
 
     /** @var array<string, mixed> */
     public array $ordenForm = [
         'tipo_orden_id' => '',
+        'procedimiento_id' => '',
         'detalle' => '',
         'prioridad' => '',
         'fecha_hora_solicitud' => '',
         'resultado' => '',
+        'estado' => '',
         'profesional_salud_id' => '',
     ];
 
@@ -254,6 +290,7 @@ class HcEmergenciaPanel extends Component
         'duracion' => '',
         'cantidad' => '',
         'fecha_hora' => '',
+        'estado' => '',
         'profesional_salud_id' => '',
     ];
 
@@ -269,6 +306,7 @@ class HcEmergenciaPanel extends Component
         'denominacion' => '',
         'sesiones' => '',
         'fecha_hora' => '',
+        'estado' => '',
     ];
 
     public bool $formularioAltaMedicamentoAbierto = false;
@@ -350,6 +388,20 @@ class HcEmergenciaPanel extends Component
 
     public bool $panelAtencionCerradaAbierto = false;
 
+    public bool $hayCambiosSinGuardar = false;
+
+    public bool $panelSalidaSinGuardarAbierto = false;
+
+    public ?string $urlSalidaPendiente = null;
+
+    private bool $detectandoCambios = true;
+
+    public bool $modalProfesionalTratanteAbierto = false;
+
+    public string $profesionalTratanteBusqueda = '';
+
+    public ?int $profesionalTratanteId = null;
+
     /** @var array<int, string> */
     public array $erroresGuardado = [];
 
@@ -376,6 +428,8 @@ class HcEmergenciaPanel extends Component
             abort_if($atencion->paciente_id !== $paciente->id, 404);
         }
 
+        abort_if($modo === 'editar' && ! $this->usuarioPuedeEditarHistoriaClinica(), 403);
+
         $this->cargarAtencion($atencion);
     }
 
@@ -391,13 +445,31 @@ class HcEmergenciaPanel extends Component
         $this->persistirHistoria();
     }
 
+    public function updated(string $propiedad): void
+    {
+        if (! $this->detectandoCambios || $this->edicionBloqueada()) {
+            return;
+        }
+
+        if (Str::startsWith($propiedad, [
+            'form.',
+            'referenciaForm.',
+            'profesionalTriajeBusqueda',
+            'shockTraumaResponsableBusqueda',
+            'profesionalEgresoBusqueda',
+            'upsOrigenBusqueda',
+            'upsDestinoBusqueda',
+        ])) {
+            $this->hayCambiosSinGuardar = true;
+        }
+    }
+
     private function persistirHistoria(
         bool $mostrarConfirmacionGuardado = true,
         ?string $mensajeFlash = 'Historia clinica de emergencia guardada correctamente.',
         ?string $tituloFlash = 'Historia clinica',
         bool $permitirEstadoCerrado = false
-    ): ?HcEmergencia
-    {
+    ): ?HcEmergencia {
         abort_if($this->edicionBloqueada() && ! $permitirEstadoCerrado, 403);
 
         if ($this->modo === 'nuevo') {
@@ -432,7 +504,8 @@ class HcEmergenciaPanel extends Component
             'fecha_hora_inicio_episodio' => $datos['fecha_hora_inicio_episodio'] ?: now(),
             'fecha_hora_atencion' => $datos['fecha_hora_atencion'] ?: now(),
             'topico' => $datos['topico'] ?: TopicoAtencion::Topico->value,
-            'ambiente' => $datos['ambiente'],
+            'ambiente_id' => $datos['ambiente_id'] ?: null,
+            'tipo' => $datos['tipo'] ?: 'Accidental',
             'alias' => $datos['alias'],
             'acompanante' => $datos['acompanante'],
             'parentesco' => $datos['parentesco'],
@@ -445,6 +518,7 @@ class HcEmergenciaPanel extends Component
             'fecha_hora_triaje' => $datos['fecha_hora_triaje'],
             'profesional_triaje_id' => $datos['profesional_triaje_id'],
             'destino_topico' => $datos['destino_topico'],
+            'motivo_consulta' => $datos['motivo_consulta'],
             'tiempo_espera_calculado' => $datos['tiempo_espera_calculado'],
             'reevaluacion_programada' => $datos['reevaluacion_programada'],
             'triaje' => (bool) $datos['triaje'],
@@ -500,6 +574,8 @@ class HcEmergenciaPanel extends Component
         $this->atencionId = $this->atencion?->id;
         $this->modo = 'editar';
         $this->cargarAtencion($this->atencion);
+        $this->hayCambiosSinGuardar = false;
+        $this->panelSalidaSinGuardarAbierto = false;
 
         $this->panelErroresAbierto = false;
         $this->panelConfirmacionGuardadoAbierto = $mostrarConfirmacionGuardado;
@@ -524,6 +600,55 @@ class HcEmergenciaPanel extends Component
         $this->redirigirAlListadoOrigen();
     }
 
+    public function solicitarSalidaDelPanel(): void
+    {
+        $this->solicitarSalidaAUrl($this->urlListadoOrigen());
+    }
+
+    public function solicitarSalidaAUrl(string $url, bool $forzarPorCambiosCliente = false): void
+    {
+        if ($this->edicionBloqueada() || (! $this->hayCambiosSinGuardar && ! $forzarPorCambiosCliente)) {
+            $this->redirect($this->normalizarUrlSalida($url) ?? $this->urlListadoOrigen());
+
+            return;
+        }
+
+        $this->hayCambiosSinGuardar = true;
+        $this->urlSalidaPendiente = $this->normalizarUrlSalida($url) ?? $this->urlListadoOrigen();
+        $this->panelSalidaSinGuardarAbierto = true;
+    }
+
+    public function cancelarSalidaDelPanel(): void
+    {
+        $this->panelSalidaSinGuardarAbierto = false;
+    }
+
+    public function salirSinGuardarCambios(): void
+    {
+        $this->hayCambiosSinGuardar = false;
+        $this->panelSalidaSinGuardarAbierto = false;
+
+        $this->redirigirASalidaPendiente();
+    }
+
+    public function guardarYSalirDelPanel(): void
+    {
+        $atencion = $this->persistirHistoria(
+            mostrarConfirmacionGuardado: false,
+            mensajeFlash: 'Historia clinica de emergencia guardada correctamente.',
+            tituloFlash: 'Historia clinica',
+        );
+
+        if ($atencion === null) {
+            return;
+        }
+
+        $this->hayCambiosSinGuardar = false;
+        $this->panelSalidaSinGuardarAbierto = false;
+
+        $this->redirigirASalidaPendiente();
+    }
+
     public function cerrarPanelErrores(): void
     {
         $this->panelErroresAbierto = false;
@@ -535,10 +660,106 @@ class HcEmergenciaPanel extends Component
         $this->panelErroresAbierto = false;
     }
 
+    public function abrirModalCambiarProfesionalTratante(): void
+    {
+        abort_unless($this->puedeCambiarProfesionalTratante(), 403);
+
+        $profesionalId = is_numeric($this->form['profesional_salud_id'] ?? null)
+            ? (int) $this->form['profesional_salud_id']
+            : null;
+
+        $this->profesionalTratanteId = $profesionalId;
+        $this->profesionalTratanteBusqueda = $this->etiquetaProfesionalEvolucionId($profesionalId);
+        $this->modalProfesionalTratanteAbierto = true;
+        $this->resetValidation(['profesionalTratanteId']);
+    }
+
+    public function cerrarModalProfesionalTratante(): void
+    {
+        $this->modalProfesionalTratanteAbierto = false;
+        $this->profesionalTratanteId = null;
+        $this->profesionalTratanteBusqueda = '';
+        $this->resetValidation(['profesionalTratanteId']);
+    }
+
+    public function updatedProfesionalTratanteBusqueda(): void
+    {
+        if ($this->profesionalTratanteBusqueda !== $this->etiquetaProfesionalEvolucionId($this->profesionalTratanteId)) {
+            $this->profesionalTratanteId = null;
+        }
+    }
+
+    public function seleccionarProfesionalTratante(int $profesionalId): void
+    {
+        abort_unless($this->puedeCambiarProfesionalTratante(), 403);
+
+        $profesional = ProfesionalSalud::query()
+            ->with('especialidad')
+            ->findOrFail($profesionalId);
+
+        $this->profesionalTratanteId = $profesional->id;
+        $this->profesionalTratanteBusqueda = $this->etiquetaProfesionalEvolucion($profesional);
+        $this->resetValidation(['profesionalTratanteId']);
+    }
+
+    public function guardarProfesionalTratante(): void
+    {
+        abort_unless($this->puedeCambiarProfesionalTratante(), 403);
+
+        $datos = Validator::make(
+            ['profesionalTratanteId' => $this->profesionalTratanteId],
+            ['profesionalTratanteId' => ['required', 'integer', Rule::exists('profesionales_salud', 'id')->whereNull('deleted_at')]],
+            [],
+            ['profesionalTratanteId' => 'profesional tratante']
+        )->validate();
+
+        $this->atencion?->forceFill([
+            'profesional_salud_id' => $datos['profesionalTratanteId'],
+            'actualizado_por' => Auth::id(),
+        ])->save();
+
+        $this->form['profesional_salud_id'] = $datos['profesionalTratanteId'];
+        $this->atencion = $this->atencion?->fresh(['paciente', 'profesionalResponsable.especialidad', 'profesionalTriaje.especialidad', 'prioridad']);
+        $this->cerrarModalProfesionalTratante();
+
+        flash()->success('Profesional tratante actualizado correctamente.', [], 'Historia clinica');
+    }
+
     private function edicionBloqueada(): bool
     {
         return $this->modo === 'ver'
-            || $this->form['estado_atencion'] === EstadoAtencion::Cerrada->value;
+            || $this->form['estado_atencion'] === EstadoAtencion::Cerrada->value
+            || ($this->modo === 'editar' && ! $this->usuarioPuedeEditarHistoriaClinica());
+    }
+
+    private function usuarioPuedeEditarHistoriaClinica(): bool
+    {
+        $tipoUsuario = Str::lower(Str::ascii(trim((string) Auth::user()?->tipo_usuario)));
+
+        return in_array($tipoUsuario, ['supervisor', 'profesional de salud', 'medico'], true);
+    }
+
+    private function puedeCambiarProfesionalTratante(): bool
+    {
+        return $this->modo === 'editar'
+            && $this->atencion !== null
+            && ! $this->edicionBloqueada();
+    }
+
+    private function puedeGestionarAntecedentesMedicos(): bool
+    {
+        $usuario = Auth::user();
+        $tipoUsuario = Str::lower(Str::ascii(trim((string) $usuario?->tipo_usuario)));
+        $tieneRolMedico = $usuario !== null
+            && method_exists($usuario, 'hasAnyRole')
+            && $usuario->hasAnyRole(['Medico', 'Médico', 'Profesional de Salud']);
+
+        return ! $this->edicionBloqueada()
+            && (
+                in_array($tipoUsuario, ['medico', 'profesional de salud', 'profesional medico'], true)
+                || $tieneRolMedico
+                || $usuario?->profesional_salud_id !== null
+            );
     }
 
     public function cerrarAtencion(): void
@@ -600,6 +821,8 @@ class HcEmergenciaPanel extends Component
             'signos' => $this->signosResumen(),
             'tabs' => $this->tabs(),
             'topicos' => TopicoAtencion::cases(),
+            'ambientesCatalogo' => Ambiente::query()->orderBy('denominacion')->get(['id', 'denominacion']),
+            'tiposAtencion' => ['Accidental', 'Médica'],
             'fuentesAtencion' => FuenteAtencion::cases(),
             'unidadesTiempoEnfermedad' => UnidadTiempoEnfermedad::cases(),
             'eventosEpisodio' => $this->eventosEpisodio(),
@@ -623,6 +846,7 @@ class HcEmergenciaPanel extends Component
             'prioridadesSolicitudExamen' => PrioridadSolicitudExamen::cases(),
             'estadosSolicitudExamen' => EstadoSolicitudExamen::cases(),
             'profesionalesCatalogo' => ProfesionalSalud::query()->orderBy('nombres')->limit(250)->get(['id', 'nombres', 'cmp']),
+            'procedimientosOrden' => $this->procedimientosOrden(),
             'profesionalesOrden' => $this->profesionalesPorBusqueda($this->ordenProfesionalBusqueda),
             'profesionalesSolicitudExamen' => $this->profesionalesPorBusqueda($this->solicitudExamenProfesionalBusqueda),
             'profesionalesEnfermeria' => $this->profesionalesEnfermeria(),
@@ -639,9 +863,12 @@ class HcEmergenciaPanel extends Component
             'destinosShockTrauma' => $this->destinosShockTrauma(),
             'estadosRespuestaReferencia' => $this->estadosRespuestaReferencia(),
             'ordenesClinicas' => $this->ordenesClinicas(),
+            'documentosOrden' => $this->documentosOrdenAdjuntos(),
+            'ordenDocumentosResumen' => $this->ordenDocumentosResumen(),
             'solicitudesExamenes' => $this->solicitudesExamenes(),
             'medicamentosPrescripcion' => $this->medicamentosPrescripcion(),
             'profesionalesPrescripcion' => $this->profesionalesPorBusqueda($this->prescripcionProfesionalBusqueda),
+            'profesionalesTratantes' => $this->profesionalesPorBusqueda($this->profesionalTratanteBusqueda),
             'prescripcionesMedicamentos' => $this->prescripcionesMedicamentos(),
             'procedimientosCatalogo' => $this->procedimientosCatalogo(),
             'procedimientosRealizados' => $this->procedimientosRealizados(),
@@ -652,8 +879,11 @@ class HcEmergenciaPanel extends Component
             'balanceHidrico' => $this->balanceHidrico(),
             'interconsultasClinicas' => $this->interconsultasClinicas(),
             'transferenciasClinicas' => $this->transferenciasClinicas(),
+            'antecedentesMedicosItems' => $this->antecedentesMedicosItems(),
+            'antecedenteDrawer' => $this->antecedenteDrawer(),
             'soloLectura' => $this->edicionBloqueada(),
             'esAtencionAbierta' => $this->form['estado_atencion'] === EstadoAtencion::Abierta->value,
+            'puedeCambiarProfesionalTratante' => $this->puedeCambiarProfesionalTratante(),
         ]);
     }
 
@@ -791,6 +1021,15 @@ class HcEmergenciaPanel extends Component
     {
         if ($this->ordenProfesionalBusqueda !== $this->etiquetaProfesionalEvolucionId($this->ordenForm['profesional_salud_id'] ?: null)) {
             $this->ordenForm['profesional_salud_id'] = null;
+        }
+    }
+
+    public function updatedOrdenProcedimientoBusqueda(): void
+    {
+        $this->ordenForm['detalle'] = $this->ordenProcedimientoBusqueda;
+
+        if ($this->ordenProcedimientoBusqueda !== $this->etiquetaProcedimientoId($this->ordenForm['procedimiento_id'] ?: null)) {
+            $this->ordenForm['procedimiento_id'] = null;
         }
     }
 
@@ -995,6 +1234,18 @@ class HcEmergenciaPanel extends Component
         $this->resetValidation('ordenForm.profesional_salud_id');
     }
 
+    public function seleccionarProcedimientoOrden(int $procedimientoId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $procedimiento = Procedimiento::query()->findOrFail($procedimientoId);
+
+        $this->ordenForm['procedimiento_id'] = $procedimiento->id;
+        $this->ordenForm['detalle'] = $procedimiento->denominacion;
+        $this->ordenProcedimientoBusqueda = $procedimiento->denominacion;
+        $this->resetValidation(['ordenForm.procedimiento_id', 'ordenForm.detalle']);
+    }
+
     public function seleccionarProfesionalSolicitudExamen(int $profesionalId): void
     {
         abort_if($this->edicionBloqueada(), 403);
@@ -1044,6 +1295,99 @@ class HcEmergenciaPanel extends Component
         $this->procedimientoForm['denominacion'] = $procedimiento->denominacion;
         $this->procedimientoBusqueda = $procedimiento->denominacion;
         $this->resetValidation(['procedimientoForm.procedimiento_id', 'procedimientoForm.denominacion']);
+    }
+
+    public function abrirDrawerAntecedente(string $seccion): void
+    {
+        abort_unless($this->puedeGestionarAntecedentesMedicos(), 403);
+        abort_unless(array_key_exists($seccion, $this->antecedenteSecciones()), 404);
+
+        if ($this->paciente === null) {
+            flash()->warning('Debe seleccionar o registrar un paciente para gestionar antecedentes medicos.', [], 'Triaje');
+
+            return;
+        }
+
+        $this->antecedenteSeccionActiva = $seccion;
+        $this->antecedenteRegistroEditandoId = null;
+        $this->antecedenteFormulario = $this->antecedenteFormularioVacio($seccion);
+        $this->resetValidation();
+    }
+
+    public function cerrarDrawerAntecedente(): void
+    {
+        $this->antecedenteSeccionActiva = null;
+        $this->antecedenteRegistroEditandoId = null;
+        $this->antecedenteFormulario = [];
+        $this->resetValidation();
+    }
+
+    public function nuevoAntecedenteRegistro(): void
+    {
+        abort_unless($this->puedeGestionarAntecedentesMedicos(), 403);
+
+        if ($this->antecedenteSeccionActiva === null) {
+            return;
+        }
+
+        $this->antecedenteRegistroEditandoId = null;
+        $this->antecedenteFormulario = $this->antecedenteFormularioVacio($this->antecedenteSeccionActiva);
+        $this->resetValidation();
+    }
+
+    public function editarAntecedenteRegistro(int $registroId): void
+    {
+        abort_unless($this->puedeGestionarAntecedentesMedicos(), 403);
+
+        if ($this->antecedenteSeccionActiva === null) {
+            return;
+        }
+
+        $registro = $this->antecedenteBuscarRegistro($this->antecedenteSeccionActiva, $registroId);
+
+        $this->antecedenteRegistroEditandoId = $registro->id;
+        $this->antecedenteFormulario = $this->antecedenteDatosFormulario($this->antecedenteSeccionActiva, $registro);
+        $this->resetValidation();
+    }
+
+    public function guardarAntecedenteRegistro(): void
+    {
+        abort_unless($this->puedeGestionarAntecedentesMedicos(), 403);
+
+        if ($this->antecedenteSeccionActiva === null || $this->paciente === null) {
+            return;
+        }
+
+        $datos = $this->validate($this->antecedenteReglasFormulario($this->antecedenteSeccionActiva))['antecedenteFormulario'];
+        $datos = collect($datos)
+            ->map(fn ($valor) => $valor === '' ? null : $valor)
+            ->all();
+
+        $modelo = $this->antecedenteModeloDeSeccion($this->antecedenteSeccionActiva);
+        $registro = $this->antecedenteRegistroEditandoId
+            ? $this->antecedenteBuscarRegistro($this->antecedenteSeccionActiva, $this->antecedenteRegistroEditandoId)
+            : new $modelo;
+
+        $registro->fill(array_merge($datos, ['paciente_id' => $this->paciente->id]));
+        $registro->save();
+
+        $this->nuevoAntecedenteRegistro();
+
+        flash()->success('La informacion de antecedentes medicos fue actualizada.', [], 'Triaje');
+    }
+
+    public function eliminarAntecedenteRegistro(int $registroId): void
+    {
+        abort_unless($this->puedeGestionarAntecedentesMedicos(), 403);
+
+        if ($this->antecedenteSeccionActiva === null) {
+            return;
+        }
+
+        $this->antecedenteBuscarRegistro($this->antecedenteSeccionActiva, $registroId)->delete();
+        $this->nuevoAntecedenteRegistro();
+
+        flash()->success('El antecedente medico fue eliminado correctamente.', [], 'Triaje');
     }
 
     public function abrirNuevoSignoVital(): void
@@ -1111,6 +1455,67 @@ class HcEmergenciaPanel extends Component
         $this->atencion = $this->atencion->fresh(['paciente', 'profesionalResponsable.especialidad', 'profesionalTriaje', 'prioridad']);
 
         flash()->success('Signo vital registrado correctamente.', [], 'Triaje');
+    }
+
+    public function cargarSignosVitalesFavoritos(): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        if ($this->atencion === null) {
+            flash()->warning('Guarde la atención para ejecutar esta acción', [], 'Triaje');
+
+            return;
+        }
+
+        $signosFavoritos = SignoVital::query()
+            ->where('favorito', true)
+            ->orderBy('descripcion')
+            ->get(['id']);
+
+        if ($signosFavoritos->isEmpty()) {
+            flash()->warning('No hay signos vitales favoritos configurados.', [], 'Triaje');
+
+            return;
+        }
+
+        $signosExistentes = $this->atencion
+            ->signosVitalesTriaje()
+            ->pluck('signo_vital_id')
+            ->all();
+
+        $signosParaCargar = $signosFavoritos
+            ->pluck('id')
+            ->diff($signosExistentes);
+
+        if ($signosParaCargar->isEmpty()) {
+            flash()->warning('Los signos vitales favoritos ya fueron cargados.', [], 'Triaje');
+
+            return;
+        }
+
+        $ahora = now();
+
+        TriajeSignoVital::query()->insert(
+            $signosParaCargar
+                ->map(fn (int $signoVitalId): array => [
+                    'hc_emergencia_id' => $this->atencion->id,
+                    'signo_vital_id' => $signoVitalId,
+                    'valor' => '',
+                    'registrado_por' => Auth::id(),
+                    'actualizado_por' => Auth::id(),
+                    'created_at' => $ahora,
+                    'updated_at' => $ahora,
+                ])
+                ->values()
+                ->all()
+        );
+
+        $this->formularioSignoVitalAbierto = false;
+        $this->signoVitalEditandoId = null;
+        $this->signoVitalForm = ['signo_vital_id' => '', 'valor' => ''];
+        $this->atencion = $this->atencion->fresh(['paciente', 'profesionalResponsable.especialidad', 'profesionalTriaje', 'prioridad']);
+
+        flash()->success('Signos vitales favoritos cargados correctamente.', [], 'Triaje');
     }
 
     public function eliminarSignoVital(int $signoVitalTriajeId): void
@@ -1399,15 +1804,18 @@ class HcEmergenciaPanel extends Component
         $this->ordenEditandoId = null;
         $this->ordenForm = [
             'tipo_orden_id' => '',
+            'procedimiento_id' => '',
             'detalle' => '',
             'prioridad' => PrioridadOrden::Urgente->value,
             'fecha_hora_solicitud' => now()->format('Y-m-d\TH:i'),
             'resultado' => '',
+            'estado' => EstadoSolicitudExamen::Solicitado->value,
             'profesional_salud_id' => $this->form['profesional_salud_id'] ?: '',
         ];
+        $this->ordenProcedimientoBusqueda = '';
         $this->ordenProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($this->ordenForm['profesional_salud_id'] ?: null);
         $this->formularioOrdenAbierto = true;
-        $this->resetValidation(['ordenForm.tipo_orden_id', 'ordenForm.detalle', 'ordenForm.prioridad', 'ordenForm.fecha_hora_solicitud', 'ordenForm.resultado', 'ordenForm.profesional_salud_id']);
+        $this->resetValidation(['ordenForm.tipo_orden_id', 'ordenForm.procedimiento_id', 'ordenForm.detalle', 'ordenForm.prioridad', 'ordenForm.fecha_hora_solicitud', 'ordenForm.resultado', 'ordenForm.estado', 'ordenForm.profesional_salud_id']);
     }
 
     public function editarOrden(int $ordenId): void
@@ -1419,15 +1827,18 @@ class HcEmergenciaPanel extends Component
         $this->ordenEditandoId = $registro->id;
         $this->ordenForm = [
             'tipo_orden_id' => $registro->tipo_orden_id,
+            'procedimiento_id' => $registro->procedimiento_id,
             'detalle' => $registro->detalle,
             'prioridad' => $this->valorEnum($registro->prioridad),
             'fecha_hora_solicitud' => $registro->fecha_hora_solicitud?->format('Y-m-d\TH:i'),
             'resultado' => $registro->resultado,
+            'estado' => $this->valorEnum($registro->estado) ?: EstadoSolicitudExamen::Solicitado->value,
             'profesional_salud_id' => $registro->profesional_salud_id,
         ];
+        $this->ordenProcedimientoBusqueda = $registro->detalle ?: $this->etiquetaProcedimientoId($registro->procedimiento_id);
         $this->ordenProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($registro->profesional_salud_id);
         $this->formularioOrdenAbierto = true;
-        $this->resetValidation(['ordenForm.tipo_orden_id', 'ordenForm.detalle', 'ordenForm.prioridad', 'ordenForm.fecha_hora_solicitud', 'ordenForm.resultado', 'ordenForm.profesional_salud_id']);
+        $this->resetValidation(['ordenForm.tipo_orden_id', 'ordenForm.procedimiento_id', 'ordenForm.detalle', 'ordenForm.prioridad', 'ordenForm.fecha_hora_solicitud', 'ordenForm.resultado', 'ordenForm.estado', 'ordenForm.profesional_salud_id']);
     }
 
     public function guardarOrden(): void
@@ -1440,21 +1851,31 @@ class HcEmergenciaPanel extends Component
             return;
         }
 
+        $this->ordenForm['detalle'] = filled($this->ordenForm['detalle'])
+            ? $this->ordenForm['detalle']
+            : $this->ordenProcedimientoBusqueda;
+
         $datos = $this->validate([
             'ordenForm.tipo_orden_id' => ['required', 'integer', Rule::exists('tipos_ordenes', 'id')->whereNull('deleted_at')],
+            'ordenForm.procedimiento_id' => ['nullable', 'integer', Rule::exists('procedimientos', 'id')->whereNull('deleted_at')],
             'ordenForm.detalle' => ['required', 'string'],
             'ordenForm.prioridad' => ['nullable', Rule::in(array_map(fn (PrioridadOrden $prioridad): string => $prioridad->value, PrioridadOrden::cases()))],
             'ordenForm.fecha_hora_solicitud' => ['nullable', 'date'],
             'ordenForm.resultado' => ['nullable', 'string'],
+            'ordenForm.estado' => ['required', Rule::in(array_map(fn (EstadoSolicitudExamen $estado): string => $estado->value, EstadoSolicitudExamen::cases()))],
             'ordenForm.profesional_salud_id' => ['nullable', 'integer', Rule::exists('profesionales_salud', 'id')->whereNull('deleted_at')],
         ], [], [
             'ordenForm.tipo_orden_id' => 'tipo de orden',
+            'ordenForm.procedimiento_id' => 'procedimiento catalogado',
             'ordenForm.detalle' => 'detalle',
             'ordenForm.prioridad' => 'prioridad',
             'ordenForm.fecha_hora_solicitud' => 'fecha y hora',
             'ordenForm.resultado' => 'resultado',
+            'ordenForm.estado' => 'estado',
             'ordenForm.profesional_salud_id' => 'profesional',
         ])['ordenForm'];
+
+        $procedimientoId = $datos['procedimiento_id'] ?: $this->resolverProcedimientoOrdenDesdeDetalle($datos['detalle']);
 
         $registro = $this->ordenEditandoId
             ? $this->consultaOrden($this->ordenEditandoId)
@@ -1465,17 +1886,20 @@ class HcEmergenciaPanel extends Component
 
         $registro->forceFill([
             'tipo_orden_id' => $datos['tipo_orden_id'],
+            'procedimiento_id' => $procedimientoId,
             'detalle' => $datos['detalle'],
             'prioridad' => $datos['prioridad'] ?: null,
             'fecha_hora_solicitud' => $datos['fecha_hora_solicitud'],
             'resultado' => $datos['resultado'],
+            'estado' => $datos['estado'],
             'profesional_salud_id' => $datos['profesional_salud_id'] ?: null,
             'actualizado_por' => Auth::id(),
         ])->save();
 
         $this->formularioOrdenAbierto = false;
         $this->ordenEditandoId = null;
-        $this->ordenForm = ['tipo_orden_id' => '', 'detalle' => '', 'prioridad' => '', 'fecha_hora_solicitud' => '', 'resultado' => '', 'profesional_salud_id' => ''];
+        $this->ordenForm = ['tipo_orden_id' => '', 'procedimiento_id' => '', 'detalle' => '', 'prioridad' => '', 'fecha_hora_solicitud' => '', 'resultado' => '', 'estado' => '', 'profesional_salud_id' => ''];
+        $this->ordenProcedimientoBusqueda = '';
         $this->ordenProfesionalBusqueda = '';
 
         flash()->success('Orden registrada correctamente.', [], 'Ordenes');
@@ -1485,13 +1909,91 @@ class HcEmergenciaPanel extends Component
     {
         abort_if($this->edicionBloqueada(), 403);
 
-        $this->consultaOrden($ordenId)->delete();
+        $orden = $this->consultaOrden($ordenId);
+
+        DocumentoAdjunto::query()
+            ->where('hc_emergencia_id', $orden->hc_emergencia_id)
+            ->where('orden_id', $orden->id)
+            ->get()
+            ->each(function (DocumentoAdjunto $documento): void {
+                $this->eliminarArchivoDocumentoAdjunto($documento);
+                $documento->delete();
+            });
+
+        $orden->delete();
 
         $this->formularioOrdenAbierto = false;
         $this->ordenEditandoId = null;
+        $this->ordenProcedimientoBusqueda = '';
         $this->ordenProfesionalBusqueda = '';
 
         flash()->success('Orden eliminada correctamente.', [], 'Ordenes');
+    }
+
+    public function abrirModalDocumentosOrden(int $ordenId): void
+    {
+        $orden = $this->consultaOrden($ordenId);
+
+        $this->ordenDocumentosId = $orden->id;
+        $this->busquedaDocumentoOrden = '';
+        $this->ordenDocumentosArchivos = [];
+        $this->modalDocumentosOrdenAbierto = true;
+        $this->resetValidation(['ordenDocumentosArchivos', 'ordenDocumentosArchivos.*']);
+    }
+
+    public function cerrarModalDocumentosOrden(): void
+    {
+        $this->modalDocumentosOrdenAbierto = false;
+        $this->ordenDocumentosId = null;
+        $this->busquedaDocumentoOrden = '';
+        $this->ordenDocumentosArchivos = [];
+        $this->resetValidation(['ordenDocumentosArchivos', 'ordenDocumentosArchivos.*']);
+    }
+
+    public function guardarDocumentosOrden(): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $orden = $this->ordenDocumentosId !== null
+            ? $this->consultaOrden($this->ordenDocumentosId)
+            : null;
+
+        if ($orden === null) {
+            flash()->warning('Seleccione una orden para cargar documentos.', [], 'Ordenes');
+
+            return;
+        }
+
+        $datos = $this->validate([
+            'ordenDocumentosArchivos' => ['required', 'array', 'min:1'],
+            'ordenDocumentosArchivos.*' => $this->reglasArchivoDocumentoAdjunto(),
+        ], [], [
+            'ordenDocumentosArchivos' => 'archivos de la orden',
+            'ordenDocumentosArchivos.*' => 'archivo de la orden',
+        ]);
+
+        foreach ($datos['ordenDocumentosArchivos'] as $archivo) {
+            $this->guardarArchivoDocumentoAdjunto($archivo, $orden->hcEmergencia, $orden);
+        }
+
+        $this->ordenDocumentosArchivos = [];
+        $this->resetValidation(['ordenDocumentosArchivos', 'ordenDocumentosArchivos.*']);
+
+        flash()->success('Documento de la orden cargado correctamente.', [], 'Ordenes');
+    }
+
+    public function eliminarDocumentoOrden(int $documentoAdjuntoId): void
+    {
+        abort_if($this->edicionBloqueada(), 403);
+
+        $documento = $this->consultaDocumentoAdjunto($documentoAdjuntoId);
+
+        abort_if($this->ordenDocumentosId === null || (int) $documento->orden_id !== $this->ordenDocumentosId, 404);
+
+        $this->eliminarArchivoDocumentoAdjunto($documento);
+        $documento->delete();
+
+        flash()->success('Documento de la orden eliminado correctamente.', [], 'Ordenes');
     }
 
     public function abrirNuevaSolicitudExamen(): void
@@ -1613,12 +2115,13 @@ class HcEmergenciaPanel extends Component
             'duracion' => '',
             'cantidad' => '',
             'fecha_hora' => now()->format('Y-m-d\TH:i'),
+            'estado' => EstadoSolicitudExamen::Solicitado->value,
             'profesional_salud_id' => $this->form['profesional_salud_id'] ?: '',
         ];
         $this->prescripcionMedicamentoBusqueda = '';
         $this->prescripcionProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($this->prescripcionForm['profesional_salud_id'] ?: null);
         $this->formularioPrescripcionAbierto = true;
-        $this->resetValidation(['prescripcionForm.medicamento_id', 'prescripcionForm.medicamento', 'prescripcionForm.presentacion', 'prescripcionForm.dosis', 'prescripcionForm.via', 'prescripcionForm.duracion', 'prescripcionForm.cantidad', 'prescripcionForm.fecha_hora', 'prescripcionForm.profesional_salud_id']);
+        $this->resetValidation(['prescripcionForm.medicamento_id', 'prescripcionForm.medicamento', 'prescripcionForm.presentacion', 'prescripcionForm.dosis', 'prescripcionForm.via', 'prescripcionForm.duracion', 'prescripcionForm.cantidad', 'prescripcionForm.fecha_hora', 'prescripcionForm.estado', 'prescripcionForm.profesional_salud_id']);
     }
 
     public function editarPrescripcion(int $prescripcionId): void
@@ -1637,12 +2140,13 @@ class HcEmergenciaPanel extends Component
             'duracion' => $registro->duracion,
             'cantidad' => $registro->cantidad,
             'fecha_hora' => $registro->fecha_hora?->format('Y-m-d\TH:i'),
+            'estado' => $this->valorEnum($registro->estado) ?: EstadoSolicitudExamen::Solicitado->value,
             'profesional_salud_id' => $registro->profesional_salud_id,
         ];
         $this->prescripcionMedicamentoBusqueda = $registro->medicamento;
         $this->prescripcionProfesionalBusqueda = $this->etiquetaProfesionalEvolucionId($registro->profesional_salud_id);
         $this->formularioPrescripcionAbierto = true;
-        $this->resetValidation(['prescripcionForm.medicamento_id', 'prescripcionForm.medicamento', 'prescripcionForm.presentacion', 'prescripcionForm.dosis', 'prescripcionForm.via', 'prescripcionForm.duracion', 'prescripcionForm.cantidad', 'prescripcionForm.fecha_hora', 'prescripcionForm.profesional_salud_id']);
+        $this->resetValidation(['prescripcionForm.medicamento_id', 'prescripcionForm.medicamento', 'prescripcionForm.presentacion', 'prescripcionForm.dosis', 'prescripcionForm.via', 'prescripcionForm.duracion', 'prescripcionForm.cantidad', 'prescripcionForm.fecha_hora', 'prescripcionForm.estado', 'prescripcionForm.profesional_salud_id']);
     }
 
     public function guardarPrescripcion(): void
@@ -1668,6 +2172,7 @@ class HcEmergenciaPanel extends Component
             'prescripcionForm.duracion' => ['nullable', 'string', 'max:100'],
             'prescripcionForm.cantidad' => ['nullable', 'integer', 'min:1'],
             'prescripcionForm.fecha_hora' => ['nullable', 'date'],
+            'prescripcionForm.estado' => ['required', Rule::in(array_map(fn (EstadoSolicitudExamen $estado): string => $estado->value, EstadoSolicitudExamen::cases()))],
             'prescripcionForm.profesional_salud_id' => ['nullable', 'integer', Rule::exists('profesionales_salud', 'id')->whereNull('deleted_at')],
         ], [], [
             'prescripcionForm.medicamento_id' => 'medicamento catalogado',
@@ -1678,6 +2183,7 @@ class HcEmergenciaPanel extends Component
             'prescripcionForm.duracion' => 'duracion',
             'prescripcionForm.cantidad' => 'cantidad',
             'prescripcionForm.fecha_hora' => 'fecha y hora',
+            'prescripcionForm.estado' => 'estado',
             'prescripcionForm.profesional_salud_id' => 'profesional',
         ])['prescripcionForm'];
 
@@ -1697,13 +2203,14 @@ class HcEmergenciaPanel extends Component
             'duracion' => $datos['duracion'],
             'cantidad' => $datos['cantidad'] ?: null,
             'fecha_hora' => $datos['fecha_hora'],
+            'estado' => $datos['estado'],
             'profesional_salud_id' => $datos['profesional_salud_id'] ?: null,
             'actualizado_por' => Auth::id(),
         ])->save();
 
         $this->formularioPrescripcionAbierto = false;
         $this->prescripcionEditandoId = null;
-        $this->prescripcionForm = ['medicamento_id' => '', 'medicamento' => '', 'presentacion' => '', 'dosis' => '', 'via' => '', 'duracion' => '', 'cantidad' => '', 'fecha_hora' => '', 'profesional_salud_id' => ''];
+        $this->prescripcionForm = ['medicamento_id' => '', 'medicamento' => '', 'presentacion' => '', 'dosis' => '', 'via' => '', 'duracion' => '', 'cantidad' => '', 'fecha_hora' => '', 'estado' => '', 'profesional_salud_id' => ''];
         $this->prescripcionMedicamentoBusqueda = '';
         $this->prescripcionProfesionalBusqueda = '';
 
@@ -1733,10 +2240,11 @@ class HcEmergenciaPanel extends Component
             'denominacion' => '',
             'sesiones' => '',
             'fecha_hora' => now()->format('Y-m-d\TH:i'),
+            'estado' => EstadoSolicitudExamen::Solicitado->value,
         ];
         $this->procedimientoBusqueda = '';
         $this->formularioProcedimientoAbierto = true;
-        $this->resetValidation(['procedimientoForm.procedimiento_id', 'procedimientoForm.denominacion', 'procedimientoForm.sesiones', 'procedimientoForm.fecha_hora']);
+        $this->resetValidation(['procedimientoForm.procedimiento_id', 'procedimientoForm.denominacion', 'procedimientoForm.sesiones', 'procedimientoForm.fecha_hora', 'procedimientoForm.estado']);
     }
 
     public function editarProcedimiento(int $procedimientoRealizadoId): void
@@ -1751,10 +2259,11 @@ class HcEmergenciaPanel extends Component
             'denominacion' => $registro->denominacion,
             'sesiones' => $registro->sesiones,
             'fecha_hora' => $registro->fecha_hora?->format('Y-m-d\TH:i'),
+            'estado' => $this->valorEnum($registro->estado) ?: EstadoSolicitudExamen::Solicitado->value,
         ];
         $this->procedimientoBusqueda = $registro->denominacion ?: '';
         $this->formularioProcedimientoAbierto = true;
-        $this->resetValidation(['procedimientoForm.procedimiento_id', 'procedimientoForm.denominacion', 'procedimientoForm.sesiones', 'procedimientoForm.fecha_hora']);
+        $this->resetValidation(['procedimientoForm.procedimiento_id', 'procedimientoForm.denominacion', 'procedimientoForm.sesiones', 'procedimientoForm.fecha_hora', 'procedimientoForm.estado']);
     }
 
     public function guardarProcedimiento(): void
@@ -1776,11 +2285,13 @@ class HcEmergenciaPanel extends Component
             'procedimientoForm.denominacion' => ['required', 'string', 'max:255'],
             'procedimientoForm.sesiones' => ['nullable', 'integer', 'min:1'],
             'procedimientoForm.fecha_hora' => ['nullable', 'date'],
+            'procedimientoForm.estado' => ['required', Rule::in(array_map(fn (EstadoSolicitudExamen $estado): string => $estado->value, EstadoSolicitudExamen::cases()))],
         ], [], [
             'procedimientoForm.procedimiento_id' => 'procedimiento catalogado',
             'procedimientoForm.denominacion' => 'procedimiento',
             'procedimientoForm.sesiones' => 'sesiones',
             'procedimientoForm.fecha_hora' => 'fecha y hora',
+            'procedimientoForm.estado' => 'estado',
         ])['procedimientoForm'];
 
         $registro = $this->procedimientoEditandoId
@@ -1795,12 +2306,13 @@ class HcEmergenciaPanel extends Component
             'denominacion' => $datos['denominacion'],
             'sesiones' => $datos['sesiones'] ?: null,
             'fecha_hora' => $datos['fecha_hora'],
+            'estado' => $datos['estado'],
             'actualizado_por' => Auth::id(),
         ])->save();
 
         $this->formularioProcedimientoAbierto = false;
         $this->procedimientoEditandoId = null;
-        $this->procedimientoForm = ['procedimiento_id' => '', 'denominacion' => '', 'sesiones' => '', 'fecha_hora' => ''];
+        $this->procedimientoForm = ['procedimiento_id' => '', 'denominacion' => '', 'sesiones' => '', 'fecha_hora' => '', 'estado' => ''];
         $this->procedimientoBusqueda = '';
 
         flash()->success('Procedimiento registrado correctamente.', [], 'Procedimientos');
@@ -1945,29 +2457,14 @@ class HcEmergenciaPanel extends Component
 
         $datos = $this->validate([
             'documentosAdjuntosArchivos' => ['required', 'array', 'min:1'],
-            'documentosAdjuntosArchivos.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'documentosAdjuntosArchivos.*' => $this->reglasArchivoDocumentoAdjunto(),
         ], [], [
             'documentosAdjuntosArchivos' => 'archivos adjuntos',
             'documentosAdjuntosArchivos.*' => 'archivo adjunto',
         ]);
 
         foreach ($datos['documentosAdjuntosArchivos'] as $archivo) {
-            $extension = strtolower($archivo->getClientOriginalExtension() ?: 'bin');
-            $nombreAlmacenado = Str::uuid()->toString().'.'.$extension;
-            $ruta = $archivo->storeAs(
-                "historias-clinicas/{$atencion->id}/documentos",
-                $nombreAlmacenado,
-                'public'
-            );
-
-            DocumentoAdjunto::query()->create([
-                'hc_emergencia_id' => $atencion->id,
-                'tipo' => $this->tipoDocumentoAdjuntoPorArchivo($extension, $archivo->getMimeType())->value,
-                'contenido' => $archivo->getClientOriginalName(),
-                'ruta_archivo' => $ruta,
-                'registrado_por' => Auth::id(),
-                'actualizado_por' => Auth::id(),
-            ]);
+            $this->guardarArchivoDocumentoAdjunto($archivo, $atencion);
         }
 
         $this->documentosAdjuntosArchivos = [];
@@ -1982,10 +2479,9 @@ class HcEmergenciaPanel extends Component
 
         $documento = $this->consultaDocumentoAdjunto($documentoAdjuntoId);
 
-        if (filled($documento->ruta_archivo)) {
-            Storage::disk('public')->delete($documento->ruta_archivo);
-        }
+        abort_if($documento->orden_id !== null, 404);
 
+        $this->eliminarArchivoDocumentoAdjunto($documento);
         $documento->delete();
 
         flash()->success('Documento adjunto eliminado correctamente.', [], 'Documentacion');
@@ -2255,7 +2751,8 @@ class HcEmergenciaPanel extends Component
     {
         return [
             ['clave' => 'atencion', 'titulo' => 'Atencion', 'icono' => 'lucide:stethoscope'],
-            ['clave' => 'triaje', 'titulo' => 'Triaje / Anamnesis', 'icono' => 'lucide:clipboard-list'],
+            ['clave' => 'triaje', 'titulo' => 'Triaje', 'icono' => 'lucide:clipboard-list'],
+            ['clave' => 'anamnesis', 'titulo' => 'Anamnesis', 'icono' => 'lucide:message-square-text'],
             ['clave' => 'examenes', 'titulo' => 'Examenes Clinicos', 'icono' => 'lucide:microscope'],
             ['clave' => 'diagnosticos', 'titulo' => 'Diagnosticos y Evoluciones', 'icono' => 'lucide:activity'],
             ['clave' => 'ordenes', 'titulo' => 'Ordenes y Laboratorio', 'icono' => 'lucide:test-tube'],
@@ -2271,6 +2768,7 @@ class HcEmergenciaPanel extends Component
     private function prepararNuevoRegistro(): void
     {
         $this->validarUsuarioMedico();
+        $this->detectandoCambios = false;
 
         $this->atencionId = null;
 
@@ -2281,7 +2779,8 @@ class HcEmergenciaPanel extends Component
             'fecha_hora_inicio_episodio' => now()->format('Y-m-d\TH:i'),
             'fecha_hora_atencion' => now()->format('Y-m-d\TH:i'),
             'topico' => TopicoAtencion::Topico->value,
-            'ambiente' => null,
+            'ambiente_id' => null,
+            'tipo' => 'Accidental',
             'alias' => null,
             'acompanante' => null,
             'parentesco' => null,
@@ -2294,6 +2793,7 @@ class HcEmergenciaPanel extends Component
             'fecha_hora_triaje' => now()->format('Y-m-d\TH:i'),
             'profesional_triaje_id' => $profesionalId,
             'prioridad_id' => Prioridad::query()->orderByRaw('orden = 2 desc')->orderBy('orden')->value('id'),
+            'motivo_consulta' => null,
             'destino_topico' => null,
             'tiempo_espera_calculado' => null,
             'reevaluacion_programada' => null,
@@ -2346,11 +2846,15 @@ class HcEmergenciaPanel extends Component
         $this->upsOrigenBusqueda = '';
         $this->upsDestinoBusqueda = '';
         $this->recalcularTiemposTriaje();
+        $this->hayCambiosSinGuardar = false;
+        $this->panelSalidaSinGuardarAbierto = false;
+        $this->detectandoCambios = true;
     }
 
     private function cargarAtencion(HcEmergencia $atencion): void
     {
-        $this->atencion = $atencion->loadMissing(['paciente', 'profesionalResponsable.especialidad', 'profesionalTriaje.especialidad', 'prioridad']);
+        $this->detectandoCambios = false;
+        $this->atencion = $atencion->loadMissing(['paciente', 'profesionalResponsable.especialidad', 'profesionalTriaje.especialidad', 'prioridad', 'ambiente']);
         $this->atencionId = $atencion->id;
 
         $this->form = [
@@ -2358,7 +2862,8 @@ class HcEmergenciaPanel extends Component
             'fecha_hora_inicio_episodio' => $atencion->fecha_hora_inicio_episodio?->format('Y-m-d\TH:i'),
             'fecha_hora_atencion' => $atencion->fecha_hora_atencion?->format('Y-m-d\TH:i'),
             'topico' => $this->valorEnum($atencion->topico),
-            'ambiente' => $atencion->ambiente,
+            'ambiente_id' => $atencion->ambiente_id,
+            'tipo' => $atencion->tipo ?: 'Accidental',
             'alias' => $atencion->alias,
             'acompanante' => $atencion->acompanante,
             'parentesco' => $atencion->parentesco,
@@ -2371,6 +2876,7 @@ class HcEmergenciaPanel extends Component
             'fecha_hora_triaje' => $atencion->fecha_hora_triaje?->format('Y-m-d\TH:i'),
             'profesional_triaje_id' => $atencion->profesional_triaje_id,
             'prioridad_id' => $atencion->prioridad_id,
+            'motivo_consulta' => $atencion->motivo_consulta,
             'destino_topico' => $atencion->destino_topico,
             'tiempo_espera_calculado' => $atencion->tiempo_espera_calculado,
             'reevaluacion_programada' => $atencion->reevaluacion_programada?->format('Y-m-d\TH:i'),
@@ -2420,6 +2926,9 @@ class HcEmergenciaPanel extends Component
         $this->shockTraumaResponsableBusqueda = $atencion->shock_trauma_responsable ?: '';
         $this->profesionalEgresoBusqueda = $this->etiquetaProfesionalEvolucionId($atencion->profesional_egreso_id);
         $this->cargarReferenciaDeAtencion($atencion);
+        $this->hayCambiosSinGuardar = false;
+        $this->panelSalidaSinGuardarAbierto = false;
+        $this->detectandoCambios = true;
     }
 
     private function validarUsuarioMedico(): void
@@ -2546,7 +3055,8 @@ class HcEmergenciaPanel extends Component
             'form.fecha_hora_inicio_episodio' => ['nullable', 'date'],
             'form.fecha_hora_atencion' => ['nullable', 'date'],
             'form.topico' => ['nullable', Rule::in(array_map(fn (BackedEnum $enum): string => $enum->value, TopicoAtencion::cases()))],
-            'form.ambiente' => ['nullable', 'string', 'max:150'],
+            'form.ambiente_id' => ['nullable', 'integer', Rule::exists('ambientes', 'id')->whereNull('deleted_at')],
+            'form.tipo' => ['required', Rule::in(['Accidental', 'Médica'])],
             'form.alias' => ['nullable', 'string', 'max:100'],
             'form.acompanante' => ['nullable', 'string', 'max:255'],
             'form.parentesco' => ['nullable', 'string', 'max:100'],
@@ -2559,6 +3069,7 @@ class HcEmergenciaPanel extends Component
             'form.fecha_hora_triaje' => ['nullable', 'date'],
             'form.profesional_triaje_id' => ['nullable', 'integer', Rule::exists('profesionales_salud', 'id')->whereNull('deleted_at')],
             'form.prioridad_id' => ['nullable', 'integer', Rule::exists('prioridades', 'id')->whereNull('deleted_at')],
+            'form.motivo_consulta' => ['nullable', 'string'],
             'form.destino_topico' => ['nullable', 'string', 'max:150'],
             'form.tiempo_espera_calculado' => ['nullable', 'string', 'max:50'],
             'form.reevaluacion_programada' => ['nullable', 'date'],
@@ -2796,7 +3307,8 @@ class HcEmergenciaPanel extends Component
             'form.fecha_hora_inicio_episodio' => 'fecha y hora del episodio',
             'form.fecha_hora_atencion' => 'fecha y hora de ingreso',
             'form.topico' => 'topico',
-            'form.ambiente' => 'ambiente',
+            'form.ambiente_id' => 'ambiente',
+            'form.tipo' => 'tipo',
             'form.alias' => 'alias del paciente',
             'form.acompanante' => 'acompanante',
             'form.parentesco' => 'parentesco',
@@ -2809,6 +3321,7 @@ class HcEmergenciaPanel extends Component
             'form.fecha_hora_triaje' => 'fecha y hora de triaje',
             'form.profesional_triaje_id' => 'profesional de triaje',
             'form.prioridad_id' => 'nivel de prioridad',
+            'form.motivo_consulta' => 'motivo de consulta',
             'form.destino_topico' => 'destino',
             'form.tiempo_espera_calculado' => 'tiempo de espera',
             'form.reevaluacion_programada' => 'reevaluacion programada',
@@ -2995,7 +3508,7 @@ class HcEmergenciaPanel extends Component
     }
 
     /**
-     * @return array<string, \Illuminate\Support\Collection<int, Glasgow>>
+     * @return array<string, Collection<int, Glasgow>>
      */
     private function glasgowOpciones(): array
     {
@@ -3371,6 +3884,60 @@ class HcEmergenciaPanel extends Component
             ->get(['id', 'codigo', 'denominacion']);
     }
 
+    private function procedimientosOrden(): Collection
+    {
+        return Procedimiento::query()
+            ->when($this->ordenProcedimientoBusqueda !== '', function ($consulta): void {
+                $busqueda = $this->ordenProcedimientoBusqueda;
+
+                $consulta->where(function ($grupo) use ($busqueda): void {
+                    $grupo
+                        ->where('codigo', 'like', "%{$busqueda}%")
+                        ->orWhere('denominacion', 'like', "%{$busqueda}%");
+                });
+            })
+            ->where('estado', 'Activo')
+            ->orderBy('denominacion')
+            ->limit(12)
+            ->get(['id', 'codigo', 'denominacion']);
+    }
+
+    private function resolverProcedimientoOrdenDesdeDetalle(string $detalle): ?int
+    {
+        $detalle = trim($detalle);
+
+        if ($detalle === '') {
+            return null;
+        }
+
+        $procedimiento = Procedimiento::query()
+            ->where('denominacion', $detalle)
+            ->first();
+
+        if ($procedimiento !== null) {
+            return $procedimiento->id;
+        }
+
+        $procedimiento = Procedimiento::query()->create([
+            'codigo' => $this->codigoProcedimientoOrdenLibre(),
+            'denominacion' => $detalle,
+            'estado' => 'Activo',
+            'registrado_por' => Auth::id(),
+            'actualizado_por' => Auth::id(),
+        ]);
+
+        return $procedimiento->id;
+    }
+
+    private function codigoProcedimientoOrdenLibre(): string
+    {
+        do {
+            $codigo = 'ORD-'.Str::upper(Str::random(8));
+        } while (Procedimiento::query()->where('codigo', $codigo)->exists());
+
+        return $codigo;
+    }
+
     private function etiquetaProcedimientoId(?int $procedimientoId): string
     {
         return $this->etiquetaProcedimiento(Procedimiento::query()->find($procedimientoId));
@@ -3390,7 +3957,8 @@ class HcEmergenciaPanel extends Component
         return $this->atencion
             ->signosVitalesTriaje()
             ->with('signoVital')
-            ->latest()
+            ->orderBy('signo_vital_id')
+            ->orderBy('id')
             ->get()
             ->map(function (TriajeSignoVital $registro): array {
                 $estado = $this->estadoSignoVital($registro);
@@ -3540,7 +4108,7 @@ class HcEmergenciaPanel extends Component
         }
 
         return Orden::query()
-            ->with(['tipoOrden', 'profesionalSalud'])
+            ->with(['tipoOrden', 'procedimiento', 'profesionalSalud'])
             ->where('hc_emergencia_id', $this->atencion->id)
             ->latest('fecha_hora_solicitud')
             ->latest('id')
@@ -3552,6 +4120,7 @@ class HcEmergenciaPanel extends Component
                 'prioridad' => $this->valorEnum($registro->prioridad) ?: '-',
                 'fecha_hora' => $registro->fecha_hora_solicitud?->format('d/m/Y H:i') ?: '--',
                 'resultado' => $registro->resultado ?: 'Pendiente',
+                'estado' => $this->valorEnum($registro->estado) ?: EstadoSolicitudExamen::Solicitado->value,
                 'profesional' => $registro->profesionalSalud?->nombres ?: 'Sin profesional',
                 'iniciales' => $this->inicialesProfesional($registro->profesionalSalud?->nombres),
             ]);
@@ -3602,6 +4171,7 @@ class HcEmergenciaPanel extends Component
                 'duracion' => $registro->duracion ?: '-',
                 'cantidad' => $registro->cantidad ?: '-',
                 'fecha_hora' => $registro->fecha_hora?->format('d/m/Y H:i') ?: '--',
+                'estado' => $this->valorEnum($registro->estado) ?: EstadoSolicitudExamen::Solicitado->value,
                 'profesional' => $registro->profesionalSalud?->nombres ?: 'Sin profesional',
                 'iniciales' => $this->inicialesProfesional($registro->profesionalSalud?->nombres),
                 'origen' => $registro->medicamento_id ? 'Catalogado' : 'No catalogado',
@@ -3626,6 +4196,7 @@ class HcEmergenciaPanel extends Component
                 'denominacion' => $registro->denominacion ?: $registro->procedimiento?->denominacion ?: 'Sin procedimiento',
                 'sesiones' => $registro->sesiones ?: '-',
                 'fecha_hora' => $registro->fecha_hora?->format('d/m/Y H:i') ?: '--',
+                'estado' => $this->valorEnum($registro->estado) ?: EstadoSolicitudExamen::Solicitado->value,
                 'origen' => $registro->procedimiento_id ? 'Catalogado' : 'No catalogado',
             ]);
     }
@@ -3666,6 +4237,7 @@ class HcEmergenciaPanel extends Component
         return DocumentoAdjunto::query()
             ->with('registradoPor')
             ->where('hc_emergencia_id', $atencion->id)
+            ->whereNull('orden_id')
             ->when($this->busquedaDocumentoAdjunto !== '', function ($consulta): void {
                 $consulta->where(function ($subconsulta): void {
                     $subconsulta
@@ -3691,6 +4263,70 @@ class HcEmergenciaPanel extends Component
                     'url' => Storage::disk('public')->url((string) $documento->ruta_archivo),
                 ];
             });
+    }
+
+    private function documentosOrdenAdjuntos(): Collection
+    {
+        if ($this->atencion === null || $this->ordenDocumentosId === null) {
+            return collect();
+        }
+
+        return DocumentoAdjunto::query()
+            ->with('registradoPor')
+            ->where('hc_emergencia_id', $this->atencion->id)
+            ->where('orden_id', $this->ordenDocumentosId)
+            ->when($this->busquedaDocumentoOrden !== '', function ($consulta): void {
+                $consulta->where(function ($subconsulta): void {
+                    $subconsulta
+                        ->where('contenido', 'like', '%'.$this->busquedaDocumentoOrden.'%')
+                        ->orWhere('tipo', 'like', '%'.$this->busquedaDocumentoOrden.'%');
+                });
+            })
+            ->latest('id')
+            ->get()
+            ->map(fn (DocumentoAdjunto $documento): array => $this->formatearDocumentoAdjunto($documento));
+    }
+
+    private function ordenDocumentosResumen(): ?array
+    {
+        if ($this->atencion === null || $this->ordenDocumentosId === null) {
+            return null;
+        }
+
+        $orden = Orden::query()
+            ->with(['tipoOrden', 'profesionalSalud'])
+            ->where('hc_emergencia_id', $this->atencion->id)
+            ->find($this->ordenDocumentosId);
+
+        if ($orden === null) {
+            return null;
+        }
+
+        return [
+            'id' => $orden->id,
+            'tipo' => $orden->tipoOrden?->descripcion ?: 'Sin tipo',
+            'detalle' => $orden->detalle ?: 'Sin detalle',
+            'fecha_hora' => $orden->fecha_hora_solicitud?->format('d/m/Y H:i') ?: '--',
+            'profesional' => $orden->profesionalSalud?->nombres ?: 'Sin profesional',
+        ];
+    }
+
+    private function formatearDocumentoAdjunto(DocumentoAdjunto $documento): array
+    {
+        $nombreArchivo = $documento->contenido ?: basename((string) $documento->ruta_archivo);
+
+        return [
+            'id' => $documento->id,
+            'tipo' => $documento->tipo?->value ?: TipoDocumentoAdjunto::Otro->value,
+            'icono' => $this->iconoDocumentoAdjunto($documento->tipo),
+            'clase_icono' => $this->claseIconoDocumentoAdjunto($documento->tipo),
+            'nombre' => $nombreArchivo,
+            'tamano' => $this->tamanoDocumentoAdjunto((string) $documento->ruta_archivo),
+            'fecha_carga' => $documento->created_at?->format('d/m/Y H:i') ?: '--',
+            'cargado_por' => $documento->registradoPor?->name ?: 'Sistema',
+            'iniciales' => $this->inicialesProfesional($documento->registradoPor?->name ?: 'Sistema'),
+            'url' => Storage::disk('public')->url((string) $documento->ruta_archivo),
+        ];
     }
 
     private function resolverAtencionPersistida(): ?HcEmergencia
@@ -3727,13 +4363,47 @@ class HcEmergenciaPanel extends Component
 
     private function redirigirAlListadoOrigen(): void
     {
-        if ($this->paciente !== null) {
-            $this->redirectRoute('historia-clinica.atenciones-paciente.historia', $this->paciente);
+        $this->redirect($this->urlListadoOrigen());
+    }
 
-            return;
+    private function redirigirASalidaPendiente(): void
+    {
+        $url = $this->urlSalidaPendiente ?: $this->urlListadoOrigen();
+        $this->urlSalidaPendiente = null;
+
+        $this->redirect($url);
+    }
+
+    private function urlListadoOrigen(): string
+    {
+        if ($this->paciente !== null) {
+            return route('historia-clinica.atenciones-paciente.historia', $this->paciente);
         }
 
-        $this->redirectRoute('historia-clinica.historias-abiertas.index');
+        return route('historia-clinica.historias-abiertas.index');
+    }
+
+    private function normalizarUrlSalida(string $url): ?string
+    {
+        $url = trim($url);
+
+        if ($url === '') {
+            return null;
+        }
+
+        $componentes = parse_url($url);
+
+        if ($componentes === false) {
+            return null;
+        }
+
+        $host = $componentes['host'] ?? null;
+
+        if ($host !== null && $host !== request()->getHost()) {
+            return null;
+        }
+
+        return $url;
     }
 
     private function notasEnfermeria(): Collection
@@ -4043,11 +4713,46 @@ class HcEmergenciaPanel extends Component
             return TipoDocumentoAdjunto::Pdf;
         }
 
-        if (in_array($extension, ['jpg', 'jpeg', 'png'], true) || Str::startsWith($mime, 'image/')) {
+        if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true) || Str::startsWith($mime, 'image/')) {
             return TipoDocumentoAdjunto::Imagen;
         }
 
         return TipoDocumentoAdjunto::Otro;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function reglasArchivoDocumentoAdjunto(): array
+    {
+        return ['file', 'mimes:pdf,xls,xlsx,doc,docx,jpg,jpeg,png,webp', 'max:10240'];
+    }
+
+    private function guardarArchivoDocumentoAdjunto(TemporaryUploadedFile $archivo, HcEmergencia $atencion, ?Orden $orden = null): void
+    {
+        $extension = strtolower($archivo->getClientOriginalExtension() ?: 'bin');
+        $nombreAlmacenado = Str::uuid()->toString().'.'.$extension;
+        $directorio = $orden === null
+            ? "historias-clinicas/{$atencion->id}/documentos"
+            : "historias-clinicas/{$atencion->id}/ordenes/{$orden->id}/documentos";
+        $ruta = $archivo->storeAs($directorio, $nombreAlmacenado, 'public');
+
+        DocumentoAdjunto::query()->create([
+            'hc_emergencia_id' => $atencion->id,
+            'orden_id' => $orden?->id,
+            'tipo' => $this->tipoDocumentoAdjuntoPorArchivo($extension, $archivo->getMimeType())->value,
+            'contenido' => $archivo->getClientOriginalName(),
+            'ruta_archivo' => $ruta,
+            'registrado_por' => Auth::id(),
+            'actualizado_por' => Auth::id(),
+        ]);
+    }
+
+    private function eliminarArchivoDocumentoAdjunto(DocumentoAdjunto $documento): void
+    {
+        if (filled($documento->ruta_archivo)) {
+            Storage::disk('public')->delete($documento->ruta_archivo);
+        }
     }
 
     private function iconoDocumentoAdjunto(TipoDocumentoAdjunto|string|null $tipo): string
@@ -4135,8 +4840,8 @@ class HcEmergenciaPanel extends Component
             ->filter(fn (array $evento): bool => filled($evento['fecha']))
             ->map(function (array $evento): array {
                 $fecha = $evento['fecha'] instanceof \DateTimeInterface
-                    ? \Carbon\Carbon::instance($evento['fecha'])
-                    : \Carbon\Carbon::parse($evento['fecha']);
+                    ? Carbon::instance($evento['fecha'])
+                    : Carbon::parse($evento['fecha']);
 
                 return [
                     'fecha' => $fecha->isToday() ? 'Hoy, '.$fecha->format('H:i') : $fecha->format('d/m/Y H:i'),
@@ -4156,9 +4861,272 @@ class HcEmergenciaPanel extends Component
         return "PA:\nFC:\nT°:\nSoP2:\nGlasgow:";
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function antecedentesMedicosItems(): array
+    {
+        $paciente = $this->pacienteConAntecedentes();
+        $secciones = $this->antecedenteSecciones();
+
+        return collect($secciones)
+            ->map(function (array $seccion, string $clave) use ($paciente): array {
+                $items = $paciente ? $this->antecedenteResumenItems($clave, $paciente) : collect();
+
+                return [
+                    'clave' => $clave,
+                    'titulo' => $seccion['titulo'],
+                    'icono' => $seccion['icono'],
+                    'acento' => $seccion['acento'],
+                    'items' => $items,
+                    'vacio' => $paciente ? $seccion['vacio'] : 'Paciente sin registro.',
+                    'deshabilitado' => ! $this->puedeGestionarAntecedentesMedicos(),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function antecedenteDrawer(): array
+    {
+        if ($this->antecedenteSeccionActiva === null) {
+            return ['abierto' => false];
+        }
+
+        $seccion = $this->antecedenteSecciones()[$this->antecedenteSeccionActiva];
+
+        return [
+            'abierto' => true,
+            'clave' => $this->antecedenteSeccionActiva,
+            'titulo' => $seccion['titulo'],
+            'icono' => $seccion['icono'],
+            'acento' => $seccion['acento'],
+            'ancho' => in_array($this->antecedenteSeccionActiva, ['familiares', 'cirugias', 'hospitalizaciones', 'patologicos'], true) ? 'is-wide' : 'is-standard',
+            'registros' => $this->antecedenteRegistrosDeSeccion($this->antecedenteSeccionActiva),
+            'opciones' => $this->antecedenteOpcionesFormulario(),
+        ];
+    }
+
+    private function pacienteConAntecedentes(): ?Paciente
+    {
+        if ($this->paciente === null) {
+            return null;
+        }
+
+        return Paciente::query()
+            ->with([
+                'alergias.alergia',
+                'reaccionesAdversasMedicamentos',
+                'antecedentesFamiliares.diagnosticoCie10',
+                'cirugiasPrevias',
+                'hospitalizacionesPrevias.diagnosticoCie10',
+                'medicamentosHabituales',
+                'antecedentesPatologicos.diagnosticoCie10',
+            ])
+            ->find($this->paciente->id);
+    }
+
+    private function antecedenteResumenItems(string $seccion, Paciente $paciente): Collection
+    {
+        return match ($seccion) {
+            'alergias' => $paciente->alergias->take(2)->map(fn (PacienteAlergia $item): string => $item->alergia?->nombre ?? 'Alergia registrada'),
+            'reacciones' => $paciente->reaccionesAdversasMedicamentos->take(2)->map(fn (ReaccionAdversaMedicamento $item): string => $item->dci_medicamento ?: ($item->descripcion ?: 'Reaccion registrada')),
+            'familiares' => $paciente->antecedentesFamiliares->take(2)->map(fn (AntecedenteFamiliar $item): string => trim(($this->valorEnum($item->parentesco) ?: 'Parentesco --').' / '.($item->denominacion ?: ($item->diagnosticoCie10?->nombre ?? 'Condicion --')))),
+            'cirugias' => $paciente->cirugiasPrevias->take(2)->map(fn (CirugiaPrevia $item): string => $item->denominacion ?: 'Cirugia registrada'),
+            'hospitalizaciones' => $paciente->hospitalizacionesPrevias->take(2)->map(fn (HospitalizacionPrevia $item): string => $item->denominacion ?: ($item->diagnosticoCie10?->nombre ?? 'Hospitalizacion registrada')),
+            'medicamentos' => $paciente->medicamentosHabituales->take(2)->map(fn (MedicamentoHabitual $item): string => $item->medicacion ?: 'Medicamento registrado'),
+            'patologicos' => $paciente->antecedentesPatologicos->take(2)->map(fn (AntecedentePatologico $item): string => $item->denominacion ?: ($item->diagnosticoCie10?->nombre ?? 'Antecedente registrado')),
+            default => collect(),
+        };
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function antecedenteSecciones(): array
+    {
+        return [
+            'alergias' => ['titulo' => 'Alergias', 'modelo' => PacienteAlergia::class, 'icono' => 'healthicons:allergies-outline', 'acento' => '#dc2626', 'vacio' => 'Ninguna registrada.'],
+            'reacciones' => ['titulo' => 'Reacción Adversa', 'modelo' => ReaccionAdversaMedicamento::class, 'icono' => 'healthicons:medicines-outline', 'acento' => '#f59e0b', 'vacio' => 'Ninguna registrada.'],
+            'familiares' => ['titulo' => 'Antecedentes Familiares', 'modelo' => AntecedenteFamiliar::class, 'icono' => 'lucide:git-fork', 'acento' => '#0077b6', 'vacio' => 'Ninguno registrado.'],
+            'cirugias' => ['titulo' => 'Cirugías', 'modelo' => CirugiaPrevia::class, 'icono' => 'lucide:scissors', 'acento' => '#00b4d8', 'vacio' => 'Ninguna registrada.'],
+            'hospitalizaciones' => ['titulo' => 'Hospitalizaciones', 'modelo' => HospitalizacionPrevia::class, 'icono' => 'lucide:hospital', 'acento' => '#17a2b8', 'vacio' => 'Ninguna registrada.'],
+            'medicamentos' => ['titulo' => 'Medicamentos Habituales', 'modelo' => MedicamentoHabitual::class, 'icono' => 'healthicons:medicines-outline', 'acento' => '#10669a', 'vacio' => 'Ninguno registrado.'],
+            'patologicos' => ['titulo' => 'Antecedentes Patológicos', 'modelo' => AntecedentePatologico::class, 'icono' => 'lucide:file-text', 'acento' => '#415a77', 'vacio' => 'Ninguno registrado.'],
+        ];
+    }
+
+    private function antecedenteModeloDeSeccion(string $seccion): string
+    {
+        return $this->antecedenteSecciones()[$seccion]['modelo'];
+    }
+
+    private function antecedenteBuscarRegistro(string $seccion, int $registroId): Model
+    {
+        abort_if($this->paciente === null, 404);
+
+        return $this->antecedenteModeloDeSeccion($seccion)::query()
+            ->where('paciente_id', $this->paciente->id)
+            ->findOrFail($registroId);
+    }
+
+    private function antecedenteRegistrosDeSeccion(string $seccion): Collection
+    {
+        if ($this->paciente === null) {
+            return collect();
+        }
+
+        $consulta = $this->antecedenteModeloDeSeccion($seccion)::query()
+            ->where('paciente_id', $this->paciente->id)
+            ->latest();
+
+        if (in_array($seccion, ['familiares', 'hospitalizaciones', 'patologicos'], true)) {
+            $consulta->with('diagnosticoCie10');
+        }
+
+        if ($seccion === 'alergias') {
+            $consulta->with('alergia');
+        }
+
+        return $consulta->get();
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    private function antecedenteOpcionesFormulario(): array
+    {
+        return [
+            'alergias' => Alergia::query()->orderBy('nombre')->get(['id', 'nombre'])->mapWithKeys(fn (Alergia $alergia): array => [$alergia->id => $alergia->nombre])->all(),
+            'diagnosticos' => DiagnosticoCie10::query()->orderBy('codigo')->limit(120)->get(['id', 'codigo', 'nombre'])->mapWithKeys(fn (DiagnosticoCie10 $diagnostico): array => [$diagnostico->id => trim($diagnostico->codigo.' - '.$diagnostico->nombre)])->all(),
+            'tipos_ram' => collect(TipoReaccionAdversaMedicamento::cases())->mapWithKeys(fn ($caso): array => [$caso->value => $caso->value])->all(),
+            'gravedades_ram' => collect(GravedadReaccionAdversaMedicamento::cases())->mapWithKeys(fn ($caso): array => [$caso->value => $caso->value])->all(),
+            'parentescos' => collect(ParentescoFamiliar::cases())->mapWithKeys(fn ($caso): array => [$caso->value => $caso->value])->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function antecedenteFormularioVacio(string $seccion): array
+    {
+        return match ($seccion) {
+            'alergias' => ['alergia_id' => '', 'agente_causal' => '', 'alergeno' => '', 'periodo' => ''],
+            'reacciones' => ['descripcion' => '', 'tipo' => '', 'gravedad' => '', 'dci_medicamento' => '', 'periodo' => ''],
+            'familiares' => ['parentesco' => '', 'diagnostico_cie10_id' => '', 'denominacion' => '', 'periodo' => ''],
+            'cirugias' => ['codigo_cpms' => '', 'denominacion' => '', 'periodo' => ''],
+            'hospitalizaciones' => ['codigo_ups' => '', 'diagnostico_cie10_id' => '', 'denominacion' => '', 'periodo' => ''],
+            'medicamentos' => ['medicacion' => '', 'periodo' => ''],
+            'patologicos' => ['diagnostico_cie10_id' => '', 'denominacion' => '', 'origen' => '', 'periodo' => ''],
+            default => [],
+        };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function antecedenteDatosFormulario(string $seccion, Model $registro): array
+    {
+        return match ($seccion) {
+            'alergias' => [
+                'alergia_id' => (string) $registro->alergia_id,
+                'agente_causal' => $registro->agente_causal,
+                'alergeno' => $registro->alergeno,
+                'periodo' => $registro->periodo,
+            ],
+            'reacciones' => [
+                'descripcion' => $registro->descripcion,
+                'tipo' => $this->valorEnum($registro->tipo),
+                'gravedad' => $this->valorEnum($registro->gravedad),
+                'dci_medicamento' => $registro->dci_medicamento,
+                'periodo' => $registro->periodo,
+            ],
+            'familiares' => [
+                'parentesco' => $this->valorEnum($registro->parentesco),
+                'diagnostico_cie10_id' => (string) $registro->diagnostico_cie10_id,
+                'denominacion' => $registro->denominacion,
+                'periodo' => $registro->periodo,
+            ],
+            'cirugias' => [
+                'codigo_cpms' => $registro->codigo_cpms,
+                'denominacion' => $registro->denominacion,
+                'periodo' => $registro->periodo,
+            ],
+            'hospitalizaciones' => [
+                'codigo_ups' => $registro->codigo_ups,
+                'diagnostico_cie10_id' => (string) $registro->diagnostico_cie10_id,
+                'denominacion' => $registro->denominacion,
+                'periodo' => $registro->periodo,
+            ],
+            'medicamentos' => [
+                'medicacion' => $registro->medicacion,
+                'periodo' => $registro->periodo,
+            ],
+            'patologicos' => [
+                'diagnostico_cie10_id' => (string) $registro->diagnostico_cie10_id,
+                'denominacion' => $registro->denominacion,
+                'origen' => $registro->origen,
+                'periodo' => $registro->periodo,
+            ],
+            default => [],
+        };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function antecedenteReglasFormulario(string $seccion): array
+    {
+        return match ($seccion) {
+            'alergias' => [
+                'antecedenteFormulario.alergia_id' => ['required', Rule::exists('alergias', 'id')],
+                'antecedenteFormulario.agente_causal' => ['nullable', 'string', 'max:255'],
+                'antecedenteFormulario.alergeno' => ['nullable', 'string', 'max:255'],
+                'antecedenteFormulario.periodo' => ['nullable', 'string', 'max:20'],
+            ],
+            'reacciones' => [
+                'antecedenteFormulario.descripcion' => ['required', 'string', 'max:1000'],
+                'antecedenteFormulario.tipo' => ['nullable', Rule::enum(TipoReaccionAdversaMedicamento::class)],
+                'antecedenteFormulario.gravedad' => ['nullable', Rule::enum(GravedadReaccionAdversaMedicamento::class)],
+                'antecedenteFormulario.dci_medicamento' => ['nullable', 'string', 'max:255'],
+                'antecedenteFormulario.periodo' => ['nullable', 'string', 'max:20'],
+            ],
+            'familiares' => [
+                'antecedenteFormulario.parentesco' => ['nullable', Rule::enum(ParentescoFamiliar::class)],
+                'antecedenteFormulario.diagnostico_cie10_id' => ['nullable', Rule::exists('diagnosticos_cie10', 'id')],
+                'antecedenteFormulario.denominacion' => ['nullable', 'string', 'max:255'],
+                'antecedenteFormulario.periodo' => ['nullable', 'string', 'max:20'],
+            ],
+            'cirugias' => [
+                'antecedenteFormulario.codigo_cpms' => ['nullable', 'string', 'max:30'],
+                'antecedenteFormulario.denominacion' => ['required', 'string', 'max:255'],
+                'antecedenteFormulario.periodo' => ['nullable', 'string', 'max:20'],
+            ],
+            'hospitalizaciones' => [
+                'antecedenteFormulario.codigo_ups' => ['nullable', 'string', 'max:30'],
+                'antecedenteFormulario.diagnostico_cie10_id' => ['nullable', Rule::exists('diagnosticos_cie10', 'id')],
+                'antecedenteFormulario.denominacion' => ['nullable', 'string', 'max:255'],
+                'antecedenteFormulario.periodo' => ['nullable', 'string', 'max:20'],
+            ],
+            'medicamentos' => [
+                'antecedenteFormulario.medicacion' => ['required', 'string', 'max:255'],
+                'antecedenteFormulario.periodo' => ['nullable', 'string', 'max:20'],
+            ],
+            'patologicos' => [
+                'antecedenteFormulario.diagnostico_cie10_id' => ['nullable', Rule::exists('diagnosticos_cie10', 'id')],
+                'antecedenteFormulario.denominacion' => ['nullable', 'string', 'max:255'],
+                'antecedenteFormulario.origen' => ['nullable', 'string', 'max:50'],
+                'antecedenteFormulario.periodo' => ['nullable', 'string', 'max:20'],
+            ],
+            default => [],
+        };
+    }
+
     private function valorEnum(mixed $valor): ?string
     {
         return $valor instanceof BackedEnum ? $valor->value : ($valor !== null ? (string) $valor : null);
     }
 }
-

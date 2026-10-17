@@ -5,11 +5,15 @@ namespace App\Http\Controllers\HistoriaClinica;
 use App\Http\Controllers\Controller;
 use App\Models\HcEmergencia;
 use App\Models\Paciente;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\HistoriaClinica\HcEmergenciaPdfService;
 use Illuminate\Http\Request;
 
 class HcEmergenciaPdfController extends Controller
 {
+    public function __construct(private readonly HcEmergenciaPdfService $pdfService)
+    {
+    }
+
     /**
      * Genera el formato imprimible de la historia clinica de emergencia.
      */
@@ -17,7 +21,7 @@ class HcEmergenciaPdfController extends Controller
     {
         abort_unless($atencion->paciente_id === $paciente->id, 404);
 
-        return $this->generar($request, $atencion, $paciente);
+        return $this->generar($request, $atencion);
     }
 
     /**
@@ -25,57 +29,13 @@ class HcEmergenciaPdfController extends Controller
      */
     public function imprimirGeneral(Request $request, HcEmergencia $atencion)
     {
-        return $this->generar($request, $atencion, $atencion->paciente);
+        return $this->generar($request, $atencion);
     }
 
-    private function generar(Request $request, HcEmergencia $atencion, ?Paciente $paciente)
+    private function generar(Request $request, HcEmergencia $atencion)
     {
-        $paciente?->load([
-            'alergias.alergia',
-            'antecedentesPatologicos.diagnosticoCie10',
-            'reaccionesAdversasMedicamentos',
-            'antecedentesFamiliares.diagnosticoCie10',
-            'cirugiasPrevias',
-            'hospitalizacionesPrevias.ups',
-            'hospitalizacionesPrevias.diagnosticoCie10',
-            'medicamentosHabituales',
-        ]);
+        $pdf = $this->pdfService->generar($atencion, $request->user());
 
-        $atencion->load([
-            'paciente',
-            'prioridad',
-            'profesionalResponsable.especialidad',
-            'profesionalTriaje.especialidad',
-            'profesionalEgreso.especialidad',
-            'signosVitalesTriaje.signoVital',
-            'diagnosticosIngreso.diagnosticoCie10',
-            'solicitudesExamenes.examen',
-            'solicitudesExamenes.profesionalSalud.especialidad',
-            'ordenes.tipoOrden',
-            'ordenes.profesionalSalud.especialidad',
-            'prescripciones.medicamentoCatalogo',
-            'prescripciones.profesionalSalud.especialidad',
-            'procedimientosRealizados.procedimiento',
-            'evoluciones.profesionalSalud.especialidad',
-            'interconsultas.profesionalSalud.especialidad',
-            'notasEnfermeria.profesionalSalud.especialidad',
-            'transferencias',
-            'referencia.upsOrigen',
-            'referencia.upsDestino',
-            'diagnosticosEgreso.diagnosticoCie10',
-            'altaMedicamentos.medicamentoCatalogo',
-            'documentosAdjuntos.registradoPor',
-            'registradoPor',
-            'actualizadoPor',
-        ]);
-
-        return Pdf::loadView('historia-clinica.atenciones-paciente.emergencia-pdf', [
-            'paciente' => $paciente,
-            'atencion' => $atencion,
-            'generadoPor' => $request->user(),
-            'generadoEn' => now(),
-        ])
-            ->setPaper('a4')
-            ->stream('historia-clinica-emergencia-'.$atencion->id.'.pdf');
+        return $pdf->stream($this->pdfService->nombreArchivo($atencion));
     }
 }

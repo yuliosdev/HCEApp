@@ -11,13 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ambientes', function (Blueprint $table): void {
-            $table->id();
-            $table->string('descripcion', 150)->unique();
-            $table->string('ubicacion', 150)->nullable();
-            $table->enum('estado', ['Activo', 'Inactivo'])->default('Activo');
-            $this->auditoriaBasica($table);
-        });
+        //
     }
 
     /**
@@ -25,7 +19,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ambientes');
+        //
     }
 
     /**

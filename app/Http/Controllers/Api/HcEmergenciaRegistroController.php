@@ -7,9 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Models\HcEmergencia;
 use App\Models\Paciente;
 use App\Models\ProfesionalSalud;
+use App\Support\GestionClinica\RegistrosClinicos;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class HcEmergenciaRegistroController extends Controller
@@ -34,6 +36,12 @@ class HcEmergenciaRegistroController extends Controller
             return response()->json([
                 'message' => "La atención existe pero está 'Cerrada'",
             ], 409);
+        }
+
+        if (blank($request->input('numero_atencion')) || (int) $request->input('numero_atencion') === 0) {
+            return response()->json([
+                'message' => 'No existe número de admisión',
+            ], 422);
         }
 
         $datos = $this->validarDatosClinicos($request);
@@ -62,6 +70,7 @@ class HcEmergenciaRegistroController extends Controller
             );
 
             $atencion->forceFill([
+                'numero_atencion' => $datos['numero_atencion'],
                 'paciente_id' => $paciente->id,
                 'profesional_salud_id' => $profesional->id,
                 'sin_identificacion' => 'No',
@@ -69,6 +78,7 @@ class HcEmergenciaRegistroController extends Controller
 
             return [
                 'hce_id' => $atencion->id,
+                'numero_atencion' => $atencion->numero_atencion,
                 'paciente_id' => $paciente->id,
                 'profesional_salud_id' => $profesional->id,
             ];
@@ -87,6 +97,7 @@ class HcEmergenciaRegistroController extends Controller
     {
         try {
             return $request->validate([
+                'numero_atencion' => ['required', 'integer', 'min:1'],
                 'paciente' => ['required', 'array'],
                 'paciente.nombres' => ['required', 'string', 'max:255'],
                 'paciente.direccion' => ['nullable', 'string', 'max:255'],
@@ -98,10 +109,11 @@ class HcEmergenciaRegistroController extends Controller
                 'paciente.id_paciente_externo' => ['required', 'integer'],
                 'profesional' => ['required', 'array'],
                 'profesional.nombres' => ['required', 'string', 'max:255'],
-                'profesional.tipo_colegiatura' => ['required', 'string', 'max:100'],
+                'profesional.tipo_colegiatura' => ['required', 'string', 'max:100', Rule::in(RegistrosClinicos::tiposColegiatura())],
                 'profesional.cmp' => ['required', 'string', 'max:30'],
                 'profesional.codigo_servicio' => ['required', 'string', 'max:50'],
             ], [], [
+                'numero_atencion' => 'numero de admision',
                 'paciente.nombres' => 'nombres del paciente',
                 'paciente.direccion' => 'direccion del paciente',
                 'paciente.telefono' => 'telefono del paciente',

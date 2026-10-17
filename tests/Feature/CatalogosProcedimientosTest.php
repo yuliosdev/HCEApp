@@ -12,6 +12,8 @@ use Database\Seeders\RolesPermisosSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 use Tests\TestCase;
 
 class CatalogosProcedimientosTest extends TestCase
@@ -72,6 +74,40 @@ class CatalogosProcedimientosTest extends TestCase
             ->assertSee('XLSX')
             ->assertSee('Plantilla')
             ->assertSee('Importar');
+    }
+
+    public function test_importacion_de_procedimientos_desde_panel_usa_lotes_y_finaliza_con_alerta(): void
+    {
+        $administrador = $this->crearAdministrador();
+        $ruta = tempnam(sys_get_temp_dir(), 'procedimientos_livewire_').'.xlsx';
+        $writer = new Writer;
+        $writer->openToFile($ruta);
+        $writer->addRow(Row::fromValues(['codigo', 'denominacion', 'estado']));
+        $writer->addRow(Row::fromValues([
+            'PROC-PANEL-001',
+            'Procedimiento importado desde panel',
+            EstadoCatalogo::Activo->value,
+        ]));
+        $writer->close();
+
+        $archivo = UploadedFile::fake()
+            ->createWithContent('procedimientos_panel.xlsx', file_get_contents($ruta))
+            ->mimeType('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        Livewire::actingAs($administrador)
+            ->test(ProcedimientosPanel::class)
+            ->set('archivoImportacion', $archivo)
+            ->call('importarDesdeExcel')
+            ->assertSet('archivoImportacion', null);
+
+        @unlink($ruta);
+
+        $this->assertDatabaseHas('procedimientos', [
+            'codigo' => 'PROC-PANEL-001',
+            'denominacion' => 'Procedimiento importado desde panel',
+            'estado' => EstadoCatalogo::Activo->value,
+            'registrado_por' => $administrador->id,
+        ]);
     }
 
     public function test_administrador_crea_edita_cambia_estado_y_elimina_procedimiento(): void
@@ -152,6 +188,32 @@ class CatalogosProcedimientosTest extends TestCase
             ->set('busqueda', 'radiografia')
             ->assertSee('Radiografia simple')
             ->assertDontSee('Toma de muestra');
+    }
+
+    public function test_las_acciones_se_conservan_al_aplicar_busqueda_y_filtro_de_estado(): void
+    {
+        $administrador = $this->crearAdministrador();
+
+        Procedimiento::query()->create([
+            'codigo' => 'ACC-100',
+            'denominacion' => 'Procedimiento con acciones visibles',
+            'estado' => EstadoCatalogo::Activo->value,
+            'registrado_por' => $administrador->id,
+            'actualizado_por' => $administrador->id,
+        ]);
+
+        Livewire::actingAs($administrador)
+            ->test(ProcedimientosPanel::class)
+            ->set('busqueda', 'acciones visibles')
+            ->assertSee('lucide:eye')
+            ->assertSee('lucide:pencil')
+            ->assertSee('lucide:pause-circle')
+            ->assertSee('lucide:trash-2')
+            ->set('estado', EstadoCatalogo::Activo->value)
+            ->assertSee('lucide:eye')
+            ->assertSee('lucide:pencil')
+            ->assertSee('lucide:pause-circle')
+            ->assertSee('lucide:trash-2');
     }
 
     public function test_catalogo_inicia_mostrando_cinco_registros_y_permite_cambiar_cantidad(): void
@@ -242,6 +304,49 @@ class CatalogosProcedimientosTest extends TestCase
             'estado' => EstadoCatalogo::Activo->value,
             'registrado_por' => $administrador->id,
             'actualizado_por' => $administrador->id,
+        ]);
+    }
+
+    public function test_servicio_importa_procedimientos_masivamente_por_lotes(): void
+    {
+        $administrador = $this->crearAdministrador();
+        $ruta = tempnam(sys_get_temp_dir(), 'procedimientos_').'.xlsx';
+        $writer = new Writer;
+        $writer->openToFile($ruta);
+        $writer->addRow(Row::fromValues(['codigo', 'denominacion', 'estado']));
+
+        foreach (range(1, 1500) as $numero) {
+            $writer->addRow(Row::fromValues([
+                'MAS-'.$numero,
+                'Procedimiento masivo '.$numero,
+                EstadoCatalogo::Activo->value,
+            ]));
+        }
+
+        $writer->close();
+
+        $archivo = new UploadedFile(
+            $ruta,
+            'procedimientos_masivo.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true,
+        );
+
+        $resultado = app(ProcedimientosArchivoService::class)
+            ->importar($archivo, $administrador->id);
+
+        @unlink($ruta);
+
+        $this->assertSame(1500, $resultado['creados']);
+        $this->assertSame(0, $resultado['actualizados']);
+        $this->assertSame(0, $resultado['omitidos']);
+        $this->assertSame([], $resultado['errores']);
+        $this->assertDatabaseHas('procedimientos', [
+            'codigo' => 'MAS-1500',
+            'denominacion' => 'Procedimiento masivo 1500',
+            'estado' => EstadoCatalogo::Activo->value,
+            'registrado_por' => $administrador->id,
         ]);
     }
 

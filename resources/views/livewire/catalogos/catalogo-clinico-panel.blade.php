@@ -71,15 +71,17 @@
                 <form wire:submit.prevent="importarDesdeExcel" class="catalog-import-form">
                     <label>
                         <span class="sr-only">Archivo Excel</span>
-                        <input type="file" wire:model="archivoImportacion" accept=".xlsx">
+                        <input type="file" wire:model="archivoImportacion" accept=".xlsx" wire:loading.attr="disabled" wire:target="archivoImportacion,importarDesdeExcel">
                         @error('archivoImportacion') <small>{{ $message }}</small> @enderror
                     </label>
 
                     <button type="submit" class="catalog-primary-action" wire:loading.attr="disabled" wire:target="archivoImportacion,importarDesdeExcel">
                         <iconify-icon icon="lucide:upload" aria-hidden="true"></iconify-icon>
-                        Importar
+                        <span wire:loading.remove wire:target="archivoImportacion,importarDesdeExcel">Importar</span>
+                        <span wire:loading wire:target="archivoImportacion,importarDesdeExcel">Importando...</span>
                     </button>
                 </form>
+
             </div>
         </article>
     @else
@@ -146,7 +148,20 @@
                         <tr wire:key="{{ $catalogo }}-{{ $registro->id }}">
                             @foreach ($configuracion['campos'] as $campo)
                                 <td>
-                                    @if ($loop->first)
+                                    @if (($campo['nombre'] ?? '') === 'favorito')
+                                        @php
+                                            $esFavorito = filter_var(data_get($registro, 'favorito'), FILTER_VALIDATE_BOOLEAN);
+                                        @endphp
+                                        <span class="catalog-favorite-icon {{ $esFavorito ? 'is-favorite' : 'is-not-favorite' }}" title="{{ $esFavorito ? 'Favorito' : 'No favorito' }}" aria-label="{{ $esFavorito ? 'Favorito' : 'No favorito' }}">
+                                            <iconify-icon
+                                                icon="{{ $esFavorito ? 'material-symbols:star-rounded' : 'material-symbols:star-outline-rounded' }}"
+                                                width="24"
+                                                height="24"
+                                                style="color: {{ $esFavorito ? '#facc15' : 'currentColor' }}; font-size: 24px; width: 24px; height: 24px;"
+                                                aria-hidden="true"
+                                            ></iconify-icon>
+                                        </span>
+                                    @elseif ($loop->first)
                                         <strong>{{ \Illuminate\Support\Str::limit($this->valorCampo($registro, $campo['nombre']), 70) }}</strong>
                                     @else
                                         {{ \Illuminate\Support\Str::limit($this->valorCampo($registro, $campo['nombre']), 70) }}
@@ -239,7 +254,7 @@
                                 </div>
 
                                 <div class="catalog-form-section-fields">
-                                    @foreach (collect($configuracion['campos'])->whereIn('nombre', ['descripcion', 'unidad']) as $campo)
+                                    @foreach (collect($configuracion['campos'])->whereIn('nombre', ['descripcion', 'unidad', 'favorito']) as $campo)
                                         @include('livewire.catalogos.partials.campo-formulario', ['campo' => $campo, 'modoFormulario' => $modoFormulario])
                                     @endforeach
 
@@ -348,4 +363,5 @@
             </section>
         </div>
     @endif
+
 </section>

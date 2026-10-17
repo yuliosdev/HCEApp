@@ -127,6 +127,7 @@ final class CatalogosClinicos
                     ['nombre' => 'unidad', 'etiqueta' => 'Unidad', 'tipo' => 'text', 'requerido' => false, 'max' => 50],
                     ['nombre' => 'rango_inicial', 'etiqueta' => 'Rango Inicial', 'tipo' => 'decimal', 'requerido' => false, 'min' => 0, 'step' => '0.01', 'seccion' => 'rangos_normales'],
                     ['nombre' => 'rango_final', 'etiqueta' => 'Rango Final', 'tipo' => 'decimal', 'requerido' => false, 'min' => 0, 'step' => '0.01', 'seccion' => 'rangos_normales'],
+                    ['nombre' => 'favorito', 'etiqueta' => 'Favorito', 'tipo' => 'boolean', 'requerido' => false],
                 ],
                 'secciones_formulario' => [
                     [
@@ -212,13 +213,12 @@ final class CatalogosClinicos
                 'descripcion' => 'Administra ambientes fisicos referenciales para la atencion de emergencia.',
                 'modelo' => Ambiente::class,
                 'tabla' => 'ambientes',
-                'orden' => 'descripcion',
-                'placeholder' => 'Buscar por descripcion o ubicacion',
-                'etiqueta_uso' => 'referencias',
-                'relaciones_uso' => [],
+                'orden' => 'denominacion',
+                'placeholder' => 'Buscar por denominacion',
+                'etiqueta_uso' => 'historias clinicas',
+                'relaciones_uso' => ['hcEmergencias'],
                 'campos' => [
-                    ['nombre' => 'descripcion', 'etiqueta' => 'Descripcion', 'tipo' => 'text', 'requerido' => true, 'max' => 150, 'unico' => true],
-                    ['nombre' => 'ubicacion', 'etiqueta' => 'Ubicacion', 'tipo' => 'text', 'requerido' => false, 'max' => 150],
+                    ['nombre' => 'denominacion', 'etiqueta' => 'Denominacion', 'tipo' => 'text', 'requerido' => true, 'max' => 255],
                 ],
             ],
         ];

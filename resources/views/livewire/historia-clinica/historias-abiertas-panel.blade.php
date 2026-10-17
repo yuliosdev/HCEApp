@@ -3,7 +3,7 @@
         <div>
             <p class="patient-history-kicker">Historia clinica</p>
             <h1>Historial de Atenciones</h1>
-            <span>Seguimiento operativo de historias clinicas de emergencia por fecha y estado.</span>
+            <span>Seguimiento operativo de historias clinicas de emergencia abiertas.</span>
         </div>
 
         <nav class="patient-history-actions" aria-label="Acciones de historias clinicas">
@@ -173,7 +173,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span>{{ $atencion->destino_topico ?: $atencion->ambiente ?: '--' }}</span>
+                                <span>{{ $atencion->destino_topico ?: $atencion->ambiente?->denominacion ?: '--' }}</span>
                             </td>
                             <td>
                                 <span class="{{ $diagnostico ? '' : 'patient-history-muted is-italic' }}">
@@ -200,7 +200,7 @@
                             </td>
                             <td>
                                 <nav class="patient-history-row-actions" aria-label="Acciones de atencion {{ $atencion->numero_atencion ?: $atencion->id }}">
-                                    @if ($abierta)
+                                    @if ($this->puedeEditarAtencion($atencion))
                                         <button type="button" wire:click="editarAtencion({{ $atencion->id }})" aria-label="Editar atencion" title="Editar atencion">
                                             <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
                                         </button>
@@ -208,6 +208,15 @@
                                     <button type="button" wire:click="verAtencion({{ $atencion->id }})" aria-label="Ver atencion" title="Ver atencion">
                                         <iconify-icon icon="lucide:eye" aria-hidden="true"></iconify-icon>
                                     </button>
+                                    <a
+                                        href="{{ $atencion->paciente ? route('historia-clinica.atenciones-paciente.emergencia.imprimir', [$atencion->paciente, $atencion]) : route('historia-clinica.emergencia.imprimir', $atencion) }}"
+                                        target="_blank"
+                                        rel="noopener"
+                                        aria-label="Imprimir historia clinica"
+                                        title="Imprimir historia clinica"
+                                    >
+                                        <iconify-icon icon="lucide:printer" aria-hidden="true"></iconify-icon>
+                                    </a>
                                     <a
                                         href="{{ $atencion->paciente ? route('historia-clinica.atenciones-paciente.emergencia.ticket', [$atencion->paciente, $atencion]) : route('historia-clinica.emergencia.ticket', $atencion) }}"
                                         target="_blank"
@@ -301,6 +310,16 @@
                                 maxlength="100"
                             >
                             @error('nuevaHistoriaForm.alias') <small>{{ $message }}</small> @enderror
+                        </label>
+
+                        <label>
+                            <span>Tipo de emergencia</span>
+                            <select wire:model="nuevaHistoriaForm.tipo">
+                                @foreach ($tiposEmergencia as $tipoEmergencia)
+                                    <option value="{{ $tipoEmergencia }}">{{ $tipoEmergencia }}</option>
+                                @endforeach
+                            </select>
+                            @error('nuevaHistoriaForm.tipo') <small>{{ $message }}</small> @enderror
                         </label>
                     </div>
 

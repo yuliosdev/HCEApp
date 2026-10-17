@@ -91,6 +91,7 @@
         $fechaHora = $atencion->fecha_hora_atencion?->format('d/m/Y h:i:sA') ?? '--';
         $paciente = $atencion->paciente?->nombre ?: 'Sin Registro';
         $alias = $atencion->alias ?: '--';
+        $tipo = $atencion->tipo ?: '--';
         $medico = $atencion->profesionalResponsable?->nombres ?: '--';
     @endphp
 
@@ -106,6 +107,7 @@
             <p class="field"><strong>Fecha / Hora:</strong> {{ $fechaHora }}</p>
             <p class="field"><strong>Paciente:</strong> {{ $paciente === 'Sin Registro' ? '(Sin Registro)' : $paciente }}</p>
             <p class="field"><strong>Alias:</strong> {{ $alias }}</p>
+            <p class="field"><strong>Tipo de Emergencia:</strong> {{ $tipo }}</p>
             <p class="field"><strong>Médico Tratante:</strong> {{ $medico }}</p>
 
             <div class="dash"></div>

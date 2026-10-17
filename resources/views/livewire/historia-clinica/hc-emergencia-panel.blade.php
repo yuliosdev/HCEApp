@@ -1,4 +1,4 @@
-<section class="emergency-record-page">
+<section class="emergency-record-page" data-emergency-unsaved-changes="{{ $hayCambiosSinGuardar ? 'true' : 'false' }}">
     <header class="emergency-record-header panel-animate">
         <div class="emergency-patient-block">
             <span class="emergency-patient-avatar">
@@ -7,15 +7,15 @@
 
             <div>
                 <div class="emergency-patient-heading">
-                    <a
-                        href="{{ $paciente ? route('historia-clinica.atenciones-paciente.historia', $paciente) : route('historia-clinica.historias-abiertas.index') }}"
+                    <button
+                        type="button"
                         class="emergency-back-link"
                         title="Volver a Listado de HCE"
                         aria-label="Volver a Listado de HCE"
-                        wire:navigate
+                        wire:click="solicitarSalidaDelPanel"
                     >
                         <iconify-icon icon="lucide:arrow-left" aria-hidden="true"></iconify-icon>
-                    </a>
+                    </button>
 
                     <h1>{{ $datosPaciente['nombre'] }}</h1>
                 </div>
@@ -105,9 +105,21 @@
                         <span>{{ $datosMedico['especialidad'] }}</span>
                         <em>CMP: {{ $datosMedico['cmp'] }} · RNE: {{ $datosMedico['rne'] }}</em>
                     </div>
-                    <span>
-                        <iconify-icon icon="lucide:stethoscope" aria-hidden="true"></iconify-icon>
-                    </span>
+                    @if ($puedeCambiarProfesionalTratante)
+                        <button
+                            type="button"
+                            class="emergency-doctor-icon-button"
+                            wire:click="abrirModalCambiarProfesionalTratante"
+                            title="Cambiar Profesional Tratante"
+                            aria-label="Cambiar Profesional Tratante"
+                        >
+                            <iconify-icon icon="lucide:stethoscope" aria-hidden="true"></iconify-icon>
+                        </button>
+                    @else
+                        <span>
+                            <iconify-icon icon="lucide:stethoscope" aria-hidden="true"></iconify-icon>
+                        </span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -164,8 +176,22 @@
                                 </label>
                                 <label>
                                     <span>Ambiente</span>
-                                    <input type="text" wire:model.blur="form.ambiente" placeholder="Ej. Shock Trauma" @readonly($soloLectura)>
-                                    @error('form.ambiente') <small>{{ $message }}</small> @enderror
+                                    <select wire:model="form.ambiente_id" wire:change="limpiarErrorDeCampo('ambiente_id')" @disabled($soloLectura)>
+                                        <option value="">Seleccione</option>
+                                        @foreach ($ambientesCatalogo as $ambiente)
+                                            <option value="{{ $ambiente->id }}">{{ $ambiente->denominacion }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('form.ambiente_id') <small>{{ $message }}</small> @enderror
+                                </label>
+                                <label>
+                                    <span>Tipo</span>
+                                    <select wire:model="form.tipo" wire:change="limpiarErrorDeCampo('tipo')" @disabled($soloLectura)>
+                                        @foreach ($tiposAtencion as $tipoAtencion)
+                                            <option value="{{ $tipoAtencion }}">{{ $tipoAtencion }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('form.tipo') <small>{{ $message }}</small> @enderror
                                 </label>
                             </div>
                         </article>
@@ -336,12 +362,6 @@
                                 </label>
 
                                 <label>
-                                    <span>Destino</span>
-                                    <input type="text" wire:model.blur="form.destino_topico" placeholder="Ej. Topico de Medicina" @readonly($soloLectura)>
-                                    @error('form.destino_topico') <small>{{ $message }}</small> @enderror
-                                </label>
-
-                                <label>
                                     <span>Tiempo de espera</span>
                                     <input type="text" wire:model="form.tiempo_espera_calculado" readonly>
                                     @error('form.tiempo_espera_calculado') <small>{{ $message }}</small> @enderror
@@ -363,10 +383,16 @@
                                 </h2>
 
                                 @if (! $soloLectura)
-                                    <button type="button" class="emergency-inline-action" wire:click="abrirNuevoSignoVital">
-                                        <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
-                                        Nuevo
-                                    </button>
+                                    <div class="emergency-section-actions">
+                                        <button type="button" class="emergency-inline-action" wire:click="cargarSignosVitalesFavoritos">
+                                            <iconify-icon icon="lucide:star" aria-hidden="true"></iconify-icon>
+                                            Cargar Signos Vitales
+                                        </button>
+                                        <button type="button" class="emergency-inline-action" wire:click="abrirNuevoSignoVital">
+                                            <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
+                                            Nuevo
+                                        </button>
+                                    </div>
                                 @endif
                             </header>
 
@@ -452,6 +478,66 @@
                         </article>
                     </div>
 
+                    <div class="emergency-triage-reserved">
+                        <article class="emergency-attention-card emergency-consultation-reason-card">
+                            <header>
+                                <h2>
+                                    <iconify-icon icon="lucide:message-circle-question" aria-hidden="true"></iconify-icon>
+                                    Motivo de Consulta
+                                </h2>
+                            </header>
+
+                            <div class="emergency-attention-form emergency-consultation-reason-form">
+                                <label class="is-full">
+                                    <span>Motivo de Consulta</span>
+                                    <textarea rows="7" wire:model.blur="form.motivo_consulta" @readonly($soloLectura)></textarea>
+                                    @error('form.motivo_consulta') <small>{{ $message }}</small> @enderror
+                                </label>
+                            </div>
+                        </article>
+
+                        <article class="emergency-attention-card emergency-medical-history-card">
+                            <header>
+                                <h2>
+                                    <iconify-icon icon="lucide:clipboard-clock" aria-hidden="true"></iconify-icon>
+                                    Antecedentes Médicos
+                                </h2>
+                            </header>
+
+                            <div class="emergency-medical-history-grid">
+                                @foreach ($antecedentesMedicosItems as $item)
+                                    <article class="emergency-medical-history-item hce-card-motion" style="--history-accent: {{ $item['acento'] }}">
+                                        <div class="emergency-medical-history-heading">
+                                            <span>
+                                                <iconify-icon icon="{{ $item['icono'] }}" aria-hidden="true"></iconify-icon>
+                                            </span>
+                                            <strong>{{ $item['titulo'] }}</strong>
+                                            <button
+                                                type="button"
+                                                wire:click="abrirDrawerAntecedente('{{ $item['clave'] }}')"
+                                                title="Agregar o editar {{ $item['titulo'] }}"
+                                                aria-label="Agregar o editar {{ $item['titulo'] }}"
+                                                @disabled($item['deshabilitado'])
+                                            >
+                                                <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
+                                            </button>
+                                        </div>
+
+                                        <ul>
+                                            @forelse ($item['items'] as $detalle)
+                                                <li>{{ $detalle }}</li>
+                                            @empty
+                                                <li class="is-empty">{{ $item['vacio'] }}</li>
+                                            @endforelse
+                                        </ul>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            @elseif ($tabActiva === 'anamnesis')
+                <section class="emergency-anamnesis-tab-grid" style="padding-top: 18px;">
                     <article class="emergency-attention-card emergency-anamnesis-card">
                         <header>
                             <h2>
@@ -990,12 +1076,32 @@
                                 Ordenes
                             </h2>
 
-                            @if (! $soloLectura)
-                                <button type="button" class="emergency-inline-action" wire:click="abrirNuevaOrden">
-                                    <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
-                                    Nuevo
-                                </button>
-                            @endif
+                            <div class="emergency-section-actions">
+                                @if ($atencion)
+                                    <a
+                                        href="{{ route('historia-clinica.emergencia.ordenes.pdf', $atencion) }}"
+                                        class="emergency-inline-action"
+                                        target="_blank"
+                                        rel="noopener"
+                                        title="Genera Receta"
+                                    >
+                                        <iconify-icon icon="lucide:file-text" aria-hidden="true"></iconify-icon>
+                                        Genera Receta
+                                    </a>
+                                @else
+                                    <button type="button" class="emergency-inline-action" title="Guarde la atención para generar receta" disabled>
+                                        <iconify-icon icon="lucide:file-text" aria-hidden="true"></iconify-icon>
+                                        Genera Receta
+                                    </button>
+                                @endif
+
+                                @if (! $soloLectura)
+                                    <button type="button" class="emergency-inline-action" wire:click="abrirNuevaOrden">
+                                        <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
+                                        Nuevo
+                                    </button>
+                                @endif
+                            </div>
                         </header>
 
                         <div class="emergency-vitals-table-wrap">
@@ -1007,6 +1113,7 @@
                                         <th>Prioridad</th>
                                         <th>Fecha / Hora</th>
                                         <th>Resultado</th>
+                                        <th>Estado</th>
                                         <th>Profesional</th>
                                         <th>Acciones</th>
                                     </tr>
@@ -1019,6 +1126,7 @@
                                             <td><span class="emergency-table-badge">{{ $orden['prioridad'] }}</span></td>
                                             <td>{{ $orden['fecha_hora'] }}</td>
                                             <td>{{ $orden['resultado'] }}</td>
+                                            <td><span class="emergency-table-badge">{{ $orden['estado'] }}</span></td>
                                             <td>
                                                 <span class="emergency-professional-inline">
                                                     <strong>{{ $orden['iniciales'] }}</strong>
@@ -1026,23 +1134,24 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                @if (! $soloLectura)
-                                                    <div class="emergency-row-actions">
+                                                <div class="emergency-row-actions">
+                                                    <button type="button" wire:click="abrirModalDocumentosOrden({{ $orden['id'] }})" title="Cargar archivos de la orden">
+                                                        <iconify-icon icon="lucide:file-up" aria-hidden="true"></iconify-icon>
+                                                    </button>
+                                                    @if (! $soloLectura)
                                                         <button type="button" wire:click="editarOrden({{ $orden['id'] }})" title="Editar orden">
                                                             <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
                                                         </button>
                                                         <button type="button" data-confirm-delete-emergency-tab data-registro-id="{{ $orden['id'] }}" data-registro-nombre="{{ $orden['detalle'] }}" data-catalogo-singular="orden" data-delete-method="eliminarOrden" data-confirm-title="Eliminar orden" data-confirm-message="Deseas eliminar esta orden?" title="Eliminar orden">
                                                             <iconify-icon icon="lucide:trash-2" aria-hidden="true"></iconify-icon>
                                                         </button>
-                                                    </div>
-                                                @else
-                                                    <span>-</span>
-                                                @endif
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="emergency-empty-cell">
+                                            <td colspan="8" class="emergency-empty-cell">
                                                 <div class="emergency-table-empty-state">
                                                     <iconify-icon icon="lucide:clipboard-x" aria-hidden="true"></iconify-icon>
                                                     <p>No se han registrado ordenes.</p>
@@ -1067,10 +1176,26 @@
                                         </select>
                                         @error('ordenForm.tipo_orden_id') <small>{{ $message }}</small> @enderror
                                     </label>
-                                    <label>
+                                    <label class="emergency-combobox emergency-order-detail-field">
                                         <span>Detalle</span>
-                                        <input type="text" wire:model.blur="ordenForm.detalle" placeholder="Ej. Rayos X de torax">
+                                        <div class="emergency-combobox-field">
+                                            <input type="search" wire:model.live.debounce.250ms="ordenProcedimientoBusqueda" placeholder="Buscar o escribir procedimiento / servicio">
+                                            <iconify-icon icon="lucide:search" aria-hidden="true"></iconify-icon>
+                                        </div>
+                                        @if ($ordenProcedimientoBusqueda !== '' && blank($ordenForm['procedimiento_id']))
+                                            <div class="emergency-combobox-list emergency-order-procedure-list">
+                                                @forelse ($procedimientosOrden as $procedimientoOrden)
+                                                    <button type="button" wire:click="seleccionarProcedimientoOrden({{ $procedimientoOrden->id }})">
+                                                        <strong>{{ $procedimientoOrden->codigo }}</strong>
+                                                        <span>{{ $procedimientoOrden->denominacion }}</span>
+                                                    </button>
+                                                @empty
+                                                    <p>No se encontraron procedimientos. Se registrará como nuevo servicio.</p>
+                                                @endforelse
+                                            </div>
+                                        @endif
                                         @error('ordenForm.detalle') <small>{{ $message }}</small> @enderror
+                                        @error('ordenForm.procedimiento_id') <small>{{ $message }}</small> @enderror
                                     </label>
                                     <label>
                                         <span>Prioridad</span>
@@ -1086,6 +1211,16 @@
                                         <span>Fecha / Hora</span>
                                         <input type="datetime-local" wire:model.blur="ordenForm.fecha_hora_solicitud">
                                         @error('ordenForm.fecha_hora_solicitud') <small>{{ $message }}</small> @enderror
+                                    </label>
+                                    <label>
+                                        <span>Estado</span>
+                                        <select wire:model="ordenForm.estado">
+                                            <option value="">Seleccione</option>
+                                            @foreach ($estadosSolicitudExamen as $estadoExamen)
+                                                <option value="{{ $estadoExamen->value }}">{{ $estadoExamen->value }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('ordenForm.estado') <small>{{ $message }}</small> @enderror
                                     </label>
                                     <label class="emergency-combobox emergency-order-professional-field">
                                         <span>Profesional</span>
@@ -1131,12 +1266,48 @@
                                 Examenes de Laboratorio
                             </h2>
 
-                            @if (! $soloLectura)
-                                <button type="button" class="emergency-inline-action" wire:click="abrirNuevaSolicitudExamen">
-                                    <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
-                                    Nuevo
-                                </button>
-                            @endif
+                            <div class="emergency-section-actions">
+                                @if ($atencion)
+                                    <a
+                                        href="{{ route('historia-clinica.emergencia.examenes.pdf', $atencion) }}"
+                                        class="emergency-inline-action"
+                                        target="_blank"
+                                        rel="noopener"
+                                        title="Genera Receta"
+                                    >
+                                        <iconify-icon icon="lucide:file-text" aria-hidden="true"></iconify-icon>
+                                        Genera Receta
+                                    </a>
+                                    <a
+                                        href="{{ route('historia-clinica.emergencia.laboratorio.pdf', $atencion) }}"
+                                        class="emergency-inline-action emergency-lab-pdf-action"
+                                        target="_blank"
+                                        rel="noopener"
+                                        title="Ver exámenes"
+                                        data-emergency-lab-pdf
+                                    >
+                                        <iconify-icon class="emergency-lab-pdf-icon" icon="lucide:eye" aria-hidden="true"></iconify-icon>
+                                        <span class="emergency-lab-pdf-spinner" aria-hidden="true"></span>
+                                        <span class="emergency-lab-pdf-label">Ver exámenes</span>
+                                    </a>
+                                @else
+                                    <button type="button" class="emergency-inline-action" title="Guarde la atención para generar receta" disabled>
+                                        <iconify-icon icon="lucide:file-text" aria-hidden="true"></iconify-icon>
+                                        Genera Receta
+                                    </button>
+                                    <button type="button" class="emergency-inline-action" title="Guarde la atención para ver exámenes" disabled>
+                                        <iconify-icon icon="lucide:eye" aria-hidden="true"></iconify-icon>
+                                        Ver exámenes
+                                    </button>
+                                @endif
+
+                                @if (! $soloLectura)
+                                    <button type="button" class="emergency-inline-action" wire:click="abrirNuevaSolicitudExamen">
+                                        <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
+                                        Nuevo
+                                    </button>
+                                @endif
+                            </div>
                         </header>
 
                         <div class="emergency-vitals-table-wrap">
@@ -1296,12 +1467,32 @@
                                 Prescripción de Medicamentos
                             </h2>
 
-                            @if (! $soloLectura)
-                                <button type="button" class="emergency-inline-action" wire:click="abrirNuevaPrescripcion">
-                                    <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
-                                    Nuevo
-                                </button>
-                            @endif
+                            <div class="emergency-section-actions">
+                                @if ($atencion)
+                                    <a
+                                        href="{{ route('historia-clinica.emergencia.medicamentos.pdf', $atencion) }}"
+                                        class="emergency-inline-action"
+                                        target="_blank"
+                                        rel="noopener"
+                                        title="Genera Receta"
+                                    >
+                                        <iconify-icon icon="lucide:file-text" aria-hidden="true"></iconify-icon>
+                                        Genera Receta
+                                    </a>
+                                @else
+                                    <button type="button" class="emergency-inline-action" title="Guarde la atención para generar receta" disabled>
+                                        <iconify-icon icon="lucide:file-text" aria-hidden="true"></iconify-icon>
+                                        Genera Receta
+                                    </button>
+                                @endif
+
+                                @if (! $soloLectura)
+                                    <button type="button" class="emergency-inline-action" wire:click="abrirNuevaPrescripcion">
+                                        <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
+                                        Nuevo
+                                    </button>
+                                @endif
+                            </div>
                         </header>
 
                         <div class="emergency-vitals-table-wrap">
@@ -1315,6 +1506,7 @@
                                         <th>Duración</th>
                                         <th>Cantidad</th>
                                         <th>Fecha / Hora</th>
+                                        <th>Estado</th>
                                         <th>Profesional</th>
                                         <th>Acciones</th>
                                     </tr>
@@ -1334,6 +1526,7 @@
                                             <td>{{ $prescripcion['duracion'] }}</td>
                                             <td>{{ $prescripcion['cantidad'] }}</td>
                                             <td>{{ $prescripcion['fecha_hora'] }}</td>
+                                            <td><span class="emergency-table-badge">{{ $prescripcion['estado'] }}</span></td>
                                             <td>
                                                 <span class="emergency-professional-inline">
                                                     <strong>{{ $prescripcion['iniciales'] }}</strong>
@@ -1357,7 +1550,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="emergency-empty-cell">
+                                            <td colspan="10" class="emergency-empty-cell">
                                                 <div class="emergency-table-empty-state">
                                                     <iconify-icon icon="lucide:pill" aria-hidden="true"></iconify-icon>
                                                     <p>No se han registrado prescripciones de medicamentos.</p>
@@ -1432,6 +1625,17 @@
                                         @error('prescripcionForm.fecha_hora') <small>{{ $message }}</small> @enderror
                                     </label>
 
+                                    <label>
+                                        <span>Estado</span>
+                                        <select wire:model="prescripcionForm.estado">
+                                            <option value="">Seleccione</option>
+                                            @foreach ($estadosSolicitudExamen as $estadoExamen)
+                                                <option value="{{ $estadoExamen->value }}">{{ $estadoExamen->value }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('prescripcionForm.estado') <small>{{ $message }}</small> @enderror
+                                    </label>
+
                                     <label class="emergency-combobox emergency-medication-professional-field">
                                         <span>Profesional</span>
                                         <div class="emergency-combobox-field">
@@ -1488,6 +1692,7 @@
                                         <th>Procedimiento</th>
                                         <th>Sesiones</th>
                                         <th>Fecha / Hora</th>
+                                        <th>Estado</th>
                                         <th>Origen</th>
                                         <th>Acciones</th>
                                     </tr>
@@ -1499,6 +1704,7 @@
                                             <td>{{ $procedimiento['denominacion'] }}</td>
                                             <td>{{ $procedimiento['sesiones'] }}</td>
                                             <td>{{ $procedimiento['fecha_hora'] }}</td>
+                                            <td><span class="emergency-table-badge">{{ $procedimiento['estado'] }}</span></td>
                                             <td><span class="emergency-table-badge">{{ $procedimiento['origen'] }}</span></td>
                                             <td>
                                                 @if (! $soloLectura)
@@ -1517,7 +1723,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="emergency-empty-cell">
+                                            <td colspan="7" class="emergency-empty-cell">
                                                 <div class="emergency-table-empty-state">
                                                     <iconify-icon icon="lucide:clipboard-x" aria-hidden="true"></iconify-icon>
                                                     <p>No se han registrado procedimientos realizados.</p>
@@ -1563,6 +1769,17 @@
                                     <span>Fecha / Hora</span>
                                     <input type="datetime-local" wire:model.blur="procedimientoForm.fecha_hora">
                                     @error('procedimientoForm.fecha_hora') <small>{{ $message }}</small> @enderror
+                                </label>
+
+                                <label>
+                                    <span>Estado</span>
+                                    <select wire:model="procedimientoForm.estado">
+                                        <option value="">Seleccione</option>
+                                        @foreach ($estadosSolicitudExamen as $estadoExamen)
+                                            <option value="{{ $estadoExamen->value }}">{{ $estadoExamen->value }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('procedimientoForm.estado') <small>{{ $message }}</small> @enderror
                                 </label>
 
                                 <div class="emergency-procedure-form-actions">
@@ -2408,6 +2625,26 @@
                                 @error('form.indicaciones_finales') <small>{{ $message }}</small> @enderror
                             </label>
                         </div>
+
+                        <div class="emergency-section-actions" style="margin-top: 14px;">
+                            @if ($atencion)
+                                <a
+                                    href="{{ route('historia-clinica.emergencia.alta.pdf', $atencion) }}"
+                                    class="emergency-inline-action"
+                                    target="_blank"
+                                    rel="noopener"
+                                    title="Genera Ficha de Alta"
+                                >
+                                    <iconify-icon icon="lucide:file-text" aria-hidden="true"></iconify-icon>
+                                    Genera Ficha de Alta
+                                </a>
+                            @else
+                                <button type="button" class="emergency-inline-action" title="Guarde la atención para generar ficha de alta" disabled>
+                                    <iconify-icon icon="lucide:file-text" aria-hidden="true"></iconify-icon>
+                                    Genera Ficha de Alta
+                                </button>
+                            @endif
+                        </div>
                     </article>
                 </section>
             @elseif ($tabActiva === 'documentacion')
@@ -2570,6 +2807,474 @@
         </main>
     </div>
 
+    @if ($modalDocumentosOrdenAbierto)
+        <div class="emergency-feedback-backdrop emergency-order-documents-backdrop" role="dialog" aria-modal="true" aria-labelledby="emergency-order-documents-title">
+            <section class="emergency-order-documents-modal">
+                <header class="emergency-order-documents-header">
+                    <div>
+                        <p>Orden clínica</p>
+                        <h2 id="emergency-order-documents-title">Documentos de la orden</h2>
+                        @if ($ordenDocumentosResumen)
+                            <span>{{ $ordenDocumentosResumen['tipo'] }} · {{ $ordenDocumentosResumen['detalle'] }} · {{ $ordenDocumentosResumen['fecha_hora'] }}</span>
+                        @endif
+                    </div>
+                    <button type="button" class="emergency-close-icon-action" wire:click="cerrarModalDocumentosOrden" title="Cerrar">
+                        <iconify-icon icon="lucide:x" aria-hidden="true"></iconify-icon>
+                    </button>
+                </header>
+
+                <div class="emergency-order-documents-grid">
+                    <article class="emergency-attention-card emergency-documents-upload-card">
+                        <header class="emergency-section-toolbar">
+                            <h2>
+                                <iconify-icon icon="lucide:file-up" aria-hidden="true"></iconify-icon>
+                                Cargar Nuevo Documento
+                            </h2>
+                        </header>
+
+                        <div class="emergency-document-dropzone">
+                            <input
+                                id="ordenDocumentosArchivos"
+                                type="file"
+                                multiple
+                                accept=".pdf,.xls,.xlsx,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp"
+                                wire:model="ordenDocumentosArchivos"
+                                @disabled($soloLectura)
+                            >
+
+                            <iconify-icon icon="lucide:cloud-upload" aria-hidden="true"></iconify-icon>
+                            <p>Arrastre y suelte los archivos aquí</p>
+                            <span>o</span>
+                            <label for="ordenDocumentosArchivos" class="emergency-document-select-action">
+                                Seleccionar Archivo
+                            </label>
+                            <small>Formatos soportados: PDF, Excel, Word, JPG, PNG, WEBP (Max. 10MB)</small>
+                        </div>
+
+                        @if (count($ordenDocumentosArchivos) > 0)
+                            <ul class="emergency-document-selected-list">
+                                @foreach ($ordenDocumentosArchivos as $archivo)
+                                    <li wire:key="orden-documento-temporal-{{ $loop->index }}">
+                                        <iconify-icon icon="lucide:paperclip" aria-hidden="true"></iconify-icon>
+                                        {{ $archivo->getClientOriginalName() }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+
+                        @error('ordenDocumentosArchivos') <small class="emergency-document-error">{{ $message }}</small> @enderror
+                        @error('ordenDocumentosArchivos.*') <small class="emergency-document-error">{{ $message }}</small> @enderror
+
+                        <button
+                            type="button"
+                            class="emergency-document-upload-action"
+                            wire:click="guardarDocumentosOrden"
+                            wire:loading.attr="disabled"
+                            wire:target="ordenDocumentosArchivos,guardarDocumentosOrden"
+                            @disabled($soloLectura || count($ordenDocumentosArchivos) === 0)
+                        >
+                            <iconify-icon icon="lucide:upload" aria-hidden="true"></iconify-icon>
+                            <span wire:loading.remove wire:target="guardarDocumentosOrden">Cargar Archivos</span>
+                            <span wire:loading wire:target="guardarDocumentosOrden">Cargando...</span>
+                        </button>
+                    </article>
+
+                    <article class="emergency-attention-card emergency-clinical-table-card emergency-documents-list-card">
+                        <header class="emergency-section-toolbar emergency-documents-toolbar">
+                            <h2>
+                                <iconify-icon icon="lucide:folder" aria-hidden="true"></iconify-icon>
+                                Documentos de la Orden
+                            </h2>
+
+                            <div class="emergency-documents-search">
+                                <label>
+                                    <iconify-icon icon="lucide:search" aria-hidden="true"></iconify-icon>
+                                    <input type="search" wire:model.live.debounce.300ms="busquedaDocumentoOrden" placeholder="Buscar documento...">
+                                </label>
+                                <button type="button" title="Filtro de documentos" aria-label="Filtro de documentos">
+                                    <iconify-icon icon="lucide:list-filter" aria-hidden="true"></iconify-icon>
+                                </button>
+                            </div>
+                        </header>
+
+                        <div class="emergency-vitals-table-wrap">
+                            <table class="emergency-vitals-table emergency-clinical-table emergency-documents-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Nombre del Archivo</th>
+                                        <th>Fecha de Carga</th>
+                                        <th>Cargado por</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($documentosOrden as $documentoOrden)
+                                        <tr wire:key="orden-documento-adjunto-{{ $documentoOrden['id'] }}">
+                                            <td>
+                                                <span class="emergency-document-type {{ $documentoOrden['clase_icono'] }}">
+                                                    <iconify-icon icon="{{ $documentoOrden['icono'] }}" aria-hidden="true"></iconify-icon>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="emergency-document-name-cell">
+                                                    <strong>{{ $documentoOrden['nombre'] }}</strong>
+                                                    <em>{{ $documentoOrden['tamano'] }}</em>
+                                                </span>
+                                            </td>
+                                            <td>{{ $documentoOrden['fecha_carga'] }}</td>
+                                            <td>
+                                                <span class="emergency-professional-inline">
+                                                    <strong>{{ $documentoOrden['iniciales'] }}</strong>
+                                                    {{ $documentoOrden['cargado_por'] }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="emergency-row-actions">
+                                                    <a href="{{ $documentoOrden['url'] }}" target="_blank" rel="noopener" title="Ver documento">
+                                                        <iconify-icon icon="lucide:eye" aria-hidden="true"></iconify-icon>
+                                                    </a>
+                                                    <a href="{{ $documentoOrden['url'] }}" download title="Descargar documento">
+                                                        <iconify-icon icon="lucide:download" aria-hidden="true"></iconify-icon>
+                                                    </a>
+                                                    @if (! $soloLectura)
+                                                        <button type="button" data-confirm-delete-emergency-tab data-registro-id="{{ $documentoOrden['id'] }}" data-registro-nombre="{{ $documentoOrden['nombre'] }}" data-catalogo-singular="documento de orden" data-delete-method="eliminarDocumentoOrden" data-confirm-title="Eliminar documento de orden" data-confirm-message="Deseas eliminar el documento {{ $documentoOrden['nombre'] }}?" title="Eliminar documento">
+                                                            <iconify-icon icon="lucide:trash-2" aria-hidden="true"></iconify-icon>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="emergency-empty-cell">
+                                                <div class="emergency-table-empty-state">
+                                                    <iconify-icon icon="lucide:file-search" aria-hidden="true"></iconify-icon>
+                                                    <p>No se han registrado documentos para esta orden.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <footer class="emergency-documents-footer">
+                            Mostrando {{ $documentosOrden->count() }} de {{ $documentosOrden->count() }} documentos
+                        </footer>
+                    </article>
+                </div>
+            </section>
+        </div>
+    @endif
+
+    @if ($antecedenteDrawer['abierto'] ?? false)
+        <div class="patient-drawer-backdrop"></div>
+
+        <aside class="patient-drawer patient-clinical-drawer {{ $antecedenteDrawer['ancho'] }} is-{{ $antecedenteDrawer['clave'] }}" style="--drawer-accent: {{ $antecedenteDrawer['acento'] }}" aria-modal="true" role="dialog">
+            <header>
+                <div>
+                    <p>Antecedentes medicos</p>
+                    <h2>{{ $antecedenteDrawer['titulo'] }}</h2>
+                </div>
+                <button type="button" wire:click="cerrarDrawerAntecedente" aria-label="Cerrar drawer">
+                    <iconify-icon icon="lucide:x" aria-hidden="true"></iconify-icon>
+                </button>
+            </header>
+
+            <section class="patient-drawer-records">
+                <div class="patient-drawer-toolbar">
+                    <strong>
+                        <span class="patient-drawer-section-icon">
+                            <iconify-icon icon="{{ $antecedenteDrawer['icono'] }}" aria-hidden="true"></iconify-icon>
+                        </span>
+                        {{ $antecedenteDrawer['titulo'] }}
+                    </strong>
+                    <button type="button" wire:click="nuevoAntecedenteRegistro">
+                        <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
+                        Nuevo
+                    </button>
+                </div>
+
+                @if ($antecedenteDrawer['registros']->isNotEmpty())
+                    <table class="patient-drawer-table">
+                        <thead>
+                            <tr>
+                                @switch($antecedenteDrawer['clave'])
+                                    @case('alergias')
+                                        <th>Alergia</th>
+                                        <th>Agente</th>
+                                        <th>Alergeno</th>
+                                        <th>Periodo</th>
+                                        @break
+                                    @case('reacciones')
+                                        <th>Medicamento</th>
+                                        <th>Tipo</th>
+                                        <th>Gravedad</th>
+                                        <th>Periodo</th>
+                                        @break
+                                    @case('familiares')
+                                        <th>Parentesco</th>
+                                        <th>Condicion</th>
+                                        <th>CIE10</th>
+                                        <th>Periodo</th>
+                                        @break
+                                    @case('cirugias')
+                                        <th>Codigo CPMS</th>
+                                        <th>Denominacion</th>
+                                        <th>Periodo</th>
+                                        @break
+                                    @case('hospitalizaciones')
+                                        <th>Codigo UPS</th>
+                                        <th>Diagnostico / denominacion</th>
+                                        <th>Periodo</th>
+                                        @break
+                                    @case('medicamentos')
+                                        <th>Medicamento habitual</th>
+                                        <th>Periodo</th>
+                                        @break
+                                    @default
+                                        <th>CIE10 / denominacion</th>
+                                        <th>Origen</th>
+                                        <th>Periodo</th>
+                                @endswitch
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($antecedenteDrawer['registros'] as $registro)
+                                <tr>
+                                    @switch($antecedenteDrawer['clave'])
+                                        @case('alergias')
+                                            <td>{{ $registro->alergia?->nombre ?? 'Alergia registrada' }}</td>
+                                            <td>{{ $registro->agente_causal ?: '--' }}</td>
+                                            <td>{{ $registro->alergeno ?: '--' }}</td>
+                                            <td>{{ $registro->periodo ?: '--' }}</td>
+                                            @break
+                                        @case('reacciones')
+                                            <td>{{ $registro->dci_medicamento ?: '--' }}</td>
+                                            <td>{{ $registro->tipo?->value ?? '--' }}</td>
+                                            <td>{{ $registro->gravedad?->value ?? '--' }}</td>
+                                            <td>{{ $registro->periodo ?: '--' }}</td>
+                                            @break
+                                        @case('familiares')
+                                            <td>{{ $registro->parentesco?->value ?? '--' }}</td>
+                                            <td>{{ $registro->denominacion ?: ($registro->diagnosticoCie10?->nombre ?? '--') }}</td>
+                                            <td>{{ $registro->diagnosticoCie10?->codigo ?? '--' }}</td>
+                                            <td>{{ $registro->periodo ?: '--' }}</td>
+                                            @break
+                                        @case('cirugias')
+                                            <td>{{ $registro->codigo_cpms ?: '--' }}</td>
+                                            <td>{{ $registro->denominacion ?: '--' }}</td>
+                                            <td>{{ $registro->periodo ?: '--' }}</td>
+                                            @break
+                                        @case('hospitalizaciones')
+                                            <td>{{ $registro->codigo_ups ?: '--' }}</td>
+                                            <td>{{ $registro->denominacion ?: ($registro->diagnosticoCie10?->nombre ?? '--') }}</td>
+                                            <td>{{ $registro->periodo ?: '--' }}</td>
+                                            @break
+                                        @case('medicamentos')
+                                            <td>{{ $registro->medicacion ?: '--' }}</td>
+                                            <td>{{ $registro->periodo ?: '--' }}</td>
+                                            @break
+                                        @default
+                                            <td>{{ $registro->diagnosticoCie10?->codigo ? $registro->diagnosticoCie10->codigo.' - '.($registro->denominacion ?: $registro->diagnosticoCie10->nombre) : ($registro->denominacion ?: '--') }}</td>
+                                            <td>{{ $registro->origen ?: '--' }}</td>
+                                            <td>{{ $registro->periodo ?: '--' }}</td>
+                                    @endswitch
+                                    <td>
+                                        <nav>
+                                            <button type="button" wire:click="editarAntecedenteRegistro({{ $registro->id }})" aria-label="Editar registro">
+                                                <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                data-confirm-delete-emergency-tab
+                                                data-registro-id="{{ $registro->id }}"
+                                                data-registro-nombre="{{ $registro->periodo ?: 'registro clinico' }}"
+                                                data-catalogo-singular="registro clinico"
+                                                data-delete-method="eliminarAntecedenteRegistro"
+                                                aria-label="Eliminar registro"
+                                            >
+                                                <iconify-icon icon="lucide:trash-2" aria-hidden="true"></iconify-icon>
+                                            </button>
+                                        </nav>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <p class="patient-drawer-empty">Aun no hay registros para esta seccion.</p>
+                @endif
+            </section>
+
+            <form class="patient-drawer-form" wire:submit.prevent="guardarAntecedenteRegistro">
+                <h3>{{ $antecedenteRegistroEditandoId ? 'Editar registro' : 'Nuevo registro' }}</h3>
+
+                <div class="patient-drawer-form-grid {{ $antecedenteDrawer['ancho'] }}">
+                @if ($antecedenteDrawer['clave'] === 'alergias')
+                    <label>
+                        Alergia
+                        <select wire:model="antecedenteFormulario.alergia_id">
+                            <option value="">Seleccione</option>
+                            @foreach ($antecedenteDrawer['opciones']['alergias'] as $id => $nombre)
+                                <option value="{{ $id }}">{{ $nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('antecedenteFormulario.alergia_id') <span>{{ $message }}</span> @enderror
+                    </label>
+                    <label>Agente causal <input type="text" wire:model.blur="antecedenteFormulario.agente_causal">@error('antecedenteFormulario.agente_causal') <span>{{ $message }}</span> @enderror</label>
+                    <label>Alergeno <input type="text" wire:model.blur="antecedenteFormulario.alergeno">@error('antecedenteFormulario.alergeno') <span>{{ $message }}</span> @enderror</label>
+                    <label>Periodo <input type="text" wire:model.blur="antecedenteFormulario.periodo">@error('antecedenteFormulario.periodo') <span>{{ $message }}</span> @enderror</label>
+                @elseif ($antecedenteDrawer['clave'] === 'reacciones')
+                    <label>Medicamento DCI <input type="text" wire:model.blur="antecedenteFormulario.dci_medicamento">@error('antecedenteFormulario.dci_medicamento') <span>{{ $message }}</span> @enderror</label>
+                    <label>Descripcion <textarea rows="3" wire:model.blur="antecedenteFormulario.descripcion"></textarea>@error('antecedenteFormulario.descripcion') <span>{{ $message }}</span> @enderror</label>
+                    <label>
+                        Tipo
+                        <select wire:model="antecedenteFormulario.tipo">
+                            <option value="">Seleccione</option>
+                            @foreach ($antecedenteDrawer['opciones']['tipos_ram'] as $valor => $texto)
+                                <option value="{{ $valor }}">{{ $texto }}</option>
+                            @endforeach
+                        </select>
+                        @error('antecedenteFormulario.tipo') <span>{{ $message }}</span> @enderror
+                    </label>
+                    <label>
+                        Gravedad
+                        <select wire:model="antecedenteFormulario.gravedad">
+                            <option value="">Seleccione</option>
+                            @foreach ($antecedenteDrawer['opciones']['gravedades_ram'] as $valor => $texto)
+                                <option value="{{ $valor }}">{{ $texto }}</option>
+                            @endforeach
+                        </select>
+                        @error('antecedenteFormulario.gravedad') <span>{{ $message }}</span> @enderror
+                    </label>
+                    <label>Periodo <input type="text" wire:model.blur="antecedenteFormulario.periodo">@error('antecedenteFormulario.periodo') <span>{{ $message }}</span> @enderror</label>
+                @elseif ($antecedenteDrawer['clave'] === 'familiares')
+                    <label>
+                        Parentesco
+                        <select wire:model="antecedenteFormulario.parentesco">
+                            <option value="">Seleccione</option>
+                            @foreach ($antecedenteDrawer['opciones']['parentescos'] as $valor => $texto)
+                                <option value="{{ $valor }}">{{ $texto }}</option>
+                            @endforeach
+                        </select>
+                        @error('antecedenteFormulario.parentesco') <span>{{ $message }}</span> @enderror
+                    </label>
+                    <label>Denominacion <input type="text" wire:model.blur="antecedenteFormulario.denominacion">@error('antecedenteFormulario.denominacion') <span>{{ $message }}</span> @enderror</label>
+                    <label>
+                        Diagnostico CIE10
+                        <select wire:model="antecedenteFormulario.diagnostico_cie10_id">
+                            <option value="">Seleccione</option>
+                            @foreach ($antecedenteDrawer['opciones']['diagnosticos'] as $id => $nombre)
+                                <option value="{{ $id }}">{{ $nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('antecedenteFormulario.diagnostico_cie10_id') <span>{{ $message }}</span> @enderror
+                    </label>
+                    <label>Periodo <input type="text" wire:model.blur="antecedenteFormulario.periodo">@error('antecedenteFormulario.periodo') <span>{{ $message }}</span> @enderror</label>
+                @elseif ($antecedenteDrawer['clave'] === 'cirugias')
+                    <label>Codigo CPMS <input type="text" wire:model.blur="antecedenteFormulario.codigo_cpms">@error('antecedenteFormulario.codigo_cpms') <span>{{ $message }}</span> @enderror</label>
+                    <label>Denominacion <input type="text" wire:model.blur="antecedenteFormulario.denominacion">@error('antecedenteFormulario.denominacion') <span>{{ $message }}</span> @enderror</label>
+                    <label>Periodo <input type="text" wire:model.blur="antecedenteFormulario.periodo">@error('antecedenteFormulario.periodo') <span>{{ $message }}</span> @enderror</label>
+                @elseif ($antecedenteDrawer['clave'] === 'hospitalizaciones')
+                    <label>Codigo UPS <input type="text" wire:model.blur="antecedenteFormulario.codigo_ups">@error('antecedenteFormulario.codigo_ups') <span>{{ $message }}</span> @enderror</label>
+                    <label>Denominacion <input type="text" wire:model.blur="antecedenteFormulario.denominacion">@error('antecedenteFormulario.denominacion') <span>{{ $message }}</span> @enderror</label>
+                    <label>
+                        Diagnostico CIE10
+                        <select wire:model="antecedenteFormulario.diagnostico_cie10_id">
+                            <option value="">Seleccione</option>
+                            @foreach ($antecedenteDrawer['opciones']['diagnosticos'] as $id => $nombre)
+                                <option value="{{ $id }}">{{ $nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('antecedenteFormulario.diagnostico_cie10_id') <span>{{ $message }}</span> @enderror
+                    </label>
+                    <label>Periodo <input type="text" wire:model.blur="antecedenteFormulario.periodo">@error('antecedenteFormulario.periodo') <span>{{ $message }}</span> @enderror</label>
+                @elseif ($antecedenteDrawer['clave'] === 'medicamentos')
+                    <label>Medicamento habitual <input type="text" wire:model.blur="antecedenteFormulario.medicacion">@error('antecedenteFormulario.medicacion') <span>{{ $message }}</span> @enderror</label>
+                    <label>Periodo <input type="text" wire:model.blur="antecedenteFormulario.periodo">@error('antecedenteFormulario.periodo') <span>{{ $message }}</span> @enderror</label>
+                @elseif ($antecedenteDrawer['clave'] === 'patologicos')
+                    <label>Denominacion <input type="text" wire:model.blur="antecedenteFormulario.denominacion">@error('antecedenteFormulario.denominacion') <span>{{ $message }}</span> @enderror</label>
+                    <label>Origen <input type="text" wire:model.blur="antecedenteFormulario.origen">@error('antecedenteFormulario.origen') <span>{{ $message }}</span> @enderror</label>
+                    <label>
+                        Diagnostico CIE10
+                        <select wire:model="antecedenteFormulario.diagnostico_cie10_id">
+                            <option value="">Seleccione</option>
+                            @foreach ($antecedenteDrawer['opciones']['diagnosticos'] as $id => $nombre)
+                                <option value="{{ $id }}">{{ $nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('antecedenteFormulario.diagnostico_cie10_id') <span>{{ $message }}</span> @enderror
+                    </label>
+                    <label>Periodo <input type="text" wire:model.blur="antecedenteFormulario.periodo">@error('antecedenteFormulario.periodo') <span>{{ $message }}</span> @enderror</label>
+                @endif
+                </div>
+
+                <footer>
+                    <button type="button" class="patient-drawer-secondary" wire:click="cerrarDrawerAntecedente">Cerrar</button>
+                    <button type="submit" class="catalog-primary-action">
+                        <iconify-icon icon="lucide:save" aria-hidden="true"></iconify-icon>
+                        Guardar
+                    </button>
+                </footer>
+            </form>
+        </aside>
+    @endif
+
+    @if ($modalProfesionalTratanteAbierto)
+        <div class="emergency-feedback-backdrop" role="dialog" aria-modal="true" aria-labelledby="emergency-treating-professional-title">
+            <section class="emergency-feedback-modal emergency-treating-professional-modal">
+                <div class="emergency-feedback-icon">
+                    <iconify-icon icon="lucide:stethoscope" aria-hidden="true"></iconify-icon>
+                </div>
+
+                <div class="emergency-feedback-content">
+                    <p>Profesional tratante</p>
+                    <h2 id="emergency-treating-professional-title">Cambiar Profesional Tratante</h2>
+                    <span>Selecciona el profesional que quedará asignado como responsable de esta atención.</span>
+
+                    <label class="emergency-combobox emergency-treating-professional-field">
+                        <span>Profesional</span>
+                        <div class="emergency-combobox-field">
+                            <input
+                                type="search"
+                                wire:model.live.debounce.250ms="profesionalTratanteBusqueda"
+                                placeholder="Buscar profesional por nombre, especialidad o CMP"
+                                autocomplete="off"
+                            >
+                            <iconify-icon icon="lucide:search" aria-hidden="true"></iconify-icon>
+                        </div>
+                        @if ($profesionalTratanteBusqueda !== '' && blank($profesionalTratanteId))
+                            <div class="emergency-combobox-list emergency-treating-professional-list">
+                                @forelse ($profesionalesTratantes as $profesional)
+                                    <button type="button" wire:click="seleccionarProfesionalTratante({{ $profesional->id }})">
+                                        <strong>{{ $profesional->nombres }}</strong>
+                                        <span>{{ $profesional->especialidad?->nombre ?? 'Sin especialidad' }} · {{ $profesional->cmp ? 'CMP '.$profesional->cmp : 'Sin CMP' }}</span>
+                                    </button>
+                                @empty
+                                    <p>No se encontraron profesionales.</p>
+                                @endforelse
+                            </div>
+                        @endif
+                        @error('profesionalTratanteId') <small>{{ $message }}</small> @enderror
+                    </label>
+
+                    <div class="emergency-feedback-actions">
+                        <button type="button" class="emergency-close-action" wire:click="cerrarModalProfesionalTratante">
+                            Cerrar
+                        </button>
+                        <button type="button" class="catalog-primary-action" wire:click="guardarProfesionalTratante">
+                            <iconify-icon icon="lucide:save" aria-hidden="true"></iconify-icon>
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    @endif
+
     @if ($panelConfirmacionCierreAbierto)
         <div class="emergency-feedback-backdrop" role="dialog" aria-modal="true" aria-labelledby="emergency-close-confirmation-title">
             <section class="emergency-feedback-modal is-warning">
@@ -2663,6 +3368,35 @@
                         </button>
                         <button type="button" class="catalog-primary-action" wire:click="seguirEditandoHistoria">
                             Si, seguir editando
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    @endif
+
+    @if ($panelSalidaSinGuardarAbierto)
+        <div class="emergency-feedback-backdrop" role="dialog" aria-modal="true" aria-labelledby="emergency-unsaved-exit-title">
+            <section class="emergency-feedback-modal is-warning">
+                <div class="emergency-feedback-icon">
+                    <iconify-icon icon="lucide:circle-alert" aria-hidden="true"></iconify-icon>
+                </div>
+
+                <div class="emergency-feedback-content">
+                    <p>Cambios sin guardar</p>
+                    <h2 id="emergency-unsaved-exit-title">¿Desea guardar los cambios antes de salir?</h2>
+                    <span>Hay cambios pendientes en la historia clínica. Puede guardarlos antes de volver al historial o salir sin conservarlos.</span>
+
+                    <div class="emergency-feedback-actions">
+                        <button type="button" class="emergency-close-action" wire:click="cancelarSalidaDelPanel">
+                            Cancelar
+                        </button>
+                        <button type="button" class="emergency-close-action" wire:click="salirSinGuardarCambios">
+                            Salir sin guardar
+                        </button>
+                        <button type="button" class="catalog-primary-action" wire:click="guardarYSalirDelPanel">
+                            <iconify-icon icon="lucide:save" aria-hidden="true"></iconify-icon>
+                            Guardar y salir
                         </button>
                     </div>
                 </div>

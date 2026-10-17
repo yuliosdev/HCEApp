@@ -3408,6 +3408,40 @@
         color: #ffffff;
     }
 
+    .theme-dark .emergency-medical-history-item,
+    html[data-applied-theme='dark'] .emergency-medical-history-item {
+        background: color-mix(in srgb, var(--history-accent), #0d111c 88%);
+        border-color: color-mix(in srgb, var(--history-accent), #415a77 58%);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.04) inset,
+            0 14px 30px rgba(0, 0, 0, 0.22);
+    }
+
+    .theme-dark .emergency-medical-history-heading > span,
+    html[data-applied-theme='dark'] .emergency-medical-history-heading > span {
+        background: color-mix(in srgb, var(--history-accent), #0d111c 76%);
+        color: color-mix(in srgb, var(--history-accent), #ffffff 36%);
+    }
+
+    .theme-dark .emergency-medical-history-heading strong,
+    html[data-applied-theme='dark'] .emergency-medical-history-heading strong {
+        color: color-mix(in srgb, var(--history-accent), #ffffff 34%);
+    }
+
+    .theme-dark .emergency-medical-history-heading button,
+    html[data-applied-theme='dark'] .emergency-medical-history-heading button {
+        background: color-mix(in srgb, var(--history-accent), #111827 76%);
+        border-color: color-mix(in srgb, var(--history-accent), #ffffff 38%);
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-medical-history-heading button:hover,
+    html[data-applied-theme='dark'] .emergency-medical-history-heading button:hover {
+        background: var(--history-accent);
+        border-color: #ffffff;
+        color: #ffffff;
+    }
+
     .patient-history-page {
         display: grid;
         gap: 22px;
@@ -4167,7 +4201,8 @@
         position: relative;
     }
 
-    .open-history-create-form input {
+    .open-history-create-form input,
+    .open-history-create-form select {
         background: #ffffff;
         border: 1px solid color-mix(in srgb, var(--hce-app-divider) 88%, var(--hce-color-muted) 12%);
         border-radius: 8px;
@@ -4181,9 +4216,28 @@
         width: 100%;
     }
 
-    .open-history-create-form input:focus {
+    .open-history-create-form select {
+        appearance: none;
+        background-image:
+            linear-gradient(45deg, transparent 50%, currentColor 50%),
+            linear-gradient(135deg, currentColor 50%, transparent 50%);
+        background-position:
+            calc(100% - 18px) 50%,
+            calc(100% - 13px) 50%;
+        background-repeat: no-repeat;
+        background-size: 5px 5px, 5px 5px;
+        padding-right: 36px;
+    }
+
+    .open-history-create-form input:focus,
+    .open-history-create-form select:focus {
         border-color: var(--hce-color-highlight);
         box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
+    }
+
+    .open-history-create-form select option {
+        background: #ffffff;
+        color: #0f172a;
     }
 
     .open-history-create-form small {
@@ -4195,7 +4249,7 @@
     .open-history-patient-fields {
         display: grid;
         gap: 14px;
-        grid-template-columns: minmax(260px, 1fr) minmax(220px, 0.72fr);
+        grid-template-columns: minmax(260px, 1fr) minmax(220px, 0.72fr) minmax(180px, 0.45fr);
     }
 
     .open-history-autocomplete-list {
@@ -4373,7 +4427,9 @@
     }
 
     .theme-dark .open-history-create-form input,
-    html[data-applied-theme='dark'] .open-history-create-form input {
+    .theme-dark .open-history-create-form select,
+    html[data-applied-theme='dark'] .open-history-create-form input,
+    html[data-applied-theme='dark'] .open-history-create-form select {
         background: #183052;
         border-color: #415a77;
         color: #ffffff;
@@ -4382,6 +4438,18 @@
     .theme-dark .open-history-create-form input::placeholder,
     html[data-applied-theme='dark'] .open-history-create-form input::placeholder {
         color: #8ea6c3;
+    }
+
+    .theme-dark .open-history-create-form select option,
+    html[data-applied-theme='dark'] .open-history-create-form select option {
+        background: #183052;
+        color: #ffffff;
+    }
+
+    .theme-dark .open-history-create-form select option:checked,
+    html[data-applied-theme='dark'] .open-history-create-form select option:checked {
+        background: #1380a7;
+        color: #ffffff;
     }
 
     .theme-dark .open-history-autocomplete-list,
@@ -4730,17 +4798,17 @@
         border-color: var(--card-accent, var(--patient-accent, var(--hce-color-highlight)));
         box-shadow:
             0 0 0 1px color-mix(in srgb, var(--card-accent, var(--patient-accent, var(--hce-color-highlight))) 28%, transparent) inset,
-            0 0 30px color-mix(in srgb, var(--card-accent, var(--patient-accent, var(--hce-color-highlight))) 38%, transparent),
-            0 30px 60px rgba(0, 19, 64, 0.16);
+            0 0 20px color-mix(in srgb, var(--card-accent, var(--patient-accent, var(--hce-color-highlight))) 10%, transparent),
+            0 10px 20px #00134029;
         transform: translateY(-6px) scale(1.012);
     }
 
     .theme-dark .hce-card-motion:hover,
     html[data-applied-theme='dark'] .hce-card-motion:hover {
         box-shadow:
-            0 0 0 1px color-mix(in srgb, var(--card-accent, var(--patient-accent, var(--hce-color-highlight))) 30%, transparent) inset,
-            0 0 30px color-mix(in srgb, var(--card-accent, var(--patient-accent, var(--hce-color-highlight))) 34%, transparent),
-            0 28px 56px rgba(0, 0, 0, 0.38);
+            0 0 0 1px color-mix(in srgb, var(--card-accent, var(--patient-accent, var(--hce-color-highlight))) 28%, transparent) inset,
+            0 0 20px color-mix(in srgb, var(--card-accent, var(--patient-accent, var(--hce-color-highlight))) 10%, transparent),
+            0 10px 20px #00134029;
     }
 
     .patient-dashboard-page .patient-dashboard-card:hover .patient-profile-photo,
@@ -5111,17 +5179,127 @@
         color: #caf0f8;
     }
 
+    .theme-dark .catalog-table tbody tr:hover td:not(.catalog-empty),
+    html[data-applied-theme='dark'] .catalog-table tbody tr:hover td:not(.catalog-empty) {
+        background: #1380a7;
+        border-top-color: color-mix(in srgb, #ffffff, transparent 72%);
+        color: #ffffff;
+    }
+
+    .theme-dark .catalog-table tbody tr:hover td:not(.catalog-empty) strong,
+    .theme-dark .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-actions button,
+    .theme-dark .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-favorite-icon,
+    .theme-dark .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-status,
+    html[data-applied-theme='dark'] .catalog-table tbody tr:hover td:not(.catalog-empty) strong,
+    html[data-applied-theme='dark'] .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-actions button,
+    html[data-applied-theme='dark'] .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-favorite-icon,
+    html[data-applied-theme='dark'] .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-status {
+        color: #ffffff;
+    }
+
+    .theme-dark .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-status,
+    html[data-applied-theme='dark'] .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-status {
+        background: rgba(255, 255, 255, 0.16);
+    }
+
+    .theme-dark .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty),
+    html[data-applied-theme='dark'] .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) {
+        background: #1380a7 !important;
+        border-top-color: #7dd3fc !important;
+        color: #ffffff !important;
+    }
+
+    .theme-dark .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) strong,
+    .theme-dark .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) .catalog-actions button,
+    .theme-dark .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) .catalog-favorite-icon,
+    html[data-applied-theme='dark'] .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) strong,
+    html[data-applied-theme='dark'] .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) .catalog-actions button,
+    html[data-applied-theme='dark'] .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) .catalog-favorite-icon {
+        color: #ffffff !important;
+    }
+
     .catalog-table td {
         border-top: 1px solid var(--hce-app-divider);
         color: var(--hce-app-text);
         font-size: 0.9rem;
         padding: 14px 16px;
+        transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
         vertical-align: middle;
     }
 
     .catalog-table td strong {
         color: var(--hce-app-heading);
         font-weight: 700;
+        transition: color 140ms ease;
+    }
+
+    .catalog-table tbody tr:hover td:not(.catalog-empty) {
+        background: #d9f3ff !important;
+        border-top-color: #8bd4ef !important;
+        color: #00345c !important;
+    }
+
+    .catalog-table tbody tr:hover td:not(.catalog-empty) strong,
+    .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-actions button,
+    .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-favorite-icon,
+    .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-status {
+        color: #00345c !important;
+    }
+
+    .catalog-table tbody tr:hover td:not(.catalog-empty) .catalog-status {
+        background: #bceaff !important;
+    }
+
+    .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) {
+        background: #d9f3ff !important;
+        color: #00345c !important;
+    }
+
+    .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) strong,
+    .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) .catalog-actions button,
+    .catalog-panel .catalog-table tbody tr:hover > td:not(.catalog-empty) .catalog-favorite-icon {
+        color: #00345c !important;
+    }
+
+    .catalog-favorite-icon {
+        align-items: center;
+        color: #94a3b8;
+        display: inline-flex;
+        font-size: 24px;
+        height: 24px;
+        justify-content: center;
+        width: 24px;
+    }
+
+    .catalog-favorite-icon iconify-icon,
+    .catalog-favorite-icon iconify-icon svg {
+        font-size: 24px !important;
+        height: 24px !important;
+        min-height: 24px;
+        min-width: 24px;
+        width: 24px !important;
+    }
+
+    .catalog-favorite-icon.is-favorite {
+        color: #facc15;
+    }
+
+    .catalog-favorite-icon.is-favorite iconify-icon {
+        fill: currentColor;
+    }
+
+    .catalog-favorite-icon.is-not-favorite iconify-icon {
+        fill: transparent;
+    }
+
+    .theme-dark .catalog-favorite-icon,
+    html[data-applied-theme='dark'] .catalog-favorite-icon {
+        color: #cbd5e1;
+    }
+
+    .theme-dark .catalog-favorite-icon.is-favorite,
+    html[data-applied-theme='dark'] .catalog-favorite-icon.is-favorite {
+        color: #facc15;
     }
 
     .catalog-status {
@@ -5129,6 +5307,7 @@
         display: inline-flex;
         font-size: 0.76rem;
         padding: 5px 9px;
+        transition: background 140ms ease, color 140ms ease;
     }
 
     .catalog-status.is-active {
@@ -5142,8 +5321,10 @@
     }
 
     .catalog-actions {
+        align-items: center;
         display: flex;
         gap: 6px;
+        min-height: 34px;
     }
 
     .catalog-actions button,
@@ -5157,6 +5338,17 @@
         justify-content: center;
         transition: background 140ms ease;
         width: 34px;
+    }
+
+    .catalog-actions button iconify-icon {
+        display: inline-flex !important;
+        flex: 0 0 18px;
+        height: 18px !important;
+        min-height: 18px;
+        min-width: 18px;
+        opacity: 1 !important;
+        width: 18px !important;
+        visibility: visible !important;
     }
 
     .catalog-actions button:hover,
@@ -5320,9 +5512,9 @@
 
     .catalog-modal {
         animation: catalog-modal-enter 180ms ease-out both;
-        max-width: 560px;
+        max-width: 760px;
         overflow: hidden;
-        width: min(100%, 560px);
+        width: min(100%, 760px);
     }
 
     .catalog-vital-signs-modal {
@@ -6864,14 +7056,18 @@ a.dashboard-primary-action,
 
     .emergency-back-link {
         align-items: center;
+        appearance: none;
         background: color-mix(in srgb, var(--hce-color-surface) 58%, #ffffff 42%);
         border: 1px solid color-mix(in srgb, var(--hce-color-highlight) 42%, transparent);
         border-radius: 999px;
         color: var(--hce-color-accent);
+        cursor: pointer;
         display: inline-flex;
         flex: 0 0 30px;
+        font: inherit;
         height: 30px;
         justify-content: center;
+        padding: 0;
         text-decoration: none;
         transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
         width: 30px;
@@ -7209,7 +7405,8 @@ a.dashboard-primary-action,
         font-style: normal;
     }
 
-    .emergency-doctor-card > span {
+    .emergency-doctor-card > span,
+    .emergency-doctor-icon-button {
         align-items: center;
         background: color-mix(in srgb, var(--hce-color-soft) 44%, #ffffff 56%);
         border: 1px solid var(--hce-app-divider);
@@ -7219,6 +7416,23 @@ a.dashboard-primary-action,
         height: 42px;
         justify-content: center;
         width: 46px;
+    }
+
+    .emergency-doctor-icon-button {
+        cursor: pointer;
+        transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .emergency-doctor-icon-button:hover {
+        background: var(--hce-app-hover);
+        border-color: color-mix(in srgb, var(--hce-color-accent) 54%, var(--hce-app-divider));
+        box-shadow: 0 10px 22px rgba(0, 127, 191, 0.14);
+        transform: translateY(-1px);
+    }
+
+    .emergency-doctor-icon-button:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--hce-color-accent) 70%, transparent);
+        outline-offset: 3px;
     }
 
     .emergency-doctor-card iconify-icon {
@@ -7573,7 +7787,8 @@ a.dashboard-primary-action,
         padding-top: 18px;
     }
 
-    .emergency-triage-left {
+    .emergency-triage-left,
+    .emergency-triage-reserved {
         display: grid;
         gap: 16px;
         min-width: 0;
@@ -7581,14 +7796,128 @@ a.dashboard-primary-action,
 
     .emergency-triage-card,
     .emergency-vital-signs-card,
-    .emergency-anamnesis-card {
+    .emergency-anamnesis-card,
+    .emergency-consultation-reason-card,
+    .emergency-medical-history-card {
         min-width: 0;
+    }
+
+    .emergency-consultation-reason-form {
+        grid-template-columns: 1fr;
+    }
+
+    .emergency-reserved-panel {
+        min-height: 190px;
+    }
+
+    .emergency-medical-history-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr;
+        min-width: 0;
+    }
+
+    .emergency-medical-history-item {
+        --card-accent: var(--history-accent);
+        background: color-mix(in srgb, var(--history-accent), #ffffff 94%);
+        border: 1px solid color-mix(in srgb, var(--history-accent), var(--hce-app-border) 58%);
+        border-radius: 8px;
+        box-shadow: 0 10px 24px rgba(2, 6, 23, 0.05);
+        display: grid;
+        gap: 7px;
+        min-width: 0;
+        padding: 10px;
+    }
+
+    .emergency-medical-history-heading {
+        align-items: center;
+        display: grid;
+        gap: 8px;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        min-width: 0;
+    }
+
+    .emergency-medical-history-heading > span {
+        align-items: center;
+        background: color-mix(in srgb, var(--history-accent), transparent 86%);
+        border-radius: 7px;
+        color: var(--history-accent);
+        display: inline-flex;
+        height: 26px;
+        justify-content: center;
+        width: 26px;
+    }
+
+    .emergency-medical-history-heading strong {
+        color: var(--history-accent);
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.15;
+        min-width: 0;
+        text-transform: uppercase;
+    }
+
+    .emergency-medical-history-heading button {
+        align-items: center;
+        background: color-mix(in srgb, var(--history-accent), #ffffff 88%);
+        border: 1px solid color-mix(in srgb, var(--history-accent), #ffffff 44%);
+        border-radius: 7px;
+        color: var(--history-accent);
+        cursor: pointer;
+        display: inline-flex;
+        height: 26px;
+        justify-content: center;
+        padding: 0;
+        transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+        width: 26px;
+    }
+
+    .emergency-medical-history-heading button:hover {
+        background: var(--history-accent);
+        border-color: var(--history-accent);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .emergency-medical-history-heading button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+        transform: none;
+    }
+
+    .emergency-medical-history-item ul {
+        display: grid;
+        gap: 4px;
+        list-style: none;
+        margin: 0;
+        padding: 0 0 0 34px;
+    }
+
+    .emergency-medical-history-item li {
+        color: var(--hce-app-text);
+        font-size: 0.78rem;
+        line-height: 1.25;
+        min-width: 0;
+    }
+
+    .emergency-medical-history-item li.is-empty {
+        color: var(--hce-app-muted);
+        font-style: italic;
     }
 
     .emergency-section-toolbar {
         align-items: center;
         display: flex;
+        gap: 10px;
         justify-content: space-between;
+    }
+
+    .emergency-section-actions {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
     }
 
     .emergency-inline-action {
@@ -7610,6 +7939,37 @@ a.dashboard-primary-action,
         background: var(--hce-app-hover);
         color: var(--hce-color-accent);
         transform: translateY(-1px);
+    }
+
+    .emergency-inline-action.is-loading {
+        cursor: wait;
+        opacity: 0.86;
+        pointer-events: none;
+    }
+
+    .emergency-lab-pdf-spinner {
+        animation: emergency-lab-pdf-spin 760ms linear infinite;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 999px;
+        display: none;
+        flex: 0 0 14px;
+        height: 14px;
+        width: 14px;
+    }
+
+    .emergency-lab-pdf-action.is-loading .emergency-lab-pdf-icon {
+        display: none;
+    }
+
+    .emergency-lab-pdf-action.is-loading .emergency-lab-pdf-spinner {
+        display: inline-block;
+    }
+
+    @keyframes emergency-lab-pdf-spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .emergency-combobox {
@@ -7859,6 +8219,28 @@ a.dashboard-primary-action,
 
     .emergency-anamnesis-form textarea:last-child {
         min-height: 210px;
+    }
+
+    .emergency-anamnesis-tab-grid {
+        display: grid;
+        gap: 18px;
+        padding-top: 18px !important;
+    }
+
+    .emergency-tab-panel > .emergency-anamnesis-tab-grid {
+        padding-top: 18px !important;
+    }
+
+    .emergency-anamnesis-tab-grid .emergency-anamnesis-form {
+        grid-template-columns: minmax(260px, 1.35fr) minmax(140px, 0.45fr) minmax(160px, 0.5fr);
+    }
+
+    .emergency-anamnesis-tab-grid .emergency-anamnesis-form textarea {
+        min-height: 120px;
+    }
+
+    .emergency-anamnesis-tab-grid .emergency-anamnesis-form textarea:last-child {
+        min-height: 240px;
     }
 
     .emergency-exams-stack {
@@ -8195,7 +8577,7 @@ a.dashboard-primary-action,
 
     .emergency-procedure-form {
         align-items: end;
-        grid-template-columns: minmax(420px, 0.9fr) minmax(120px, 140px) minmax(220px, 240px) auto;
+        grid-template-columns: minmax(420px, .85fr) minmax(120px, 140px) minmax(300px, 300px) minmax(160px, 180px) auto;
     }
 
     .emergency-nursing-grid {
@@ -8605,6 +8987,10 @@ a.dashboard-primary-action,
             grid-template-columns: auto minmax(0, 1fr);
             width: 100%;
         }
+
+        .emergency-order-documents-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     .emergency-movements-stack {
@@ -8934,13 +9320,49 @@ a.dashboard-primary-action,
         align-items: end;
         display: grid;
         gap: 12px;
-        grid-template-columns: minmax(180px, 190px) minmax(260px, 270px) minmax(120px, 130px) minmax(240px, 255px) minmax(420px, 500px) auto;
+        grid-template-columns: minmax(300px, 330px) minmax(280px, 1fr) minmax(220px, 300px) max-content;
         justify-content: stretch;
+        min-width: 0;
         width: 100%;
     }
 
+    .emergency-order-form > .emergency-order-form-row > label,
+    .emergency-order-detail-field {
+        min-width: 0;
+    }
+
+    .emergency-order-form > .emergency-order-form-row > label:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .emergency-order-form > .emergency-order-form-row > label:nth-child(2) {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .emergency-order-form > .emergency-order-form-row > label:nth-child(3) {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    .emergency-order-form > .emergency-order-form-row > label:nth-child(4) {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .emergency-order-form > .emergency-order-form-row > label:nth-child(5) {
+        grid-column: 3;
+        grid-row: 2;
+    }
+
+    .emergency-order-form > .emergency-order-form-row > label:nth-child(6) {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
     .emergency-order-professional-field {
-        margin-left: 35px;
+        margin-left: 0;
         min-width: 0;
         width: 100%;
     }
@@ -8948,9 +9370,12 @@ a.dashboard-primary-action,
     .emergency-order-form-actions {
         align-items: center;
         display: flex;
+        grid-column: 4;
+        grid-row: 1;
         gap: 8px;
         justify-content: flex-end;
-        min-width: 190px;
+        min-width: 0;
+        white-space: nowrap;
     }
 
     .emergency-lab-form > .emergency-lab-form-row {
@@ -9034,7 +9459,7 @@ a.dashboard-primary-action,
     .emergency-medication-form-row.is-secondary {
         align-items: end;
         display: grid;
-        grid-template-columns: 140px 290px minmax(300px, 1fr) auto;
+        grid-template-columns: 140px 300px 180px minmax(300px, 1fr) auto;
     }
 
     .emergency-medication-name-field {
@@ -9168,6 +9593,105 @@ a.dashboard-primary-action,
         max-width: 560px;
         padding: 20px;
         width: min(100%, 560px);
+    }
+
+    .emergency-treating-professional-modal {
+        max-width: 680px;
+        width: min(100%, 680px);
+    }
+
+    .emergency-treating-professional-field {
+        color: var(--hce-app-heading);
+        display: grid;
+        font-family: var(--hce-font-ui);
+        font-size: 0.8rem;
+        font-weight: 500;
+        gap: 7px;
+        margin-top: 4px;
+    }
+
+    .emergency-treating-professional-list {
+        max-height: 280px;
+    }
+
+    .emergency-order-documents-backdrop {
+        align-items: stretch;
+        overflow: auto;
+    }
+
+    .emergency-order-documents-modal {
+        align-self: center;
+        background: var(--hce-app-panel-bg);
+        border: 1px solid var(--hce-app-panel-border);
+        border-radius: 12px;
+        box-shadow: 0 24px 70px rgba(0, 19, 64, 0.26);
+        display: grid;
+        gap: 16px;
+        max-width: 1320px;
+        padding: 16px;
+        width: min(100%, 1320px);
+    }
+
+    .emergency-order-documents-header {
+        align-items: flex-start;
+        border-bottom: 1px solid var(--hce-app-divider);
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        padding-bottom: 14px;
+    }
+
+    .emergency-order-documents-header p,
+    .emergency-order-documents-header h2,
+    .emergency-order-documents-header span {
+        margin: 0;
+    }
+
+    .emergency-order-documents-header p {
+        color: var(--hce-color-primary);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .emergency-order-documents-header h2 {
+        color: var(--hce-app-heading);
+        font-size: 1.08rem;
+        font-weight: 800;
+    }
+
+    .emergency-order-documents-header span {
+        color: var(--hce-app-muted);
+        display: block;
+        font-size: 0.82rem;
+        margin-top: 4px;
+    }
+
+    .emergency-close-icon-action {
+        align-items: center;
+        appearance: none;
+        background: transparent;
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        color: var(--hce-app-text);
+        cursor: pointer;
+        display: inline-flex;
+        height: 34px;
+        justify-content: center;
+        transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+        width: 34px;
+    }
+
+    .emergency-close-icon-action:hover {
+        background: color-mix(in srgb, var(--hce-color-soft) 58%, transparent);
+        border-color: color-mix(in srgb, var(--hce-color-accent) 42%, var(--hce-app-divider));
+        color: var(--hce-color-primary);
+    }
+
+    .emergency-order-documents-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: minmax(320px, 0.45fr) minmax(0, 1fr);
     }
 
     .emergency-feedback-icon {
@@ -9376,6 +9900,13 @@ a.dashboard-primary-action,
     html[data-applied-theme='dark'] .emergency-doctor-card > span {
         background: #183052;
         border-color: rgba(152, 193, 217, 0.34);
+    }
+
+    .theme-dark .emergency-doctor-icon-button,
+    html[data-applied-theme='dark'] .emergency-doctor-icon-button {
+        background: color-mix(in srgb, var(--hce-color-soft) 0%, #2a61af 50%);
+        border: 1px solid #ffffff63;
+        color: #a9e0ff;
     }
 
     .theme-dark .emergency-patient-alias input,
@@ -10013,6 +10544,23 @@ a.dashboard-primary-action,
         border-color: rgba(152, 193, 217, 0.22);
     }
 
+    .theme-dark .emergency-treating-professional-modal .emergency-combobox-field input,
+    html[data-applied-theme='dark'] .emergency-treating-professional-modal .emergency-combobox-field input {
+        background: #183052;
+        border-color: #415a77;
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-treating-professional-modal .emergency-combobox-field input::placeholder,
+    html[data-applied-theme='dark'] .emergency-treating-professional-modal .emergency-combobox-field input::placeholder {
+        color: #98c1d9;
+    }
+
+    .theme-dark .emergency-treating-professional-modal .emergency-combobox-field iconify-icon,
+    html[data-applied-theme='dark'] .emergency-treating-professional-modal .emergency-combobox-field iconify-icon {
+        color: #a9e0ff;
+    }
+
     .theme-dark .emergency-feedback-modal.is-error .emergency-feedback-icon,
     html[data-applied-theme='dark'] .emergency-feedback-modal.is-error .emergency-feedback-icon {
         background: rgba(220, 38, 38, 0.14);
@@ -10172,6 +10720,8 @@ a.dashboard-primary-action,
         .emergency-attention-form.is-two-columns,
         .emergency-attention-form.is-three-columns,
         .emergency-anamnesis-form,
+        .emergency-anamnesis-tab-grid .emergency-anamnesis-form,
+        .emergency-consultation-reason-form,
         .emergency-vital-form,
         .emergency-diagnosis-form,
         .emergency-evolution-form,
@@ -10208,8 +10758,21 @@ a.dashboard-primary-action,
             grid-template-columns: 1fr;
         }
 
-        .emergency-order-form-row {
+        .emergency-order-form > .emergency-order-form-row {
+            align-items: stretch;
             grid-template-columns: 1fr;
+        }
+
+        .emergency-order-form > .emergency-order-form-row > label,
+        .emergency-order-form > .emergency-order-form-row > label:nth-child(1),
+        .emergency-order-form > .emergency-order-form-row > label:nth-child(2),
+        .emergency-order-form > .emergency-order-form-row > label:nth-child(3),
+        .emergency-order-form > .emergency-order-form-row > label:nth-child(4),
+        .emergency-order-form > .emergency-order-form-row > label:nth-child(5),
+        .emergency-order-form > .emergency-order-form-row > label:nth-child(6),
+        .emergency-order-form > .emergency-order-form-row > .emergency-order-form-actions {
+            grid-column: auto;
+            grid-row: auto;
         }
 
         .emergency-order-professional-field {

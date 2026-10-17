@@ -131,7 +131,7 @@ class GestionClinicaRegistrosTest extends TestCase
             ->call('abrirNuevo')
             ->set('form.nombres', 'Profesional de prueba')
             ->set('form.especialidad_id', $especialidad->id)
-            ->set('form.tipo_colegiatura', 'CMP')
+            ->set('form.tipo_colegiatura', 'Col.Tecnólogos Médicos')
             ->set('form.cmp', '123456')
             ->set('form.rne', '654321')
             ->set('form.codigo_servicio', 'EMG')
@@ -144,6 +144,7 @@ class GestionClinicaRegistrosTest extends TestCase
         $this->assertDatabaseHas('profesionales_salud', [
             'id' => $profesional->id,
             'especialidad_id' => $especialidad->id,
+            'tipo_colegiatura' => 'Col.Tecnólogos Médicos',
         ]);
 
         Livewire::actingAs($administrador)

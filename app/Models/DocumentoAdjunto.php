@@ -28,4 +28,9 @@ class DocumentoAdjunto extends Model
     {
         return $this->belongsTo(HcEmergencia::class);
     }
+
+    public function orden(): BelongsTo
+    {
+        return $this->belongsTo(Orden::class);
+    }
 }

@@ -8,8 +8,8 @@ use App\Enums\FactorRh;
 use App\Enums\GrupoSanguineo;
 use App\Enums\SiNo;
 use App\Enums\TopicoAtencion;
-use App\Models\HcReferencia;
 use App\Models\HcEmergencia;
+use App\Models\HcReferencia;
 use App\Models\HospitalizacionPrevia;
 use App\Models\MedicamentoHabitual;
 use App\Models\Paciente;
@@ -52,9 +52,11 @@ class BaseDatosClinicaTest extends TestCase
         $this->assertTrue(Schema::hasColumn('hc_emergencia', 'triaje'), 'La tabla hc_emergencia debe tener el campo booleano triaje.');
         $this->assertTrue(Schema::hasColumn('hc_emergencia', 'alias'), 'La tabla hc_emergencia debe tener el campo alias.');
         $this->assertTrue(Schema::hasColumn('hc_emergencia', 'indicaciones_finales'), 'La tabla hc_emergencia debe tener indicaciones finales.');
+        $this->assertTrue(Schema::hasColumn('hc_emergencia', 'motivo_consulta'), 'La tabla hc_emergencia debe tener motivo_consulta.');
         $this->assertTrue(Schema::hasColumn('hospitalizaciones_previas', 'ups_id'), 'La tabla hospitalizaciones_previas debe relacionarse con ups.');
         $this->assertTrue(Schema::hasColumn('signos_vitales', 'rango_inicial'), 'La tabla signos_vitales debe tener rango inicial.');
         $this->assertTrue(Schema::hasColumn('signos_vitales', 'rango_final'), 'La tabla signos_vitales debe tener rango final.');
+        $this->assertTrue(Schema::hasColumn('signos_vitales', 'favorito'), 'La tabla signos_vitales debe tener favorito.');
         $this->assertTrue(Schema::hasColumn('evoluciones', 'detalle_clinico'), 'La tabla evoluciones debe tener detalle clinico.');
         $this->assertTrue(Schema::hasColumn('alta_medicamentos', 'cantidad'), 'La tabla alta_medicamentos debe tener cantidad.');
         $this->assertFalse(Schema::hasColumn('medicamentos_habituales', 'hc_emergencia_id'), 'medicamentos_habituales ya no debe depender directamente de hc_emergencia.');
@@ -106,6 +108,7 @@ class BaseDatosClinicaTest extends TestCase
         ]);
         $this->assertDatabaseHas('signos_vitales', [
             'descripcion' => 'Temperatura',
+            'favorito' => true,
         ]);
     }
 
@@ -131,6 +134,7 @@ class BaseDatosClinicaTest extends TestCase
             'color_triaje' => ColorTriaje::Azul,
             'triaje' => true,
             'alias' => 'Paciente no identificado',
+            'motivo_consulta' => 'Dolor abdominal.',
             'indicaciones_finales' => 'Control por consultorio externo.',
         ]);
 
@@ -143,6 +147,7 @@ class BaseDatosClinicaTest extends TestCase
         $this->assertSame(ColorTriaje::Azul, $episodio->color_triaje);
         $this->assertTrue($episodio->triaje);
         $this->assertSame('Paciente no identificado', $episodio->alias);
+        $this->assertSame('Dolor abdominal.', $episodio->motivo_consulta);
         $this->assertSame('Control por consultorio externo.', $episodio->indicaciones_finales);
         $this->assertInstanceOf(GrupoSanguineo::class, $paciente->grupo_sanguineo);
         $this->assertInstanceOf(FactorRh::class, $paciente->factor_rh);

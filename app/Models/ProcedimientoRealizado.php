@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EstadoSolicitudExamen;
 use App\Models\Concerns\TieneAuditoriaBasica;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,7 @@ class ProcedimientoRealizado extends Model
     {
         return [
             'fecha_hora' => 'datetime',
+            'estado' => EstadoSolicitudExamen::class,
         ];
     }
 

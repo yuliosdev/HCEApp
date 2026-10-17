@@ -6,6 +6,7 @@ use App\Enums\EstadoCatalogo;
 use App\Models\Concerns\TieneAuditoriaBasica;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ambiente extends Model
@@ -23,5 +24,10 @@ class Ambiente extends Model
         return [
             'estado' => EstadoCatalogo::class,
         ];
+    }
+
+    public function hcEmergencias(): HasMany
+    {
+        return $this->hasMany(HcEmergencia::class);
     }
 }

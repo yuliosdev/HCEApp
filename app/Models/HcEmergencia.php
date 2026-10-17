@@ -70,6 +70,11 @@ class HcEmergencia extends Model
         return $this->belongsTo(Prioridad::class);
     }
 
+    public function ambiente(): BelongsTo
+    {
+        return $this->belongsTo(Ambiente::class);
+    }
+
     public function profesionalTriaje(): BelongsTo
     {
         return $this->belongsTo(ProfesionalSalud::class, 'profesional_triaje_id');

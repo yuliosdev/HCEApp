@@ -138,7 +138,7 @@
                         <span class="muted">Adm: {{ $atencion->numero_atencion ?: '--' }}</span>
                     </td>
                     <td>{{ $valor($atencion->profesionalResponsable?->nombres) }}</td>
-                    <td>{{ $valor($atencion->destino_topico ?: $atencion->ambiente) }}</td>
+                    <td>{{ $valor($atencion->destino_topico ?: $atencion->ambiente?->denominacion) }}</td>
                     <td>
                         @if ($diagnostico?->diagnosticoCie10)
                             {{ $diagnostico->diagnosticoCie10->nombre }} ({{ $diagnostico->diagnosticoCie10->codigo }})

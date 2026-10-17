@@ -65,8 +65,8 @@ final class RegistrosClinicos
                 'campos' => [
                     ['nombre' => 'nombres', 'etiqueta' => 'Nombres', 'tipo' => 'text', 'requerido' => true, 'max' => 255],
                     ['nombre' => 'especialidad_id', 'etiqueta' => 'Especialidad', 'tipo' => 'model_select', 'requerido' => false, 'modelo_opciones' => Especialidad::class, 'opcion_valor' => 'id', 'opcion_texto' => 'nombre', 'relacion' => 'especialidad', 'relacion_campo' => 'nombre'],
-                    ['nombre' => 'tipo_colegiatura', 'etiqueta' => 'Tipo colegiatura', 'tipo' => 'select', 'requerido' => false, 'opciones' => ['CMP', 'CEP', 'Otro']],
-                    ['nombre' => 'cmp', 'etiqueta' => 'CMP', 'tipo' => 'text', 'requerido' => false, 'max' => 30],
+                    ['nombre' => 'tipo_colegiatura', 'etiqueta' => 'Tipo colegiatura', 'tipo' => 'select', 'requerido' => false, 'opciones' => self::tiposColegiatura()],
+                    ['nombre' => 'cmp', 'etiqueta' => 'N° Colegiatura', 'tipo' => 'text', 'requerido' => false, 'max' => 30],
                     ['nombre' => 'rne', 'etiqueta' => 'RNE', 'tipo' => 'text', 'requerido' => false, 'max' => 30],
                     ['nombre' => 'codigo_servicio', 'etiqueta' => 'Codigo servicio', 'tipo' => 'text', 'requerido' => false, 'max' => 50],
                 ],
@@ -84,6 +84,28 @@ final class RegistrosClinicos
         abort_unless(array_key_exists($registroClinico, self::todos()), 404);
 
         return self::todos()[$registroClinico];
+    }
+
+    /**
+     * Valores validos para el tipo de colegiatura de profesionales de salud.
+     *
+     * @return array<int, string>
+     */
+    public static function tiposColegiatura(): array
+    {
+        return [
+            'CMP',
+            'CEP',
+            'Col.Químico Farm',
+            'Col.Odontológico',
+            'Col.Biólogos',
+            'Col.Obstetrices',
+            'Col.Trabajadores Sociales',
+            'Col.Psicólogos',
+            'Col.Tecnólogos Médicos',
+            'Col.Nutricionistas',
+            'Prof.Salud sin colegiatura',
+        ];
     }
 
     /**

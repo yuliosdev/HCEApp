@@ -7,6 +7,7 @@ use App\Enums\EstadoAtencion;
 use App\Enums\EstadoFirma;
 use App\Enums\SiNo;
 use App\Enums\TopicoAtencion;
+use App\Models\Ambiente;
 use App\Models\HcEmergencia;
 use App\Models\Paciente;
 use App\Models\Prioridad;
@@ -35,7 +36,8 @@ class HcEmergenciaFactory extends Factory
             'fecha_hora_inicio_episodio' => now()->subMinutes(30),
             'fecha_hora_atencion' => now(),
             'topico' => TopicoAtencion::Topico,
-            'ambiente' => 'Cubiculo '.fake()->numberBetween(1, 10),
+            'ambiente_id' => Ambiente::factory(),
+            'tipo' => 'Accidental',
             'paciente_id' => Paciente::factory(),
             'alias' => fake()->optional()->firstName(),
             'sin_identificacion' => SiNo::No,
@@ -44,6 +46,7 @@ class HcEmergenciaFactory extends Factory
             'profesional_triaje_id' => ProfesionalSalud::factory(),
             'prioridad_id' => Prioridad::query()->value('id'),
             'color_triaje' => fake()->randomElement(ColorTriaje::cases()),
+            'motivo_consulta' => fake()->optional()->sentence(),
             'triaje' => true,
             'estado_firma' => EstadoFirma::Pendiente,
             'indicaciones_finales' => fake()->optional()->sentence(),

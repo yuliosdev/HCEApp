@@ -3,12 +3,16 @@
 namespace App\Services\Catalogos;
 
 use App\Enums\EstadoCatalogo;
+use App\Models\DiagnosticoCie10;
+use App\Models\Medicamento;
 use App\Models\User;
 use App\Support\Catalogos\CatalogosClinicos;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -16,6 +20,7 @@ use Illuminate\Validation\Rule;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Reader\XLSX\Reader;
 use OpenSpout\Writer\XLSX\Writer;
+use Closure;
 
 class CatalogosClinicosArchivoService
 {
@@ -83,8 +88,18 @@ class CatalogosClinicosArchivoService
      *
      * @return array{creados: int, actualizados: int, omitidos: int, errores: array<int, string>}
      */
-    public function importar(string $catalogo, UploadedFile $archivo, int $usuarioId): array
+    public function importar(string $catalogo, UploadedFile $archivo, int $usuarioId, ?Closure $progreso = null): array
     {
+        $this->prepararImportacionMasiva();
+
+        if ($catalogo === 'cie10') {
+            return $this->importarCie10PorLotes($archivo, $usuarioId, $progreso);
+        }
+
+        if ($catalogo === 'medicamentos') {
+            return $this->importarMedicamentosPorLotes($archivo, $usuarioId, $progreso);
+        }
+
         $resultado = [
             'creados' => 0,
             'actualizados' => 0,
@@ -137,6 +152,10 @@ class CatalogosClinicosArchivoService
                     $registro = $this->registroPorClaveImportacion($catalogo, $datos);
                     $esNuevo = ! $registro->exists;
 
+                    if (! $esNuevo && method_exists($registro, 'trashed') && $registro->trashed()) {
+                        $registro->restore();
+                    }
+
                     $datosRegistro = array_merge($this->datosPersistibles($catalogo, $datos), [
                         'registrado_por' => $registro->registrado_por ?: $usuarioId,
                         'actualizado_por' => $usuarioId,
@@ -156,6 +175,342 @@ class CatalogosClinicosArchivoService
             }
         } finally {
             $reader->close();
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Importa CIE10 con upsert por lotes para evitar una consulta y un save por fila.
+     *
+     * @return array{creados: int, actualizados: int, omitidos: int, errores: array<int, string>}
+     */
+    private function importarCie10PorLotes(UploadedFile $archivo, int $usuarioId, ?Closure $progreso = null): array
+    {
+        $resultado = [
+            'creados' => 0,
+            'actualizados' => 0,
+            'omitidos' => 0,
+            'errores' => [],
+        ];
+        $loteFilas = [];
+        $codigosContados = [];
+        $guardadas = 0;
+        $reader = new Reader;
+        $reader->open($archivo->getRealPath());
+        $filasLeidas = 0;
+        $guardarLote = function () use (&$loteFilas, &$codigosContados, &$guardadas, &$resultado, $usuarioId, $progreso, &$filasLeidas): void {
+            if ($loteFilas === []) {
+                return;
+            }
+
+            $codigos = array_keys($loteFilas);
+            $codigosExistentes = DiagnosticoCie10::query()
+                ->withTrashed()
+                ->whereIn('codigo', $codigos)
+                ->pluck('registrado_por', 'codigo')
+                ->all();
+
+            $ahora = now();
+            $filasUpsert = [];
+
+            foreach ($loteFilas as $codigo => $datos) {
+                if (! isset($codigosContados[$codigo])) {
+                    array_key_exists($codigo, $codigosExistentes)
+                        ? $resultado['actualizados']++
+                        : $resultado['creados']++;
+
+                    $codigosContados[$codigo] = true;
+                }
+
+                $filasUpsert[] = [
+                    'codigo' => $codigo,
+                    'nombre' => $datos['nombre'],
+                    'genero' => $datos['genero'],
+                    'estado' => $this->valorEstadoPersistible('cie10', $datos['estado']),
+                    'registrado_por' => $codigosExistentes[$codigo] ?? $usuarioId,
+                    'actualizado_por' => $usuarioId,
+                    'created_at' => $ahora,
+                    'updated_at' => $ahora,
+                    'deleted_at' => null,
+                ];
+            }
+
+            DB::table('diagnosticos_cie10')->upsert(
+                $filasUpsert,
+                ['codigo'],
+                ['nombre', 'genero', 'estado', 'actualizado_por', 'updated_at', 'deleted_at'],
+            );
+
+            $guardadas += count($filasUpsert);
+            $loteFilas = [];
+
+            $progreso?->__invoke([
+                'mensaje' => 'Guardando diagnósticos CIE10...',
+                'procesadas' => $filasLeidas,
+                'guardadas' => $guardadas,
+                'omitidos' => $resultado['omitidos'],
+            ]);
+        };
+
+        try {
+            foreach ($reader->getSheetIterator() as $sheet) {
+                $encabezados = [];
+
+                foreach ($sheet->getRowIterator() as $numeroFila => $row) {
+                    $valores = array_map(
+                        fn ($valor): string => trim((string) $valor),
+                        $row->toArray()
+                    );
+
+                    if ($numeroFila === 1) {
+                        $encabezados = $this->normalizarEncabezados($valores);
+                        $faltantes = array_diff($this->columnasImportacion('cie10'), $encabezados);
+
+                        if ($faltantes !== []) {
+                            $resultado['errores'][] = 'La plantilla no contiene las columnas obligatorias: '.implode(', ', $faltantes).'.';
+
+                            return $resultado;
+                        }
+
+                        continue;
+                    }
+
+                    if ($this->filaVacia($valores)) {
+                        $resultado['omitidos']++;
+
+                        continue;
+                    }
+
+                    $filasLeidas++;
+                    $datos = $this->normalizarDatosImportacion('cie10', $this->mapearFila($encabezados, $valores));
+                    $validacion = Validator::make($datos, $this->reglasImportacion('cie10'), [], $this->atributosImportacion('cie10'));
+
+                    if ($validacion->fails()) {
+                        $resultado['errores'][] = 'Fila '.$numeroFila.': '.$validacion->errors()->first();
+                        $resultado['omitidos']++;
+
+                        if ($progreso !== null && ($filasLeidas % 250 === 0)) {
+                            $progreso([
+                                'mensaje' => 'Validando filas del archivo...',
+                                'procesadas' => $filasLeidas,
+                                'omitidos' => $resultado['omitidos'],
+                            ]);
+                        }
+
+                        continue;
+                    }
+
+                    // El codigo es la clave unica: si aparece dos veces en el mismo lote, prevalece la ultima fila.
+                    $loteFilas[$datos['codigo']] = $datos;
+
+                    if (count($loteFilas) >= 500) {
+                        $guardarLote();
+                    }
+
+                    if ($progreso !== null && ($filasLeidas % 250 === 0)) {
+                        $progreso([
+                            'mensaje' => 'Validando filas del archivo...',
+                            'procesadas' => $filasLeidas,
+                            'omitidos' => $resultado['omitidos'],
+                        ]);
+                    }
+                }
+
+                break;
+            }
+
+            $guardarLote();
+        } finally {
+            $reader->close();
+        }
+
+        if ($guardadas === 0) {
+            $progreso?->__invoke([
+                'mensaje' => 'No se encontraron filas válidas para importar.',
+                'procesadas' => $filasLeidas,
+                'omitidos' => $resultado['omitidos'],
+            ]);
+
+            return $resultado;
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Importa medicamentos por lotes para soportar plantillas extensas sin procesar fila por fila.
+     *
+     * @return array{creados: int, actualizados: int, omitidos: int, errores: array<int, string>}
+     */
+    private function importarMedicamentosPorLotes(UploadedFile $archivo, int $usuarioId, ?Closure $progreso = null): array
+    {
+        $resultado = [
+            'creados' => 0,
+            'actualizados' => 0,
+            'omitidos' => 0,
+            'errores' => [],
+        ];
+        $loteFilas = [];
+        $descripcionesContadas = [];
+        $guardadas = 0;
+        $reader = new Reader;
+        $reader->open($archivo->getRealPath());
+        $filasLeidas = 0;
+        $guardarLote = function () use (&$loteFilas, &$descripcionesContadas, &$guardadas, &$resultado, $usuarioId, $progreso, &$filasLeidas): void {
+            if ($loteFilas === []) {
+                return;
+            }
+
+            $descripciones = array_keys($loteFilas);
+            $registrosExistentes = Medicamento::query()
+                ->withTrashed()
+                ->whereIn('descripcion', $descripciones)
+                ->get(['id', 'descripcion', 'registrado_por'])
+                ->keyBy('descripcion');
+
+            $ahora = now();
+            $filasNuevas = [];
+            $filasExistentes = [];
+
+            foreach ($loteFilas as $descripcion => $datos) {
+                $registroExistente = $registrosExistentes->get($descripcion);
+
+                if (! isset($descripcionesContadas[$descripcion])) {
+                    $registroExistente === null
+                        ? $resultado['creados']++
+                        : $resultado['actualizados']++;
+
+                    $descripcionesContadas[$descripcion] = true;
+                }
+
+                $fila = [
+                    'descripcion' => $descripcion,
+                    'presentacion' => $datos['presentacion'],
+                    'generico' => $datos['generico'],
+                    'stock' => $datos['stock'] ?? 0,
+                    'estado' => $this->valorEstadoPersistible('medicamentos', $datos['estado']),
+                    'id_producto_externo' => $datos['id_producto_externo'],
+                    'actualizado_por' => $usuarioId,
+                    'updated_at' => $ahora,
+                    'deleted_at' => null,
+                ];
+
+                if ($registroExistente === null) {
+                    $filasNuevas[] = array_merge($fila, [
+                        'registrado_por' => $usuarioId,
+                        'created_at' => $ahora,
+                    ]);
+
+                    continue;
+                }
+
+                $filasExistentes[] = array_merge($fila, [
+                    'id' => $registroExistente->id,
+                ]);
+            }
+
+            if ($filasNuevas !== []) {
+                DB::table('medicamentos')->insert($filasNuevas);
+            }
+
+            if ($filasExistentes !== []) {
+                DB::table('medicamentos')->upsert(
+                    $filasExistentes,
+                    ['id'],
+                    ['descripcion', 'presentacion', 'generico', 'stock', 'estado', 'id_producto_externo', 'actualizado_por', 'updated_at', 'deleted_at'],
+                );
+            }
+
+            $guardadas += count($filasNuevas) + count($filasExistentes);
+            $loteFilas = [];
+
+            $progreso?->__invoke([
+                'mensaje' => 'Guardando medicamentos...',
+                'procesadas' => $filasLeidas,
+                'guardadas' => $guardadas,
+                'omitidos' => $resultado['omitidos'],
+            ]);
+        };
+
+        try {
+            foreach ($reader->getSheetIterator() as $sheet) {
+                $encabezados = [];
+
+                foreach ($sheet->getRowIterator() as $numeroFila => $row) {
+                    $valores = array_map(
+                        fn ($valor): string => trim((string) $valor),
+                        $row->toArray()
+                    );
+
+                    if ($numeroFila === 1) {
+                        $encabezados = $this->normalizarEncabezados($valores);
+                        $faltantes = array_diff($this->columnasImportacion('medicamentos'), $encabezados);
+
+                        if ($faltantes !== []) {
+                            $resultado['errores'][] = 'La plantilla no contiene las columnas obligatorias: '.implode(', ', $faltantes).'.';
+
+                            return $resultado;
+                        }
+
+                        continue;
+                    }
+
+                    if ($this->filaVacia($valores)) {
+                        $resultado['omitidos']++;
+
+                        continue;
+                    }
+
+                    $filasLeidas++;
+                    $datos = $this->normalizarDatosImportacion('medicamentos', $this->mapearFila($encabezados, $valores));
+                    $validacion = Validator::make($datos, $this->reglasImportacion('medicamentos'), [], $this->atributosImportacion('medicamentos'));
+
+                    if ($validacion->fails()) {
+                        $resultado['errores'][] = 'Fila '.$numeroFila.': '.$validacion->errors()->first();
+                        $resultado['omitidos']++;
+
+                        if ($progreso !== null && ($filasLeidas % 250 === 0)) {
+                            $progreso([
+                                'mensaje' => 'Validando filas del archivo...',
+                                'procesadas' => $filasLeidas,
+                                'omitidos' => $resultado['omitidos'],
+                            ]);
+                        }
+
+                        continue;
+                    }
+
+                    // La descripcion es la clave funcional del catalogo: ante duplicados, prevalece la ultima fila.
+                    $loteFilas[$datos['descripcion']] = $datos;
+
+                    if (count($loteFilas) >= 500) {
+                        $guardarLote();
+                    }
+
+                    if ($progreso !== null && ($filasLeidas % 250 === 0)) {
+                        $progreso([
+                            'mensaje' => 'Validando filas del archivo...',
+                            'procesadas' => $filasLeidas,
+                            'omitidos' => $resultado['omitidos'],
+                        ]);
+                    }
+                }
+
+                break;
+            }
+
+            $guardarLote();
+        } finally {
+            $reader->close();
+        }
+
+        if ($guardadas === 0) {
+            $progreso?->__invoke([
+                'mensaje' => 'No se encontraron filas válidas para importar.',
+                'procesadas' => $filasLeidas,
+                'omitidos' => $resultado['omitidos'],
+            ]);
         }
 
         return $resultado;
@@ -439,8 +794,13 @@ class CatalogosClinicosArchivoService
         $configuracion = $this->configuracion($catalogo);
         $modelo = $configuracion['modelo'];
         $criterios = $this->criteriosClaveImportacion($configuracion, $datos);
+        $consulta = $modelo::query();
 
-        return $modelo::query()->firstOrNew($criterios);
+        if ($this->usaEliminacionLogica($modelo)) {
+            $consulta->withTrashed();
+        }
+
+        return $consulta->firstOrNew($criterios);
     }
 
     /**
@@ -510,5 +870,22 @@ class CatalogosClinicosArchivoService
         }
 
         return $this->valorExportable($estado);
+    }
+
+    private function prepararImportacionMasiva(): void
+    {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(0);
+        }
+
+        @ini_set('max_execution_time', '0');
+    }
+
+    /**
+     * @param  class-string  $modelo
+     */
+    private function usaEliminacionLogica(string $modelo): bool
+    {
+        return in_array(SoftDeletes::class, class_uses_recursive($modelo), true);
     }
 }

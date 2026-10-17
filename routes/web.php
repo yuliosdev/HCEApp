@@ -12,6 +12,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GestionClinica\RegistroClinicoController;
 use App\Http\Controllers\GestionClinica\RegistrosClinicosArchivoController;
 use App\Http\Controllers\HistoriaClinica\AtencionesPacienteController;
+use App\Http\Controllers\HistoriaClinica\HcEmergenciaAltaPdfController;
+use App\Http\Controllers\HistoriaClinica\HcEmergenciaExamenesPdfController;
+use App\Http\Controllers\HistoriaClinica\HcEmergenciaLaboratorioPdfController;
+use App\Http\Controllers\HistoriaClinica\HcEmergenciaMedicamentosPdfController;
+use App\Http\Controllers\HistoriaClinica\HcEmergenciaOrdenesPdfController;
 use App\Http\Controllers\HistoriaClinica\HcEmergenciaPanelController;
 use App\Http\Controllers\HistoriaClinica\HcEmergenciaPdfController;
 use App\Http\Controllers\HistoriaClinica\HcEmergenciaTicketController;
@@ -94,6 +99,26 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/historia-clinica/emergencia/{atencion}/ticket', [HcEmergenciaTicketController::class, 'general'])
         ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
         ->name('historia-clinica.emergencia.ticket');
+
+    Route::get('/historia-clinica/emergencia/{atencion}/laboratorio/pdf', HcEmergenciaLaboratorioPdfController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.emergencia.laboratorio.pdf');
+
+    Route::get('/historia-clinica/emergencia/{atencion}/examenes/pdf', HcEmergenciaExamenesPdfController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.emergencia.examenes.pdf');
+
+    Route::get('/historia-clinica/emergencia/{atencion}/ordenes/pdf', HcEmergenciaOrdenesPdfController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.emergencia.ordenes.pdf');
+
+    Route::get('/historia-clinica/emergencia/{atencion}/medicamentos/pdf', HcEmergenciaMedicamentosPdfController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.emergencia.medicamentos.pdf');
+
+    Route::get('/historia-clinica/emergencia/{atencion}/alta/pdf', HcEmergenciaAltaPdfController::class)
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.emergencia.alta.pdf');
 
     Route::get('/historia-clinica/atenciones-paciente/{paciente}/dashboard', PacienteDashboardController::class)
         ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)

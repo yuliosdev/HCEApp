@@ -15,6 +15,7 @@ use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -77,6 +78,8 @@ class HistoriaClinicaPaciente extends Component
 
     public function editarAtencion(int $atencionId): void
     {
+        abort_unless($this->usuarioPuedeEditarHistoriaClinica(), 403);
+
         $atencion = $this->buscarAtencionDelPaciente($atencionId);
 
         $this->redirectRoute('historia-clinica.atenciones-paciente.emergencia.editar', [
@@ -350,6 +353,11 @@ class HistoriaClinicaPaciente extends Component
         return $this->valorEnum($atencion->estado_atencion) === EstadoAtencion::Abierta->value;
     }
 
+    public function puedeEditarAtencion(HcEmergencia $atencion): bool
+    {
+        return $this->estadoAbierto($atencion) && $this->usuarioPuedeEditarHistoriaClinica();
+    }
+
     private function buscarAtencionDelPaciente(int $atencionId): HcEmergencia
     {
         return HcEmergencia::query()
@@ -360,6 +368,13 @@ class HistoriaClinicaPaciente extends Component
     private function esAdministrador(): bool
     {
         return Auth::user()?->hasRole('Administrador') ?? false;
+    }
+
+    private function usuarioPuedeEditarHistoriaClinica(): bool
+    {
+        $tipoUsuario = Str::lower(Str::ascii(trim((string) Auth::user()?->tipo_usuario)));
+
+        return in_array($tipoUsuario, ['supervisor', 'profesional de salud', 'medico'], true);
     }
 
     private function claseSexo(?string $sexo): string

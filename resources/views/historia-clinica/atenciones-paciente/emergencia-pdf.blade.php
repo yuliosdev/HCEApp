@@ -24,31 +24,50 @@
         }
 
         .header {
-            border-bottom: 2px solid #0077b6;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
+            background: #ffffff;
+            border-bottom: 0;
+            margin-bottom: 8px;
+            padding: 0 0 8px;
         }
 
-        .brand {
-            color: #0077b6;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.4px;
+        .header-banner-table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .header-banner-table td {
+            background: #c1121f;
+            border: 1px solid #ffffff;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.15;
+            padding: 10px 8px;
+            text-align: center;
             text-transform: uppercase;
+            vertical-align: middle;
         }
 
-        .title {
-            color: #001340;
-            font-size: 20px;
-            font-weight: 700;
-            margin-top: 3px;
-            text-transform: uppercase;
+        .header-banner-table .header-title {
+            font-size: 12px;
         }
 
-        .subtitle {
+        .header-banner-table .priority-title {
+            font-size: 13px;
+        }
+
+        .document-meta {
+            background: #ffffff;
             color: #415a77;
-            font-size: 9px;
-            margin-top: 5px;
+            display: inline-block;
+            font-size: 10px;
+            margin: 3px auto 0;
+            padding: 2px 8px;
+        }
+
+        .header-meta {
+            text-align: center;
         }
 
         .header-table,
@@ -238,6 +257,14 @@
 
         $codigoCie10 = fn ($diagnostico): string => $diagnostico?->codigo ? $diagnostico->codigo : '--';
         $nombreCie10 = fn ($diagnostico): string => $diagnostico?->nombre ? $diagnostico->nombre : '--';
+        $prioridadRomana = match ((int) ($atencion->prioridad?->orden ?? 0)) {
+            1 => 'I',
+            2 => 'II',
+            3 => 'III',
+            4 => 'IV',
+            5 => 'V',
+            default => '--',
+        };
 
         $glasgowTotal = $atencion->eg_total;
         if ($glasgowTotal === null && $atencion->eg_ocular !== null && $atencion->eg_verbal !== null && $atencion->eg_motora !== null) {
@@ -253,30 +280,21 @@
     @endphp
 
     <header class="header">
-        <table class="header-table">
+        <table class="header-banner-table">
             <tr>
-                <td style="width: 72%;">
-                    <p class="brand">HCEApp</p>
-                    <h1 class="title">Historia Clinica Electronica de Emergencia</h1>
-                    <p class="subtitle">
-                        Registro HCE: {{ $atencion->id }} |
-                        Adm: {{ $texto($atencion->numero_atencion) }} |
-                        Generado: {{ $generadoEn->format('d/m/Y H:i') }} |
-                        Usuario: {{ $generadoPor?->name ?? '--' }}
-                    </p>
-                </td>
-                <td style="text-align: right;">
-                    <span class="status-badge {{ $texto($atencion->estado_atencion) === 'Cerrada' ? 'is-closed' : '' }}">
-                        {{ $texto($atencion->estado_atencion) }}
-                    </span>
-                    <div class="priority-box" style="margin-top: 8px;">
-                        Prioridad
-                        <strong>{{ $atencion->prioridad?->orden ? 'Nivel '.$atencion->prioridad->orden : '--' }}</strong>
-                        {{ $texto($atencion->prioridad?->prioridad) }}
-                    </div>
-                </td>
+                <td>Emergencia<br>Clinica Santa Rosa Sullana</td>
+                <td class="header-title">Historia Clinica Electronica de<br>Emergencia</td>
+                <td class="priority-title">Prioridad: {{ $prioridadRomana }}</td>
             </tr>
         </table>
+        <div class="header-meta">
+            <p class="document-meta">
+                Registro HCE: {{ $atencion->id }} |
+                Adm: {{ $texto($atencion->numero_atencion) }} |
+                Generado: {{ $generadoEn->format('d/m/Y H:i') }} |
+                Usuario: {{ $generadoPor?->name ?? '--' }}
+            </p>
+        </div>
     </header>
 
     <section class="section">
@@ -285,9 +303,9 @@
             <p class="patient-name">{{ $texto($paciente?->nombre ?: $atencion->alias) }}</p>
             <table class="grid-3">
                 <tr>
-                    <td><div class="field"><span class="label">Historia</span><span class="value">{{ $texto($paciente?->numero_historia) }}</span></div></td>
+                    <td><div class="field"><span class="label">Nacimiento</span><span class="value">{{ $paciente?->fecha_nacimiento?->format('d/m/Y') ?? '--' }}</span></div></td>
                     <td><div class="field"><span class="label">Tipo / documento</span><span class="value">{{ $texto($paciente?->tipo_documento) }} {{ $texto($paciente?->numero_documento) }}</span></div></td>
-                    <td><div class="field"><span class="label">Sexo / nacimiento</span><span class="value">{{ $texto($paciente?->sexo) }} | {{ $paciente?->fecha_nacimiento?->format('d/m/Y') ?? '--' }}</span></div></td>
+                    <td><div class="field"><span class="label">Sexo</span><span class="value">{{ $texto($paciente?->sexo) }}</span></div></td>
                 </tr>
                 <tr>
                     <td><div class="field"><span class="label">Grupo sanguineo</span><span class="value">{{ $texto($paciente?->grupo_sanguineo) }}</span></div></td>
@@ -307,12 +325,15 @@
         <div class="section-body">
             <table class="grid-2">
                 <tr>
+                    <td colspan="2"><div class="field"><span class="label">Profesional medico</span><span class="value">{{ $profesional($atencion->profesionalResponsable) }}</span></div></td>
+                </tr>
+                <tr>
                     <td><div class="field"><span class="label">Fecha / hora episodio</span><span class="value">{{ $fecha($atencion->fecha_hora_inicio_episodio) }}</span></div></td>
                     <td><div class="field"><span class="label">Fecha / hora ingreso</span><span class="value">{{ $fecha($atencion->fecha_hora_atencion) }}</span></div></td>
                 </tr>
                 <tr>
                     <td><div class="field"><span class="label">Topico</span><span class="value">{{ $texto($atencion->topico) }}</span></div></td>
-                    <td><div class="field"><span class="label">Ambiente</span><span class="value">{{ $texto($atencion->ambiente) }}</span></div></td>
+                    <td><div class="field"><span class="label">Ambiente</span><span class="value">{{ $texto($atencion->ambiente?->denominacion) }}</span></div></td>
                 </tr>
                 <tr>
                     <td><div class="field"><span class="label">Acompanante</span><span class="value">{{ $texto($atencion->acompanante) }}</span></div></td>
@@ -343,9 +364,12 @@
                     <td><div class="field"><span class="label">Destino / topico</span><span class="value">{{ $texto($atencion->destino_topico) }}</span></div></td>
                 </tr>
                 <tr>
-                    <td><div class="field"><span class="label">Color triaje</span><span class="value">{{ $texto($atencion->color_triaje) }}</span></div></td>
+                    <td><div class="field"><span class="label">Triaje</span><span class="value">{{ $texto($atencion->color_triaje) }}</span></div></td>
                     <td><div class="field"><span class="label">Tiempo espera</span><span class="value">{{ $texto($atencion->tiempo_espera_calculado) }}</span></div></td>
                     <td><div class="field"><span class="label">Reevaluacion</span><span class="value">{{ $fecha($atencion->reevaluacion_programada) }}</span></div></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><div class="field"><span class="label">Motivo de consulta</span><span class="value">{{ $texto($atencion->motivo_consulta) }}</span></div></td>
                 </tr>
             </table>
 
@@ -466,7 +490,7 @@
     </section>
 
     <section class="section">
-        <h2 class="section-title">6. Shock trauma, plan y firma</h2>
+        <h2 class="section-title">6. SHOCK TRAUMA</h2>
         <div class="section-body">
             <table class="grid-2">
                 <tr>
@@ -478,12 +502,7 @@
                     <td><div class="field"><span class="label">Destino shock trauma</span><span class="value">{{ $texto($atencion->shock_trauma_destino) }}</span></div></td>
                 </tr>
                 <tr>
-                    <td><div class="field"><span class="label">Registro especializado</span><span class="value">{{ $texto($atencion->registro_especializado) }}</span></div></td>
-                    <td><div class="field"><span class="label">Plan de trabajo</span><span class="value">{{ $texto($atencion->plan_trabajo) }}</span></div></td>
-                </tr>
-                <tr>
-                    <td><div class="field"><span class="label">Profesional responsable</span><span class="value">{{ $profesional($atencion->profesionalResponsable) }}</span></div></td>
-                    <td><div class="field"><span class="label">Firma</span><span class="value">{{ $texto($atencion->estado_firma) }} | {{ $fecha($atencion->fecha_hora_firma) }}</span></div></td>
+                    <td colspan="2"><div class="field"><span class="label">Registro especializado</span><span class="value">{{ $texto($atencion->registro_especializado) }}</span></div></td>
                 </tr>
             </table>
         </div>
@@ -504,12 +523,12 @@
             </table>
 
             <table class="data-table" style="margin-bottom: 8px;">
-                <thead><tr><th>Orden</th><th>Detalle</th><th>Prioridad</th><th>Fecha / hora</th><th>Resultado</th><th>Profesional</th></tr></thead>
+                <thead><tr><th>Orden</th><th>Detalle</th><th>Prioridad</th><th>Fecha / hora</th><th>Resultado</th><th>Estado</th><th>Profesional</th></tr></thead>
                 <tbody>
                     @forelse ($atencion->ordenes as $orden)
-                        <tr><td>{{ $texto($orden->tipoOrden?->descripcion) }}</td><td>{{ $texto($orden->detalle) }}</td><td><span class="chip">{{ $texto($orden->prioridad) }}</span></td><td>{{ $fecha($orden->fecha_hora_solicitud) }}</td><td>{{ $texto($orden->resultado) }}</td><td>{{ $profesional($orden->profesionalSalud) }}</td></tr>
+                        <tr><td>{{ $texto($orden->tipoOrden?->descripcion) }}</td><td>{{ $texto($orden->detalle ?: $orden->procedimiento?->denominacion) }}</td><td><span class="chip">{{ $texto($orden->prioridad) }}</span></td><td>{{ $fecha($orden->fecha_hora_solicitud) }}</td><td>{{ $texto($orden->resultado) }}</td><td>{{ $texto($orden->estado) }}</td><td>{{ $profesional($orden->profesionalSalud) }}</td></tr>
                     @empty
-                        <tr><td colspan="6" class="empty">No se registraron ordenes.</td></tr>
+                        <tr><td colspan="7" class="empty">No se registraron ordenes.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -531,23 +550,23 @@
         <h2 class="section-title">8. Farmacos y procedimientos</h2>
         <div class="section-body">
             <table class="data-table" style="margin-bottom: 8px;">
-                <thead><tr><th>Medicamento</th><th>Presentacion</th><th>Dosis</th><th>Via</th><th>Duracion</th><th>Cantidad</th><th>Fecha</th><th>Profesional</th></tr></thead>
+                <thead><tr><th>Medicamento</th><th>Presentacion</th><th>Dosis</th><th>Via</th><th>Duracion</th><th>Cantidad</th><th>Fecha</th><th>Estado</th><th>Profesional</th></tr></thead>
                 <tbody>
                     @forelse ($atencion->prescripciones as $prescripcion)
-                        <tr><td>{{ $texto($prescripcion->medicamento) }}</td><td>{{ $texto($prescripcion->presentacion) }}</td><td>{{ $texto($prescripcion->dosis) }}</td><td>{{ $texto($prescripcion->via) }}</td><td>{{ $texto($prescripcion->duracion) }}</td><td>{{ $texto($prescripcion->cantidad) }}</td><td>{{ $fecha($prescripcion->fecha_hora) }}</td><td>{{ $profesional($prescripcion->profesionalSalud) }}</td></tr>
+                        <tr><td>{{ $texto($prescripcion->medicamento) }}</td><td>{{ $texto($prescripcion->presentacion) }}</td><td>{{ $texto($prescripcion->dosis) }}</td><td>{{ $texto($prescripcion->via) }}</td><td>{{ $texto($prescripcion->duracion) }}</td><td>{{ $texto($prescripcion->cantidad) }}</td><td>{{ $fecha($prescripcion->fecha_hora) }}</td><td>{{ $texto($prescripcion->estado) }}</td><td>{{ $profesional($prescripcion->profesionalSalud) }}</td></tr>
                     @empty
-                        <tr><td colspan="8" class="empty">No se registraron prescripciones.</td></tr>
+                        <tr><td colspan="9" class="empty">No se registraron prescripciones.</td></tr>
                     @endforelse
                 </tbody>
             </table>
 
             <table class="data-table">
-                <thead><tr><th>Codigo</th><th>Procedimiento</th><th>Sesiones</th><th>Fecha / hora</th></tr></thead>
+                <thead><tr><th>Codigo</th><th>Procedimiento</th><th>Sesiones</th><th>Fecha / hora</th><th>Estado</th></tr></thead>
                 <tbody>
                     @forelse ($atencion->procedimientosRealizados as $procedimiento)
-                        <tr><td>{{ $texto($procedimiento->procedimiento?->codigo) }}</td><td>{{ $texto($procedimiento->denominacion ?: $procedimiento->procedimiento?->denominacion) }}</td><td>{{ $texto($procedimiento->sesiones) }}</td><td>{{ $fecha($procedimiento->fecha_hora) }}</td></tr>
+                        <tr><td>{{ $texto($procedimiento->procedimiento?->codigo) }}</td><td>{{ $texto($procedimiento->denominacion ?: $procedimiento->procedimiento?->denominacion) }}</td><td>{{ $texto($procedimiento->sesiones) }}</td><td>{{ $fecha($procedimiento->fecha_hora) }}</td><td>{{ $texto($procedimiento->estado) }}</td></tr>
                     @empty
-                        <tr><td colspan="4" class="empty">No se registraron procedimientos.</td></tr>
+                        <tr><td colspan="5" class="empty">No se registraron procedimientos.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -555,7 +574,7 @@
     </section>
 
     <section class="section">
-        <h2 class="section-title">9. Evoluciones, interconsultas y enfermeria</h2>
+        <h2 class="section-title">9. Evoluciones e interconsultas</h2>
         <div class="section-body">
             <table class="data-table" style="margin-bottom: 8px;">
                 <thead><tr><th>Fecha / hora</th><th>Profesional</th><th>Detalle clinico</th></tr></thead>
@@ -578,7 +597,12 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </section>
 
+    <section class="section">
+        <h2 class="section-title">10. Notas de enfermeria y balance hidrico</h2>
+        <div class="section-body">
             <table class="data-table" style="margin-bottom: 8px;">
                 <thead><tr><th>Fecha / hora</th><th>Profesional</th><th>Nota</th><th>Firma</th></tr></thead>
                 <tbody>
@@ -601,7 +625,7 @@
     </section>
 
     <section class="section">
-        <h2 class="section-title">10. Movimientos, referencia, egreso y documentos</h2>
+        <h2 class="section-title">11. Movimientos, referencia, egreso y documentos</h2>
         <div class="section-body">
             <table class="data-table" style="margin-bottom: 8px;">
                 <thead><tr><th>Fecha / hora</th><th>Origen</th><th>Destino</th><th>Motivo</th><th>Responsable</th></tr></thead>

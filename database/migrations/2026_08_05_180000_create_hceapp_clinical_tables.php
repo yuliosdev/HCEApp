@@ -46,6 +46,7 @@ return new class extends Migration
             'medicamentos_habituales',
             'triaje_signos_vitales',
             'hc_emergencia',
+            'ambientes',
             'antecedentes_familiares',
             'hospitalizaciones_previas',
             'cirugias_previas',
@@ -265,7 +266,7 @@ return new class extends Migration
      */
     private function destinosDentroIpress(): array
     {
-        return ['No','Hospitalización', 'UCI', 'Centro quirúrgico', 'Centro obstétrico', 'Otra UPSS', 'Otro'];
+        return ['No', 'Hospitalización', 'UCI', 'Centro quirúrgico', 'Centro obstétrico', 'Otra UPSS', 'Otro'];
     }
 
     /**
@@ -275,7 +276,7 @@ return new class extends Migration
      */
     private function destinosFueraIpress(): array
     {
-        return ['No','Transferencia a otra IPRESS','Alta voluntaria', 'Alta médica', 'Fallecido', 'Deserción','Otro'];
+        return ['No', 'Transferencia a otra IPRESS', 'Alta voluntaria', 'Alta médica', 'Fallecido', 'Deserción', 'Otro'];
     }
 
     /**
@@ -315,7 +316,7 @@ return new class extends Migration
      */
     private function estadosSolicitudExamen(): array
     {
-        return ['Solicitado', 'En proceso', 'Terminado'];
+        return ['Solicitado', 'Registrado', 'En proceso', 'Terminado', 'Pagado'];
     }
 
     /**
@@ -325,7 +326,7 @@ return new class extends Migration
      */
     private function prioridadesOrden(): array
     {
-        return ['Regular','Urgente', 'Emergencia', 'Inmediata'];
+        return ['Regular', 'Urgente', 'Emergencia', 'Inmediata'];
     }
 
     /**
@@ -396,6 +397,7 @@ return new class extends Migration
             $table->enum('estado', $this->estadosCatalogo())->default('Activo');
             $table->decimal('rango_inicial', 8, 2)->nullable();
             $table->decimal('rango_final', 8, 2)->nullable();
+            $table->boolean('favorito')->default(false);
             $this->auditoriaBasica($table, true);
             $table->unique(['descripcion', 'unidad']);
         });
@@ -450,6 +452,13 @@ return new class extends Migration
         Schema::create('tipos_ordenes', function (Blueprint $table) {
             $table->id();
             $table->string('descripcion', 150);
+            $table->enum('estado', $this->estadosCatalogo())->default('Activo');
+            $this->auditoriaBasica($table, true);
+        });
+
+        Schema::create('ambientes', function (Blueprint $table) {
+            $table->id();
+            $table->string('denominacion');
             $table->enum('estado', $this->estadosCatalogo())->default('Activo');
             $this->auditoriaBasica($table, true);
         });
@@ -516,7 +525,7 @@ return new class extends Migration
             $table->string('periodo', 20)->nullable();
             $this->auditoriaBasica($table);
         });
-        
+
         Schema::create('reacciones_adversas_medicamentos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('paciente_id')->constrained('pacientes')->restrictOnDelete();
@@ -570,7 +579,8 @@ return new class extends Migration
             $table->dateTime('fecha_hora_inicio_episodio')->nullable();
             $table->dateTime('fecha_hora_atencion')->nullable()->index();
             $table->enum('topico', $this->topicosAtencion())->nullable();
-            $table->string('ambiente', 150)->nullable();
+            $table->foreignId('ambiente_id')->nullable()->constrained('ambientes')->nullOnDelete();
+            $table->enum('tipo', ['Accidental', 'Médica'])->default('Accidental');
             $table->foreignId('paciente_id')->nullable()->constrained('pacientes')->nullOnDelete();
             $table->string('alias', 100)->nullable();
             $table->enum('sin_identificacion', $this->siNo())->default('No');
@@ -586,6 +596,7 @@ return new class extends Migration
             $table->foreignId('profesional_triaje_id')->nullable()->constrained('profesionales_salud')->nullOnDelete();
             $table->foreignId('prioridad_id')->nullable()->constrained('prioridades')->nullOnDelete();
             $table->enum('color_triaje', $this->coloresTriaje())->nullable();
+            $table->text('motivo_consulta')->nullable();
             $table->boolean('triaje')->default(false);
             $table->string('destino_topico', 150)->nullable();
             $table->string('tiempo_espera_calculado', 50)->nullable();
@@ -679,11 +690,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('hc_emergencia_id')->constrained('hc_emergencia')->restrictOnDelete();
             $table->foreignId('tipo_orden_id')->constrained('tipos_ordenes')->restrictOnDelete();
+            $table->foreignId('procedimiento_id')->nullable()->constrained('procedimientos')->nullOnDelete();
             $table->text('detalle');
             $table->enum('prioridad', $this->prioridadesOrden())->nullable();
             $table->dateTime('fecha_hora_solicitud')->nullable();
             $table->text('resultado')->nullable();
             $table->foreignId('profesional_salud_id')->nullable()->constrained('profesionales_salud')->nullOnDelete();
+            $table->enum('estado', $this->estadosSolicitudExamen())->default('Solicitado');
+            $table->string('guia', 20)->nullable();
             $this->auditoriaBasica($table);
             $table->index(['hc_emergencia_id', 'fecha_hora_solicitud']);
         });
@@ -700,6 +714,7 @@ return new class extends Migration
             $table->integer('cantidad')->nullable();
             $table->dateTime('fecha_hora')->nullable();
             $table->foreignId('profesional_salud_id')->nullable()->constrained('profesionales_salud')->nullOnDelete();
+            $table->enum('estado', $this->estadosSolicitudExamen())->default('Solicitado');
             $this->auditoriaBasica($table);
             $table->index(['hc_emergencia_id', 'fecha_hora']);
         });
@@ -711,6 +726,7 @@ return new class extends Migration
             $table->string('denominacion')->nullable();
             $table->integer('sesiones')->nullable();
             $table->dateTime('fecha_hora')->nullable();
+            $table->enum('estado', $this->estadosSolicitudExamen())->default('Solicitado');
             $this->auditoriaBasica($table);
             $table->index(['hc_emergencia_id', 'fecha_hora']);
         });
@@ -808,6 +824,7 @@ return new class extends Migration
         Schema::create('documentos_adjuntos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hc_emergencia_id')->constrained('hc_emergencia')->restrictOnDelete();
+            $table->foreignId('orden_id')->nullable()->constrained('ordenes')->cascadeOnDelete();
             $table->enum('tipo', $this->tiposDocumentoAdjunto());
             $table->text('contenido')->nullable();
             $table->string('ruta_archivo');

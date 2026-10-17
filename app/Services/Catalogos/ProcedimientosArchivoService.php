@@ -8,12 +8,14 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Reader\XLSX\Reader;
 use OpenSpout\Writer\XLSX\Writer;
+use Closure;
 
 class ProcedimientosArchivoService
 {
@@ -98,17 +100,99 @@ class ProcedimientosArchivoService
      *
      * @return array{creados: int, actualizados: int, omitidos: int, errores: array<int, string>}
      */
-    public function importar(UploadedFile $archivo, int $usuarioId): array
+    public function importar(UploadedFile $archivo, int $usuarioId, ?Closure $progreso = null): array
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(0);
+        }
+
+        @ini_set('max_execution_time', '0');
+
         $resultado = [
             'creados' => 0,
             'actualizados' => 0,
             'omitidos' => 0,
             'errores' => [],
         ];
+        $loteFilas = [];
+        $codigosContados = [];
+        $guardadas = 0;
 
         $reader = new Reader;
         $reader->open($archivo->getRealPath());
+        $filasLeidas = 0;
+        $guardarLote = function () use (&$loteFilas, &$codigosContados, &$guardadas, &$resultado, $usuarioId, $progreso, &$filasLeidas): void {
+            if ($loteFilas === []) {
+                return;
+            }
+
+            $codigos = array_keys($loteFilas);
+            $registrosExistentes = Procedimiento::query()
+                ->withTrashed()
+                ->whereIn('codigo', $codigos)
+                ->get(['id', 'codigo', 'registrado_por'])
+                ->keyBy('codigo');
+
+            $ahora = now();
+            $filasNuevas = [];
+            $filasExistentes = [];
+
+            foreach ($loteFilas as $codigo => $datos) {
+                $registroExistente = $registrosExistentes->get($codigo);
+
+                if (! isset($codigosContados[$codigo])) {
+                    $registroExistente === null
+                        ? $resultado['creados']++
+                        : $resultado['actualizados']++;
+
+                    $codigosContados[$codigo] = true;
+                }
+
+                $fila = [
+                    'codigo' => $codigo,
+                    'denominacion' => $datos['denominacion'],
+                    'estado' => $datos['estado'],
+                    'actualizado_por' => $usuarioId,
+                    'updated_at' => $ahora,
+                    'deleted_at' => null,
+                ];
+
+                if ($registroExistente === null) {
+                    $filasNuevas[] = array_merge($fila, [
+                        'registrado_por' => $usuarioId,
+                        'created_at' => $ahora,
+                    ]);
+
+                    continue;
+                }
+
+                $filasExistentes[] = array_merge($fila, [
+                    'id' => $registroExistente->id,
+                ]);
+            }
+
+            if ($filasNuevas !== []) {
+                DB::table('procedimientos')->insert($filasNuevas);
+            }
+
+            if ($filasExistentes !== []) {
+                DB::table('procedimientos')->upsert(
+                    $filasExistentes,
+                    ['id'],
+                    ['codigo', 'denominacion', 'estado', 'actualizado_por', 'updated_at', 'deleted_at'],
+                );
+            }
+
+            $guardadas += count($filasNuevas) + count($filasExistentes);
+            $loteFilas = [];
+
+            $progreso?->__invoke([
+                'mensaje' => 'Guardando procedimientos...',
+                'procesadas' => $filasLeidas,
+                'guardadas' => $guardadas,
+                'omitidos' => $resultado['omitidos'],
+            ]);
+        };
 
         try {
             foreach ($reader->getSheetIterator() as $sheet) {
@@ -139,6 +223,7 @@ class ProcedimientosArchivoService
                         continue;
                     }
 
+                    $filasLeidas++;
                     $datos = $this->mapearFila($encabezados, $valores);
                     $datos['estado'] = $this->normalizarEstado($datos['estado']);
                     $validacion = Validator::make($datos, [
@@ -158,24 +243,36 @@ class ProcedimientosArchivoService
                         continue;
                     }
 
-                    $procedimiento = Procedimiento::query()->firstOrNew(['codigo' => $datos['codigo']]);
-                    $esNuevo = ! $procedimiento->exists;
+                    // El codigo es la clave unica: ante duplicados prevalece la ultima fila.
+                    $loteFilas[$datos['codigo']] = $datos;
 
-                    $procedimiento->fill([
-                        'denominacion' => $datos['denominacion'],
-                        'estado' => $datos['estado'],
-                        'registrado_por' => $procedimiento->registrado_por ?: $usuarioId,
-                        'actualizado_por' => $usuarioId,
-                    ]);
-                    $procedimiento->save();
+                    if (count($loteFilas) >= 500) {
+                        $guardarLote();
+                    }
 
-                    $esNuevo ? $resultado['creados']++ : $resultado['actualizados']++;
+                    if ($progreso !== null && ($filasLeidas % 250 === 0)) {
+                        $progreso([
+                            'mensaje' => 'Validando filas del archivo...',
+                            'procesadas' => $filasLeidas,
+                            'omitidos' => $resultado['omitidos'],
+                        ]);
+                    }
                 }
 
                 break;
             }
+
+            $guardarLote();
         } finally {
             $reader->close();
+        }
+
+        if ($guardadas === 0) {
+            $progreso?->__invoke([
+                'mensaje' => 'No se encontraron filas válidas para importar.',
+                'procesadas' => $filasLeidas,
+                'omitidos' => $resultado['omitidos'],
+            ]);
         }
 
         return $resultado;

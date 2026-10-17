@@ -23,6 +23,7 @@ class SignoVital extends Model
         return [
             'rango_inicial' => 'decimal:2',
             'rango_final' => 'decimal:2',
+            'favorito' => 'boolean',
         ];
     }
 

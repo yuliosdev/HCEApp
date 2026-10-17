@@ -29,6 +29,11 @@
             inputmode="decimal"
             @readonly($modoFormulario === 'ver')
         >
+    @elseif (($campo['tipo'] ?? 'text') === 'boolean')
+        <select wire:model="form.{{ $campo['nombre'] }}" @disabled($modoFormulario === 'ver')>
+            <option value="1">Si</option>
+            <option value="0">No</option>
+        </select>
     @else
         <input type="text" wire:model.blur="form.{{ $campo['nombre'] }}" @readonly($modoFormulario === 'ver')>
     @endif

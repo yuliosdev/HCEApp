@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -189,7 +190,7 @@ class CatalogoClinicoPanel extends Component
         abort_unless($this->esAdministrador(), 403);
 
         $this->validate([
-            'archivoImportacion' => ['required', 'file', 'mimes:xlsx', 'max:5120'],
+            'archivoImportacion' => ['required', 'file', 'mimes:xlsx', 'max:20480'],
         ], [], [
             'archivoImportacion' => 'archivo de importacion',
         ]);
@@ -201,19 +202,19 @@ class CatalogoClinicoPanel extends Component
         $this->resetPage();
 
         if ($resultado['errores'] !== []) {
-            flash()->warning(
-                'Importacion terminada con observaciones: '.implode(' ', array_slice($resultado['errores'], 0, 3)),
+            sweetalert()->warning(
+                'Importación terminada con observaciones: '.implode(' ', array_slice($resultado['errores'], 0, 3)),
                 [],
-                'Catalogos',
+                'Importación terminada',
             );
 
             return;
         }
 
-        flash()->success(
-            'Importacion completada. Creados: '.$resultado['creados'].', actualizados: '.$resultado['actualizados'].', omitidos: '.$resultado['omitidos'].'.',
+        sweetalert()->success(
+            'Importación completada. Creados: '.$resultado['creados'].', actualizados: '.$resultado['actualizados'].', omitidos: '.$resultado['omitidos'].'.',
             [],
-            'Catalogos',
+            'Importación terminada',
         );
     }
 
@@ -241,8 +242,8 @@ class CatalogoClinicoPanel extends Component
 
     public function usoTotal(mixed $registro): int
     {
-        return collect($this->configuracion()['relaciones_uso'])
-            ->sum(fn (string $relacion): int => (int) data_get($registro, $relacion.'_count', 0));
+        return collect($this->relacionesUsoDisponibles())
+            ->sum(fn (string $relacion): int => (int) data_get($registro, Str::snake($relacion).'_count', 0));
     }
 
     public function etiquetaRegistro(mixed $registro): string
@@ -279,7 +280,9 @@ class CatalogoClinicoPanel extends Component
             $nombre = $campo['nombre'];
             $reglaCampo = [($campo['requerido'] ?? false) ? 'required' : 'nullable'];
 
-            if (($campo['tipo'] ?? 'text') === 'number') {
+            if (($campo['tipo'] ?? 'text') === 'boolean') {
+                $reglaCampo[] = 'boolean';
+            } elseif (($campo['tipo'] ?? 'text') === 'number') {
                 $reglaCampo[] = 'integer';
                 $reglaCampo[] = 'min:'.($campo['min'] ?? 0);
                 if (array_key_exists('max_numero', $campo)) {
@@ -340,9 +343,10 @@ class CatalogoClinicoPanel extends Component
     private function registros(): LengthAwarePaginator
     {
         $consulta = $this->consultaBase();
+        $relacionesUso = $this->relacionesUsoDisponibles();
 
-        if ($this->configuracion()['relaciones_uso'] !== []) {
-            $consulta->withCount($this->configuracion()['relaciones_uso']);
+        if ($relacionesUso !== []) {
+            $consulta->withCount($relacionesUso);
         }
 
         return $consulta
@@ -402,12 +406,29 @@ class CatalogoClinicoPanel extends Component
     {
         $modelo = $this->configuracion()['modelo'];
         $consulta = $modelo::query();
+        $relacionesUso = $this->relacionesUsoDisponibles();
 
-        if ($this->configuracion()['relaciones_uso'] !== []) {
-            $consulta->withCount($this->configuracion()['relaciones_uso']);
+        if ($relacionesUso !== []) {
+            $consulta->withCount($relacionesUso);
         }
 
         return $consulta->findOrFail($registroId);
+    }
+
+    /**
+     * Devuelve relaciones de uso que existen en el esquema actual de la base.
+     *
+     * @return array<int, string>
+     */
+    private function relacionesUsoDisponibles(): array
+    {
+        $relaciones = $this->configuracion()['relaciones_uso'];
+
+        if ($this->catalogo === 'ambientes' && ! Schema::hasColumn('hc_emergencia', 'ambiente_id')) {
+            return array_values(array_diff($relaciones, ['hcEmergencias']));
+        }
+
+        return $relaciones;
     }
 
     private function cargarRegistro(int $registroId): void
@@ -420,7 +441,7 @@ class CatalogoClinicoPanel extends Component
         $this->registroId = $registro->id;
 
         foreach ($this->configuracion()['campos'] as $campo) {
-            $this->form[$campo['nombre']] = $this->valorFormulario(data_get($registro, $campo['nombre']));
+            $this->form[$campo['nombre']] = $this->valorFormulario(data_get($registro, $campo['nombre']), $campo);
         }
 
         $this->estadoRegistro = $this->usaEstado() ? $this->valorEstadoActual($registro) : EstadoCatalogo::Activo->value;
@@ -451,9 +472,11 @@ class CatalogoClinicoPanel extends Component
                 continue;
             }
 
-            $this->form[$campo['nombre']] = ($campo['tipo'] ?? 'text') === 'select' && ($campo['requerido'] ?? false)
-                ? ($campo['opciones'][0] ?? '')
-                : '';
+            $this->form[$campo['nombre']] = match ($campo['tipo'] ?? 'text') {
+                'boolean' => '0',
+                'select' => ($campo['requerido'] ?? false) ? ($campo['opciones'][0] ?? '') : '',
+                default => '',
+            };
         }
 
         $this->resetValidation();
@@ -484,6 +507,10 @@ class CatalogoClinicoPanel extends Component
                     $valor = (float) $valor;
                 }
 
+                if (($campo['tipo'] ?? 'text') === 'boolean') {
+                    $valor = filter_var($valor, FILTER_VALIDATE_BOOLEAN);
+                }
+
                 return [$nombre => $valor];
             })
             ->all();
@@ -497,8 +524,12 @@ class CatalogoClinicoPanel extends Component
         return CatalogosClinicos::obtener($this->catalogo);
     }
 
-    private function valorFormulario(mixed $valor): mixed
+    private function valorFormulario(mixed $valor, array $campo): mixed
     {
+        if (($campo['tipo'] ?? 'text') === 'boolean') {
+            return filter_var($valor, FILTER_VALIDATE_BOOLEAN) ? '1' : '0';
+        }
+
         return $valor instanceof BackedEnum ? $valor->value : ($valor ?? '');
     }
 

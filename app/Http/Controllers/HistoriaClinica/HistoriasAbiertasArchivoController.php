@@ -36,6 +36,7 @@ class HistoriasAbiertasArchivoController extends Controller
         $atenciones = $archivos
             ->consulta($filtros['desde'], $filtros['hasta'], $filtros['estado'])
             ->with([
+                'ambiente',
                 'paciente',
                 'profesionalResponsable',
                 'prioridad',

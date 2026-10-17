@@ -72,26 +72,28 @@ class CatalogosClinicosSeeder extends Seeder
     private function cargarSignosVitales(?int $usuarioId): void
     {
         $this->upsertConAuditoria('signos_vitales', [
-            ['descripcion' => 'Temperatura', 'unidad' => '°C'],
-            ['descripcion' => 'Frecuencia respiratoria', 'unidad' => 'resp/min'],
-            ['descripcion' => 'Frecuencia cardiaca', 'unidad' => 'lat/min'],
-            ['descripcion' => 'Presion arterial', 'unidad' => 'mmHg'],
-            ['descripcion' => 'Saturacion de oxigeno', 'unidad' => '%'],
-            ['descripcion' => 'Peso', 'unidad' => 'kg'],
-            ['descripcion' => 'Talla', 'unidad' => 'm'],
-            ['descripcion' => 'IMC', 'unidad' => 'kg/m2'],
+            ['descripcion' => 'Temperatura', 'unidad' => '°C', 'favorito' => true],
+            ['descripcion' => 'Frecuencia respiratoria', 'unidad' => 'resp/min', 'favorito' => true],
+            ['descripcion' => 'Frecuencia cardiaca', 'unidad' => 'lat/min', 'favorito' => true],
+            ['descripcion' => 'Presión arterial Sistólica (PAS)', 'unidad' => 'mmHg', 'favorito' => true],
+            ['descripcion' => 'Presión arterial Diastólica (PAD)', 'unidad' => 'mmHg', 'favorito' => true],
+            ['descripcion' => 'Saturacion de oxigeno', 'unidad' => '%', 'favorito' => true],
+            ['descripcion' => 'Peso', 'unidad' => 'kg', 'favorito' => false],
+            ['descripcion' => 'Talla', 'unidad' => 'm', 'favorito' => false],
+            ['descripcion' => 'IMC', 'unidad' => 'kg/m2', 'favorito' => false],
         ], ['descripcion', 'unidad'], $usuarioId);
     }
 
     private function cargarTiposOrdenes(?int $usuarioId): void
     {
         $this->upsertConAuditoria('tipos_ordenes', [
-            ['descripcion' => 'Laboratorio'],
             ['descripcion' => 'Imagen'],
+            ['descripcion' => 'Procedimiento'],
             ['descripcion' => 'Interconsulta'],
             ['descripcion' => 'Transferencia interna'],
             ['descripcion' => 'Apoyo respiratorio'],
             ['descripcion' => 'Tratamiento'],
+            ['descripcion' => 'Otros'],
         ], ['descripcion'], $usuarioId);
     }
 
@@ -109,12 +111,16 @@ class CatalogosClinicosSeeder extends Seeder
     private function cargarAmbientes(?int $usuarioId): void
     {
         $this->upsertConAuditoria('ambientes', [
-            ['descripcion' => 'Triaje', 'ubicacion' => 'Ingreso de emergencia'],
-            ['descripcion' => 'Topico de medicina', 'ubicacion' => 'Area clinica'],
-            ['descripcion' => 'Topico de cirugia', 'ubicacion' => 'Area quirurgica'],
-            ['descripcion' => 'Observacion adultos', 'ubicacion' => 'Sala de observacion'],
-            ['descripcion' => 'Shock trauma', 'ubicacion' => 'Area critica'],
-        ], ['descripcion'], $usuarioId);
+            ['denominacion' => 'Topico Cama 01'],
+            ['denominacion' => 'Topico Cama 02'],
+            ['denominacion' => 'Emergencia Cama 01'],
+            ['denominacion' => 'Emergencia Cama 02'],
+            ['denominacion' => 'Emergencia Cama 03'],
+            ['denominacion' => 'Emergencia Cama 04'],
+            ['denominacion' => 'Emergencia Cama 05'],
+            ['denominacion' => 'Emergencia Cama 06'],
+            ['denominacion' => 'Shock trauma'],
+        ], ['denominacion'], $usuarioId);
     }
 
     private function cargarAlergias(?int $usuarioId): void
@@ -129,10 +135,6 @@ class CatalogosClinicosSeeder extends Seeder
     private function cargarDiagnosticosCie10(?int $usuarioId): void
     {
         $this->upsertConAuditoria('diagnosticos_cie10', [
-            ['codigo' => 'K80.0', 'nombre' => 'Calculo de vesicula biliar con colecistitis aguda sin obstruccion', 'genero' => 'Ambos'],
-            ['codigo' => 'E86.0', 'nombre' => 'Deshidratacion leve', 'genero' => 'Ambos'],
-            ['codigo' => 'E87.6', 'nombre' => 'Hipopotasemia', 'genero' => 'Ambos'],
-            ['codigo' => 'E11.9', 'nombre' => 'Diabetes mellitus tipo 2 sin complicaciones documentadas', 'genero' => 'Ambos'],
             ['codigo' => 'I10', 'nombre' => 'Hipertension arterial esencial', 'genero' => 'Ambos'],
         ], ['codigo'], $usuarioId);
     }
@@ -140,35 +142,20 @@ class CatalogosClinicosSeeder extends Seeder
     private function cargarExamenes(?int $usuarioId): void
     {
         $this->upsertConAuditoria('examenes', [
-            ['descripcion' => 'Hemograma'],
-            ['descripcion' => 'Proteina C reactiva'],
-            ['descripcion' => 'Perfil hepatico'],
-            ['descripcion' => 'Creatinina'],
-            ['descripcion' => 'Electrolitos'],
-            ['descripcion' => 'Ecografia abdominal'],
-            ['descripcion' => 'Electrocardiograma de 12 derivaciones'],
+            ['descripcion' => 'QUIMICA SANGUINEA'],
         ], ['descripcion'], $usuarioId);
     }
 
     private function cargarProcedimientos(?int $usuarioId): void
     {
         $this->upsertConAuditoria('procedimientos', [
-            ['codigo' => '36000', 'denominacion' => 'Canalizacion de via venosa periferica'],
-            ['codigo' => '36415', 'denominacion' => 'Toma de muestras de sangre para laboratorio'],
-            ['codigo' => '76705', 'denominacion' => 'Ecografia abdominal enfocada'],
-            ['codigo' => '93005', 'denominacion' => 'Electrocardiograma de 12 derivaciones'],
-            ['codigo' => '96365', 'denominacion' => 'Infusion intravenosa de medicamento'],
+            ['codigo' => '00000', 'denominacion' => 'GASTOS CLINICA'],
         ], ['codigo'], $usuarioId);
     }
 
     private function cargarMedicamentos(?int $usuarioId): void
     {
         $this->upsertConAuditoria('medicamentos', [
-            ['descripcion' => 'Cloruro de sodio 0.9 %', 'presentacion' => 'Bolsa 1000 mL', 'generico' => 'Cloruro de sodio', 'stock' => 120],
-            ['descripcion' => 'Ceftriaxona', 'presentacion' => 'Vial 2 g', 'generico' => 'Ceftriaxona', 'stock' => 80],
-            ['descripcion' => 'Metronidazol', 'presentacion' => 'Frasco 500 mg/100 mL', 'generico' => 'Metronidazol', 'stock' => 60],
-            ['descripcion' => 'Paracetamol', 'presentacion' => 'Solucion 10 mg/mL', 'generico' => 'Paracetamol', 'stock' => 100],
-            ['descripcion' => 'Morfina sulfato', 'presentacion' => 'Ampolla 10 mg/mL', 'generico' => 'Morfina sulfato', 'stock' => 25],
             ['descripcion' => 'Ondansetron', 'presentacion' => 'Ampolla 4 mg/2 mL', 'generico' => 'Ondansetron', 'stock' => 45],
         ], ['descripcion'], $usuarioId);
     }
