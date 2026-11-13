@@ -1069,9 +1069,9 @@ class HcEmergenciaApiTest extends TestCase
         ]);
     }
 
-    public function test_responde_error_si_medicamento_externo_no_existe(): void
+    public function test_crea_medicamento_si_el_producto_externo_no_existe(): void
     {
-        $this->postJson(route('api.medicamentos.actualizar-por-producto-externo'), [
+        $respuesta = $this->postJson(route('api.medicamentos.actualizar-por-producto-externo'), [
             'id_producto_externo' => 999999,
             'descripcion' => 'Medicamento inexistente',
             'presentacion' => 'Tableta',
@@ -1079,10 +1079,20 @@ class HcEmergenciaApiTest extends TestCase
             'stock' => 10,
             'estado' => EstadoCatalogo::Activo->value,
         ])
-            ->assertNotFound()
+            ->assertOk()
             ->assertJson([
-                'message' => 'No existe medicamento con el id_producto_externo indicado.',
+                'message' => 'Medicamento creado correctamente.',
             ]);
+
+        $this->assertDatabaseHas('medicamentos', [
+            'id' => $respuesta->json('data.id'),
+            'id_producto_externo' => 999999,
+            'descripcion' => 'Medicamento inexistente',
+            'presentacion' => 'Tableta',
+            'generico' => 'Generico',
+            'stock' => 10,
+            'estado' => EstadoCatalogo::Activo->value,
+        ]);
     }
 
     public function test_valida_datos_para_actualizar_medicamento_externo(): void
@@ -1136,17 +1146,24 @@ class HcEmergenciaApiTest extends TestCase
         ]);
     }
 
-    public function test_responde_error_si_procedimiento_no_existe(): void
+    public function test_crea_procedimiento_si_el_codigo_no_existe(): void
     {
-        $this->postJson(route('api.procedimientos.actualizar-por-codigo'), [
+        $respuesta = $this->postJson(route('api.procedimientos.actualizar-por-codigo'), [
             'codigo' => 'PROC-999',
             'denominacion' => 'Procedimiento inexistente',
             'estado' => EstadoCatalogo::Activo->value,
         ])
-            ->assertNotFound()
+            ->assertOk()
             ->assertJson([
-                'message' => 'No existe procedimiento con el codigo indicado.',
+                'message' => 'Procedimiento creado correctamente.',
             ]);
+
+        $this->assertDatabaseHas('procedimientos', [
+            'id' => $respuesta->json('data.id'),
+            'codigo' => 'PROC-999',
+            'denominacion' => 'Procedimiento inexistente',
+            'estado' => EstadoCatalogo::Activo->value,
+        ]);
     }
 
     public function test_valida_datos_para_actualizar_procedimiento(): void
@@ -1200,19 +1217,28 @@ class HcEmergenciaApiTest extends TestCase
         ]);
     }
 
-    public function test_responde_error_si_profesional_salud_no_existe(): void
+    public function test_crea_profesional_salud_si_el_codigo_servicio_no_existe(): void
     {
-        $this->postJson(route('api.profesionales-salud.actualizar-por-codigo-servicio'), [
+        $respuesta = $this->postJson(route('api.profesionales-salud.actualizar-por-codigo-servicio'), [
             'codigo_servicio' => 'MED-999',
             'nombres' => 'Profesional inexistente',
             'tipo_colegiatura' => 'CMP',
             'cmp' => '999999',
             'estado' => EstadoCatalogo::Activo->value,
         ])
-            ->assertNotFound()
+            ->assertOk()
             ->assertJson([
-                'message' => 'No existe profesional de salud con el codigo_servicio indicado.',
+                'message' => 'Profesional de salud creado correctamente.',
             ]);
+
+        $this->assertDatabaseHas('profesionales_salud', [
+            'id' => $respuesta->json('data.id'),
+            'codigo_servicio' => 'MED-999',
+            'nombres' => 'Profesional inexistente',
+            'tipo_colegiatura' => 'CMP',
+            'cmp' => '999999',
+            'estado' => EstadoCatalogo::Activo->value,
+        ]);
     }
 
     public function test_valida_datos_para_actualizar_profesional_salud(): void
@@ -1263,18 +1289,26 @@ class HcEmergenciaApiTest extends TestCase
         ]);
     }
 
-    public function test_responde_error_si_diagnostico_cie10_no_existe(): void
+    public function test_crea_diagnostico_cie10_si_el_codigo_no_existe(): void
     {
-        $this->postJson(route('api.diagnosticos-cie10.actualizar-por-codigo'), [
+        $respuesta = $this->postJson(route('api.diagnosticos-cie10.actualizar-por-codigo'), [
             'codigo' => 'Z99',
             'nombre' => 'Diagnóstico inexistente',
             'genero' => GeneroCie10::Ambos->value,
             'estado' => EstadoCatalogo::Activo->value,
         ])
-            ->assertNotFound()
+            ->assertOk()
             ->assertJson([
-                'message' => 'No existe diagnóstico CIE10 con el codigo indicado.',
+                'message' => 'Diagnóstico CIE10 creado correctamente.',
             ]);
+
+        $this->assertDatabaseHas('diagnosticos_cie10', [
+            'id' => $respuesta->json('data.id'),
+            'codigo' => 'Z99',
+            'nombre' => 'Diagnóstico inexistente',
+            'genero' => GeneroCie10::Ambos->value,
+            'estado' => EstadoCatalogo::Activo->value,
+        ]);
     }
 
     public function test_valida_datos_para_actualizar_diagnostico_cie10(): void

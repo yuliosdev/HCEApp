@@ -1,3 +1,13 @@
+@php
+    $soloLecturaGeneral = $soloLectura;
+    $soloLectura = $soloLectura || $esProfesionalDeSalud;
+    $soloLecturaAtencion = ! $permisosEdicion['atencion'];
+    $soloLecturaTriaje = ! $permisosEdicion['triaje'];
+    $soloLecturaProcedimientos = ! $permisosEdicion['procedimientos'];
+    $soloLecturaEnfermeria = ! $permisosEdicion['enfermeria'];
+    $soloLecturaDocumentacion = ! $permisosEdicion['documentacion'];
+@endphp
+
 <section class="emergency-record-page" data-emergency-unsaved-changes="{{ $hayCambiosSinGuardar ? 'true' : 'false' }}">
     <header class="emergency-record-header panel-animate">
         <div class="emergency-patient-block">
@@ -46,6 +56,40 @@
 
         <div class="emergency-header-actions">
             <div class="emergency-vitals-summary" aria-label="Signos vitales">
+                @if (count($alertasClinicas['alergias']) > 0)
+                    <article
+                        class="emergency-clinical-alert-card is-allergy"
+                        role="button"
+                        tabindex="0"
+                        wire:click="abrirModalAlertasClinicas('alergias')"
+                        title="Ver alergias registradas"
+                        aria-label="Ver alergias registradas"
+                    >
+                        <span>
+                            <iconify-icon icon="healthicons:allergies-outline" aria-hidden="true"></iconify-icon>
+                            Alergias
+                        </span>
+                        <strong>{{ count($alertasClinicas['alergias']) }}</strong>
+                        <em>{{ $alertasClinicas['alergias'][0] }}</em>
+                    </article>
+                @endif
+                @if (count($alertasClinicas['reacciones']) > 0)
+                    <article
+                        class="emergency-clinical-alert-card is-adverse-reaction"
+                        role="button"
+                        tabindex="0"
+                        wire:click="abrirModalAlertasClinicas('reacciones')"
+                        title="Ver reacciones adversas registradas"
+                        aria-label="Ver reacciones adversas registradas"
+                    >
+                        <span>
+                            <iconify-icon icon="healthicons:medicines-outline" aria-hidden="true"></iconify-icon>
+                            Reacción Adversa
+                        </span>
+                        <strong>{{ count($alertasClinicas['reacciones']) }}</strong>
+                        <em>{{ $alertasClinicas['reacciones'][0] }}</em>
+                    </article>
+                @endif
                 <article>
                     <span>FC</span>
                     <strong>{{ $signos['fc'] }}</strong>
@@ -63,7 +107,7 @@
                 @php($prioridadResumen = $prioridades->firstWhere('id', (int) $form['prioridad_id']))
                 <article class="is-priority priority-level-{{ $prioridadResumen?->orden ?: 'none' }}">
                     <span>Prioridad</span>
-                    @if ($soloLectura)
+                    @if ($soloLecturaTriaje)
                         <strong>{{ $prioridadResumen?->prioridad ?? 'Sin prioridad' }}</strong>
                     @else
                         <select
@@ -83,10 +127,12 @@
 
             <div class="emergency-doctor-row">
                 <div class="emergency-record-actions">
-                    @if (! $soloLectura)
-                        <button type="button" class="emergency-close-action" wire:click="cerrarAtencion">
-                            Cerrar Atención
-                        </button>
+                    @if ($permisosEdicion['atencion'] || $permisosEdicion['triaje'] || $permisosEdicion['enfermeria'] || $permisosEdicion['documentacion'] || $permisosEdicion['procedimientos'])
+                        @if (! $soloLecturaGeneral)
+                            <button type="button" class="emergency-close-action" wire:click="cerrarAtencion">
+                                Cerrar Atención
+                            </button>
+                        @endif
                         <button type="button" class="catalog-primary-action emergency-save-action" wire:click="guardar">
                             <iconify-icon icon="lucide:save" aria-hidden="true"></iconify-icon>
                             Guardar
@@ -156,17 +202,17 @@
                             <div class="emergency-attention-form is-two-columns">
                                 <label>
                                     <span>Fecha/Hora Episodio</span>
-                                    <input type="datetime-local" wire:model.blur="form.fecha_hora_inicio_episodio" @readonly($soloLectura)>
+                                    <input type="datetime-local" wire:model.blur="form.fecha_hora_inicio_episodio" @readonly($soloLecturaAtencion)>
                                     @error('form.fecha_hora_inicio_episodio') <small>{{ $message }}</small> @enderror
                                 </label>
                                 <label>
                                     <span>Fecha/Hora Ingreso</span>
-                                    <input type="datetime-local" wire:model.blur="form.fecha_hora_atencion" @readonly($soloLectura)>
+                                    <input type="datetime-local" wire:model.blur="form.fecha_hora_atencion" @readonly($soloLecturaAtencion)>
                                     @error('form.fecha_hora_atencion') <small>{{ $message }}</small> @enderror
                                 </label>
                                 <label>
                                     <span>Topico</span>
-                                    <select wire:model="form.topico" wire:change="limpiarErrorDeCampo('topico')" @disabled($soloLectura)>
+                                    <select wire:model="form.topico" wire:change="limpiarErrorDeCampo('topico')" @disabled($soloLecturaAtencion)>
                                         <option value="">Seleccione</option>
                                         @foreach ($topicos as $topico)
                                             <option value="{{ $topico->value }}">{{ $topico->value }}</option>
@@ -176,7 +222,7 @@
                                 </label>
                                 <label>
                                     <span>Ambiente</span>
-                                    <select wire:model="form.ambiente_id" wire:change="limpiarErrorDeCampo('ambiente_id')" @disabled($soloLectura)>
+                                    <select wire:model="form.ambiente_id" wire:change="limpiarErrorDeCampo('ambiente_id')" @disabled($soloLecturaAtencion)>
                                         <option value="">Seleccione</option>
                                         @foreach ($ambientesCatalogo as $ambiente)
                                             <option value="{{ $ambiente->id }}">{{ $ambiente->denominacion }}</option>
@@ -186,7 +232,7 @@
                                 </label>
                                 <label>
                                     <span>Tipo</span>
-                                    <select wire:model="form.tipo" wire:change="limpiarErrorDeCampo('tipo')" @disabled($soloLectura)>
+                                    <select wire:model="form.tipo" wire:change="limpiarErrorDeCampo('tipo')" @disabled($soloLecturaAtencion)>
                                         @foreach ($tiposAtencion as $tipoAtencion)
                                             <option value="{{ $tipoAtencion }}">{{ $tipoAtencion }}</option>
                                         @endforeach
@@ -207,17 +253,17 @@
                             <div class="emergency-attention-form is-three-columns">
                                 <label>
                                     <span>Acompanante</span>
-                                    <input type="text" wire:model.blur="form.acompanante" placeholder="Nombre del acompanante" @readonly($soloLectura)>
+                                    <input type="text" wire:model.blur="form.acompanante" placeholder="Nombre del acompanante" @readonly($soloLecturaAtencion)>
                                     @error('form.acompanante') <small>{{ $message }}</small> @enderror
                                 </label>
                                 <label>
                                     <span>Parentesco</span>
-                                    <input type="text" wire:model.blur="form.parentesco" placeholder="Ej. Hijo" @readonly($soloLectura)>
+                                    <input type="text" wire:model.blur="form.parentesco" placeholder="Ej. Hijo" @readonly($soloLecturaAtencion)>
                                     @error('form.parentesco') <small>{{ $message }}</small> @enderror
                                 </label>
                                 <label>
                                     <span>Telefono</span>
-                                    <input type="tel" wire:model.blur="form.telefono" placeholder="Ej. 999888777" @readonly($soloLectura)>
+                                    <input type="tel" wire:model.blur="form.telefono" placeholder="Ej. 999888777" @readonly($soloLecturaAtencion)>
                                     @error('form.telefono') <small>{{ $message }}</small> @enderror
                                 </label>
                             </div>
@@ -234,7 +280,7 @@
                             <div class="emergency-attention-form is-two-columns">
                                 <label>
                                     <span>Fuente</span>
-                                    <select wire:model="form.fuente" @disabled($soloLectura)>
+                                    <select wire:model="form.fuente" @disabled($soloLecturaAtencion)>
                                         <option value="">Seleccione</option>
                                         @foreach ($fuentesAtencion as $fuente)
                                             <option value="{{ $fuente->value }}">{{ $fuente->value }}</option>
@@ -244,17 +290,17 @@
                                 </label>
                                 <label>
                                     <span>Lugar del Evento</span>
-                                    <input type="text" wire:model.blur="form.lugar_evento" placeholder="Ej. Domicilio" @readonly($soloLectura)>
+                                    <input type="text" wire:model.blur="form.lugar_evento" placeholder="Ej. Domicilio" @readonly($soloLecturaAtencion)>
                                     @error('form.lugar_evento') <small>{{ $message }}</small> @enderror
                                 </label>
                                 <label>
                                     <span>Tipo de Lesion</span>
-                                    <input type="text" wire:model.blur="form.tipo_lesion_evento" placeholder="Ej. Traumatica" @readonly($soloLectura)>
+                                    <input type="text" wire:model.blur="form.tipo_lesion_evento" placeholder="Ej. Traumatica" @readonly($soloLecturaAtencion)>
                                     @error('form.tipo_lesion_evento') <small>{{ $message }}</small> @enderror
                                 </label>
                                 <label>
                                     <span>Fecha/Hora Recepcion</span>
-                                    <input type="datetime-local" wire:model.blur="form.fecha_hora_recepcion" @readonly($soloLectura)>
+                                    <input type="datetime-local" wire:model.blur="form.fecha_hora_recepcion" @readonly($soloLecturaAtencion)>
                                     @error('form.fecha_hora_recepcion') <small>{{ $message }}</small> @enderror
                                 </label>
                                 <label class="is-full">
@@ -262,7 +308,7 @@
                                         Signos Vitales Pre-Hospitalarios
                                         <em>Texto libre</em>
                                     </span>
-                                    <textarea rows="6" wire:model.blur="form.signos_vitales_transmitidos" @readonly($soloLectura)></textarea>
+                                    <textarea rows="6" wire:model.blur="form.signos_vitales_transmitidos" @readonly($soloLecturaAtencion)></textarea>
                                     @error('form.signos_vitales_transmitidos') <small>{{ $message }}</small> @enderror
                                 </label>
                             </div>
@@ -313,7 +359,7 @@
                             <div class="emergency-attention-form is-two-columns">
                                 <label>
                                     <span>Fecha / Hora</span>
-                                    <input type="datetime-local" wire:model.live="form.fecha_hora_triaje" @readonly($soloLectura)>
+                                    <input type="datetime-local" wire:model.live="form.fecha_hora_triaje" @readonly($soloLecturaTriaje)>
                                     @error('form.fecha_hora_triaje') <small>{{ $message }}</small> @enderror
                                 </label>
 
@@ -324,11 +370,11 @@
                                             type="search"
                                             wire:model.live.debounce.250ms="profesionalTriajeBusqueda"
                                             placeholder="Buscar profesional por nombre, CMP o RNE"
-                                            @readonly($soloLectura)
+                                            @readonly($soloLecturaTriaje)
                                         >
                                         <iconify-icon icon="lucide:search" aria-hidden="true"></iconify-icon>
                                     </div>
-                                    @if (! $soloLectura && $profesionalTriajeBusqueda !== '' && blank($form['profesional_triaje_id']))
+                                    @if (! $soloLecturaTriaje && $profesionalTriajeBusqueda !== '' && blank($form['profesional_triaje_id']))
                                         <div class="emergency-combobox-list">
                                             @forelse ($profesionalesTriaje as $profesional)
                                                 <button type="button" wire:click="seleccionarProfesionalTriaje({{ $profesional->id }})">
@@ -349,7 +395,7 @@
                                         wire:key="prioridad-triaje"
                                         wire:model.live="form.prioridad_id"
                                         wire:change="limpiarErrorDeCampo('prioridad_id')"
-                                        @disabled($soloLectura)
+                                        @disabled($soloLecturaTriaje)
                                     >
                                         <option value="">Seleccione</option>
                                         @foreach ($prioridades as $prioridad)
@@ -382,7 +428,7 @@
                                     Signos Vitales
                                 </h2>
 
-                                @if (! $soloLectura)
+                                @if (! $soloLecturaTriaje)
                                     <div class="emergency-section-actions">
                                         <button type="button" class="emergency-inline-action" wire:click="cargarSignosVitalesFavoritos">
                                             <iconify-icon icon="lucide:star" aria-hidden="true"></iconify-icon>
@@ -420,7 +466,7 @@
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    @if (! $soloLectura)
+                                                    @if (! $soloLecturaTriaje)
                                                         <div class="emergency-row-actions">
                                                             <button type="button" wire:click="editarSignoVital({{ $signoTriaje['id'] }})" title="Editar signo vital">
                                                                 <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
@@ -471,7 +517,7 @@
                             @endif
 
                             <label class="emergency-triage-check">
-                                <input type="checkbox" wire:model.live="form.triaje" @disabled($soloLectura)>
+                                <input type="checkbox" wire:model.live="form.triaje" @disabled($soloLecturaTriaje)>
                                 <span>Triaje Realizado</span>
                             </label>
                             @error('form.triaje') <small>{{ $message }}</small> @enderror
@@ -490,7 +536,7 @@
                             <div class="emergency-attention-form emergency-consultation-reason-form">
                                 <label class="is-full">
                                     <span>Motivo de Consulta</span>
-                                    <textarea rows="7" wire:model.blur="form.motivo_consulta" @readonly($soloLectura)></textarea>
+                                    <textarea rows="7" wire:model.blur="form.motivo_consulta" @readonly($soloLecturaTriaje)></textarea>
                                     @error('form.motivo_consulta') <small>{{ $message }}</small> @enderror
                                 </label>
                             </div>
@@ -1138,6 +1184,11 @@
                                                     <button type="button" wire:click="abrirModalDocumentosOrden({{ $orden['id'] }})" title="Cargar archivos de la orden">
                                                         <iconify-icon icon="lucide:file-up" aria-hidden="true"></iconify-icon>
                                                     </button>
+                                                     @if (filled($orden['accession_number']))
+                                                         <button type="button" wire:click="verOrdenAccession({{ $orden['id'] }})" title="Ver examen" aria-label="Ver examen">
+                                                             <iconify-icon icon="lucide:eye" aria-hidden="true"></iconify-icon>
+                                                         </button>
+                                                     @endif
                                                     @if (! $soloLectura)
                                                         <button type="button" wire:click="editarOrden({{ $orden['id'] }})" title="Editar orden">
                                                             <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
@@ -1676,7 +1727,7 @@
                                 Procedimientos Realizados
                             </h2>
 
-                            @if (! $soloLectura)
+                            @if (! $soloLecturaProcedimientos)
                                 <button type="button" class="emergency-inline-action" wire:click="abrirNuevoProcedimiento">
                                     <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
                                     Nuevo
@@ -1707,7 +1758,7 @@
                                             <td><span class="emergency-table-badge">{{ $procedimiento['estado'] }}</span></td>
                                             <td><span class="emergency-table-badge">{{ $procedimiento['origen'] }}</span></td>
                                             <td>
-                                                @if (! $soloLectura)
+                                                @if (! $soloLecturaProcedimientos)
                                                     <div class="emergency-row-actions">
                                                         <button type="button" wire:click="editarProcedimiento({{ $procedimiento['id'] }})" title="Editar procedimiento">
                                                             <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
@@ -1802,7 +1853,7 @@
                                 Notas de Enfermería
                             </h2>
 
-                            @if (! $soloLectura)
+                            @if (! $soloLecturaEnfermeria)
                                 <button type="button" class="emergency-inline-action" wire:click="abrirNuevaNotaEnfermeria">
                                     <iconify-icon icon="lucide:plus" aria-hidden="true"></iconify-icon>
                                     Nuevo
@@ -1838,7 +1889,7 @@
                                             <td>{{ $notaEnfermeria['nota'] }}</td>
                                             <td>
                                                 <div class="emergency-row-actions">
-                                                    @if (! $soloLectura)
+                                                    @if (! $soloLecturaEnfermeria)
                                                         <button type="button" wire:click="editarNotaEnfermeria({{ $notaEnfermeria['id'] }})" title="Editar nota de enfermería">
                                                             <iconify-icon icon="lucide:pencil" aria-hidden="true"></iconify-icon>
                                                         </button>
@@ -1939,7 +1990,7 @@
                                     <iconify-icon icon="lucide:arrow-down" aria-hidden="true"></iconify-icon>
                                     Ingresos Totales
                                 </span>
-                                <input type="text" wire:model.live.debounce.300ms="form.ingresos" placeholder="1500 ml" @readonly($soloLectura)>
+                                <input type="text" wire:model.live.debounce.300ms="form.ingresos" placeholder="1500 ml" @readonly($soloLecturaEnfermeria)>
                                 @error('form.ingresos') <small>{{ $message }}</small> @enderror
                             </label>
 
@@ -1948,7 +1999,7 @@
                                     <iconify-icon icon="lucide:arrow-up" aria-hidden="true"></iconify-icon>
                                     Egresos Totales
                                 </span>
-                                <input type="text" wire:model.live.debounce.300ms="form.egresos" placeholder="1200 ml" @readonly($soloLectura)>
+                                <input type="text" wire:model.live.debounce.300ms="form.egresos" placeholder="1200 ml" @readonly($soloLecturaEnfermeria)>
                                 @error('form.egresos') <small>{{ $message }}</small> @enderror
                             </label>
                         </div>
@@ -2671,7 +2722,7 @@
                                 multiple
                                 accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                                 wire:model="documentosAdjuntosArchivos"
-                                @disabled($soloLectura)
+                                @disabled($soloLecturaDocumentacion)
                             >
 
                             <iconify-icon icon="lucide:cloud-upload" aria-hidden="true"></iconify-icon>
@@ -2703,7 +2754,7 @@
                             wire:click="guardarDocumentosAdjuntos"
                             wire:loading.attr="disabled"
                             wire:target="documentosAdjuntosArchivos,guardarDocumentosAdjuntos"
-                            @disabled($soloLectura || count($documentosAdjuntosArchivos) === 0)
+                            @disabled($soloLecturaDocumentacion || count($documentosAdjuntosArchivos) === 0)
                         >
                             <iconify-icon icon="lucide:upload" aria-hidden="true"></iconify-icon>
                             <span wire:loading.remove wire:target="guardarDocumentosAdjuntos">Cargar Archivos</span>
@@ -2769,7 +2820,7 @@
                                                     <a href="{{ $documentoAdjunto['url'] }}" download title="Descargar documento">
                                                         <iconify-icon icon="lucide:download" aria-hidden="true"></iconify-icon>
                                                     </a>
-                                                    @if (! $soloLectura)
+                                                    @if (! $soloLecturaDocumentacion)
                                                         <button type="button" data-confirm-delete-emergency-tab data-registro-id="{{ $documentoAdjunto['id'] }}" data-registro-nombre="{{ $documentoAdjunto['nombre'] }}" data-catalogo-singular="documento adjunto" data-delete-method="eliminarDocumentoAdjunto" data-confirm-title="Eliminar documento adjunto" data-confirm-message="Deseas eliminar el documento adjunto {{ $documentoAdjunto['nombre'] }}?" title="Eliminar documento adjunto">
                                                             <iconify-icon icon="lucide:trash-2" aria-hidden="true"></iconify-icon>
                                                         </button>
@@ -2806,6 +2857,42 @@
             @endif
         </main>
     </div>
+
+    @if ($modalAlertasClinicasAbierto && $alertaClinicaModalTipo)
+        <div class="emergency-feedback-backdrop emergency-clinical-alerts-backdrop" role="dialog" aria-modal="true" aria-labelledby="emergency-clinical-alerts-title">
+            <section class="emergency-feedback-modal emergency-clinical-alerts-modal">
+                <header class="emergency-clinical-alerts-modal-header">
+                    <div>
+                        <p>Alertas clínicas</p>
+                        <h2 id="emergency-clinical-alerts-title">
+                            {{ $alertaClinicaModalTipo === 'alergias' ? 'Alergias registradas' : 'Reacciones adversas registradas' }}
+                        </h2>
+                    </div>
+                    <button type="button" class="emergency-close-icon-action" wire:click="cerrarModalAlertasClinicas" title="Cerrar" aria-label="Cerrar">
+                        <iconify-icon icon="lucide:x" aria-hidden="true"></iconify-icon>
+                    </button>
+                </header>
+
+                <ul class="emergency-clinical-alerts-list">
+                    @foreach (($alertasClinicas[$alertaClinicaModalTipo] ?? []) as $alertaClinica)
+                        <li>
+                            <iconify-icon
+                                icon="{{ $alertaClinicaModalTipo === 'alergias' ? 'healthicons:allergies-outline' : 'healthicons:medicines-outline' }}"
+                                aria-hidden="true"
+                            ></iconify-icon>
+                            <span>{{ $alertaClinica }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+
+                <footer class="emergency-feedback-actions">
+                    <button type="button" class="emergency-close-action" wire:click="cerrarModalAlertasClinicas">
+                        Cerrar
+                    </button>
+                </footer>
+            </section>
+        </div>
+    @endif
 
     @if ($modalDocumentosOrdenAbierto)
         <div class="emergency-feedback-backdrop emergency-order-documents-backdrop" role="dialog" aria-modal="true" aria-labelledby="emergency-order-documents-title">

@@ -30,6 +30,11 @@ class ProcedimientoRealizado extends Model
         return $this->belongsTo(HcEmergencia::class);
     }
 
+    public function orden(): BelongsTo
+    {
+        return $this->belongsTo(Orden::class);
+    }
+
     public function procedimiento(): BelongsTo
     {
         return $this->belongsTo(Procedimiento::class);

@@ -175,6 +175,37 @@
             vertical-align: top;
         }
 
+        .signature-wrap {
+            margin-top: 8px;
+            text-align: center;
+            width: 240px;
+        }
+
+        .signature-image {
+            display: block;
+            height: auto;
+            margin: 0 auto 4px;
+            max-height: 80px;
+            max-width: 220px;
+            object-fit: contain;
+            object-position: center;
+            width: auto;
+        }
+
+        .signature-line {
+            border-top: 1px solid #142747;
+            margin: 0 auto 3px;
+            width: 220px;
+        }
+
+        .signature-missing {
+            color: #64748b;
+            font-size: 8px;
+            font-style: italic;
+            margin: 8px 0 4px;
+            text-align: center;
+        }
+
         .micro-label {
             color: #173b62;
             display: block;
@@ -413,7 +444,19 @@
             <table class="egress-table">
                 <tr>
                     <td><span class="micro-label">Fecha/Hora de Egreso</span><span class="micro-value">{{ $fechaHora($atencion->fecha_hora_egreso) }}</span></td>
-                    <td><span class="micro-label">Profesional Responsable</span><span class="micro-value">{{ $profesional($atencion->profesionalEgreso) }}</span></td>
+                    <td>
+                        <span class="micro-label">Profesional Responsable</span>
+                        <span class="micro-value">{{ $profesional($atencion->profesionalEgreso) }}</span>
+                        <div class="signature-wrap">
+                            @if ($firmaDataUri)
+                                <img class="signature-image" src="{{ $firmaDataUri }}" alt="Firma del profesional responsable">
+                            @else
+                                <p class="signature-missing">Firma no registrada</p>
+                            @endif
+                            <div class="signature-line"></div>
+                            <span class="micro-label">Firma del profesional responsable</span>
+                        </div>
+                    </td>
                 </tr>
             </table>
         </div>

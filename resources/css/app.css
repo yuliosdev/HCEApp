@@ -4168,6 +4168,20 @@
         min-width: 720px;
     }
 
+    .patient-history-external-notice {
+        align-items: center;
+        color: var(--hce-app-muted);
+        display: flex;
+        font-size: 0.78rem;
+        gap: 7px;
+        margin: 12px 22px 0;
+    }
+
+    .patient-history-external-notice iconify-icon {
+        color: var(--hce-color-accent);
+        font-size: 1rem;
+    }
+
     .open-history-create-modal {
         max-width: min(760px, calc(100vw - 32px));
     }
@@ -7230,6 +7244,155 @@ a.dashboard-primary-action,
         color: var(--hce-app-muted);
         font-size: 0.66rem;
         font-style: normal;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card {
+        flex: 1 1 132px;
+        justify-items: start;
+        max-width: 190px;
+        min-width: 132px;
+        text-align: left;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card[role='button'] {
+        cursor: pointer;
+        transition: box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card[role='button']:hover,
+    .emergency-vitals-summary .emergency-clinical-alert-card[role='button']:focus-visible {
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--alert-card-accent) 32%, transparent) inset, 0 8px 18px color-mix(in srgb, var(--alert-card-accent) 16%, transparent);
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card > span {
+        align-items: center;
+        display: inline-flex;
+        gap: 4px;
+        font-weight: 700;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card > span iconify-icon {
+        font-size: 0.9rem;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card > strong {
+        color: var(--alert-card-accent);
+        font-size: 1.05rem;
+        line-height: 1;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card > em {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card.is-allergy {
+        --alert-card-accent: #dc2626;
+        background: #fee2e2 !important;
+        border-color: #ef4444 !important;
+        color: #7f1d1d;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card.is-allergy > span {
+        color: #b91c1c;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card.is-adverse-reaction {
+        --alert-card-accent: #b45309;
+        background: #fef3c7 !important;
+        border-color: #f59e0b !important;
+        color: #78350f;
+    }
+
+    .emergency-vitals-summary .emergency-clinical-alert-card.is-adverse-reaction > span {
+        color: #b45309;
+    }
+
+    html[data-applied-theme='dark'] .emergency-vitals-summary .emergency-clinical-alert-card.is-allergy,
+    .theme-dark .emergency-vitals-summary .emergency-clinical-alert-card.is-allergy {
+        background: #401d23 !important;
+        border-color: #f87171 !important;
+        color: #fecaca;
+    }
+
+    html[data-applied-theme='dark'] .emergency-vitals-summary .emergency-clinical-alert-card.is-allergy > span,
+    .theme-dark .emergency-vitals-summary .emergency-clinical-alert-card.is-allergy > span {
+        color: #fca5a5;
+    }
+
+    html[data-applied-theme='dark'] .emergency-vitals-summary .emergency-clinical-alert-card.is-adverse-reaction,
+    .theme-dark .emergency-vitals-summary .emergency-clinical-alert-card.is-adverse-reaction {
+        background: #4a3515 !important;
+        border-color: #fbbf24 !important;
+        color: #fde68a;
+    }
+
+    html[data-applied-theme='dark'] .emergency-vitals-summary .emergency-clinical-alert-card.is-adverse-reaction > span,
+    .theme-dark .emergency-vitals-summary .emergency-clinical-alert-card.is-adverse-reaction > span {
+        color: #fcd34d;
+    }
+
+    .emergency-clinical-alerts-modal {
+        max-width: min(100%, 520px);
+        width: 520px;
+    }
+
+    .emergency-clinical-alerts-modal-header {
+        align-items: flex-start;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+    }
+
+    .emergency-clinical-alerts-modal-header p {
+        color: var(--hce-app-muted);
+        font-size: 0.74rem;
+        margin: 0 0 3px;
+    }
+
+    .emergency-clinical-alerts-modal-header h2 {
+        color: var(--hce-app-heading);
+        font-family: var(--hce-font-heading);
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .emergency-clinical-alerts-list {
+        display: grid;
+        gap: 8px;
+        list-style: none;
+        margin: 20px 0 4px;
+        max-height: min(48vh, 360px);
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .emergency-clinical-alerts-list li {
+        align-items: center;
+        background: color-mix(in srgb, var(--hce-color-soft) 18%, var(--hce-app-panel-bg));
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        color: var(--hce-app-text);
+        display: flex;
+        gap: 10px;
+        min-height: 42px;
+        padding: 9px 12px;
+    }
+
+    .emergency-clinical-alerts-list li iconify-icon {
+        color: var(--hce-color-accent);
+        flex: 0 0 auto;
+        font-size: 1.05rem;
+    }
+
+    @media (max-width: 560px) {
+        .emergency-clinical-alerts-modal {
+            width: 100%;
+        }
     }
 
     .emergency-vitals-summary .is-priority {

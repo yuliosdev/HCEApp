@@ -29,15 +29,9 @@ class MedicamentoProductoExternoController extends Controller
             'estado' => 'estado',
         ]);
 
-        $medicamento = Medicamento::query()
-            ->where('id_producto_externo', $datos['id_producto_externo'])
-            ->first();
-
-        if ($medicamento === null) {
-            return response()->json([
-                'message' => 'No existe medicamento con el id_producto_externo indicado.',
-            ], 404);
-        }
+        $medicamento = Medicamento::query()->firstOrNew([
+            'id_producto_externo' => $datos['id_producto_externo'],
+        ]);
 
         $medicamento->forceFill([
             'descripcion' => $datos['descripcion'],
@@ -48,7 +42,9 @@ class MedicamentoProductoExternoController extends Controller
         ])->save();
 
         return response()->json([
-            'message' => 'Medicamento actualizado correctamente.',
+            'message' => $medicamento->wasRecentlyCreated
+                ? 'Medicamento creado correctamente.'
+                : 'Medicamento actualizado correctamente.',
             'data' => [
                 'id' => $medicamento->id,
                 'id_producto_externo' => $medicamento->id_producto_externo,

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Orden extends Model
 {
@@ -51,5 +52,10 @@ class Orden extends Model
     public function documentosAdjuntos(): HasMany
     {
         return $this->hasMany(DocumentoAdjunto::class);
+    }
+
+    public function procedimientoRealizado(): HasOne
+    {
+        return $this->hasOne(ProcedimientoRealizado::class);
     }
 }

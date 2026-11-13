@@ -133,6 +133,9 @@
                         @foreach ($configuracion['campos'] as $campo)
                             <th>{{ $campo['etiqueta'] }}</th>
                         @endforeach
+                        @if ($registroClinico === 'profesionales')
+                            <th>Firma</th>
+                        @endif
                         @if ($tieneEstado)
                             <th>Estado</th>
                         @endif
@@ -153,6 +156,13 @@
                                     @endif
                                 </td>
                             @endforeach
+                            @if ($registroClinico === 'profesionales')
+                                <td>
+                                    <span class="catalog-status {{ filled($registro->firma_path) ? 'is-active' : 'is-inactive' }}">
+                                        {{ filled($registro->firma_path) ? 'Firma registrada' : 'Sin firma' }}
+                                    </span>
+                                </td>
+                            @endif
                             @if ($tieneEstado)
                                 <td>
                                     <span class="catalog-status {{ $this->valorEstado($registro) === 'Activo' ? 'is-active' : 'is-inactive' }}">
@@ -193,7 +203,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ count($configuracion['campos']) + ($tieneEstado ? 4 : 3) }}" class="catalog-empty">
+                            <td colspan="{{ count($configuracion['campos']) + ($registroClinico === 'profesionales' ? 1 : 0) + ($tieneEstado ? 4 : 3) }}" class="catalog-empty">
                                 No se encontraron registros con los filtros actuales.
                             </td>
                         </tr>
@@ -251,6 +261,51 @@
                             @error('form.'.$campo['nombre']) <small>{{ $message }}</small> @enderror
                         </label>
                     @endforeach
+
+                    @if ($registroClinico === 'profesionales')
+                        <section class="catalog-form-section clinical-signature-upload" style="grid-column: 1 / -1;">
+                            <div class="catalog-form-section-header">
+                                <span>
+                                    <iconify-icon icon="lucide:pen-line" aria-hidden="true"></iconify-icon>
+                                </span>
+                                <div>
+                                    <h3>Firma del profesional</h3>
+                                    <p>Carga una imagen JPG o PNG de la firma médica.</p>
+                                </div>
+                            </div>
+
+                            <label class="clinical-record-field is-full">
+                                <span>Archivo de firma</span>
+                                <input
+                                    type="file"
+                                    wire:model="firmaProfesional"
+                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                    @disabled($modoFormulario === 'ver')
+                                >
+                                <small>Formatos permitidos: JPG y PNG. Tamaño máximo: 2 MB.</small>
+                                @error('firmaProfesional') <small>{{ $message }}</small> @enderror
+                            </label>
+
+                            @if ($firmaProfesional || $firmaActualPath)
+                                <div class="clinical-signature-preview">
+                                    <span>Firma cargada</span>
+                                    <img
+                                        src="{{ $firmaProfesional ? $firmaProfesional->temporaryUrl() : asset('storage/'.$firmaActualPath) }}"
+                                        alt="Firma del profesional"
+                                        style="display: block; width: min(100%, 320px); height: 120px; object-fit: contain; object-position: center;"
+                                    >
+                                    @if ($modoFormulario === 'editar' && $firmaActualPath)
+                                        <button type="button" class="catalog-secondary-action" wire:click="eliminarFirma">
+                                            <iconify-icon icon="lucide:trash-2" aria-hidden="true"></iconify-icon>
+                                            Eliminar firma
+                                        </button>
+                                    @endif
+                                </div>
+                            @else
+                                <p class="clinical-signature-empty">No hay una firma cargada.</p>
+                            @endif
+                        </section>
+                    @endif
 
                     @if ($tieneEstado)
                         <label class="clinical-record-field">

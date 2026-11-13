@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -42,6 +43,10 @@ class RegistroClinicoPanel extends Component
     public string $estadoRegistro = 'Activo';
 
     public mixed $archivoImportacion = null;
+
+    public mixed $firmaProfesional = null;
+
+    public ?string $firmaActualPath = null;
 
     /**
      * Valores editables del formulario dinamico.
@@ -125,6 +130,15 @@ class RegistroClinicoPanel extends Component
             'actualizado_por' => Auth::id(),
         ]);
 
+        if ($this->registroClinico === 'profesionales' && $this->firmaProfesional !== null) {
+            $firmaAnterior = $registro->firma_path;
+            $datosPersistibles['firma_path'] = $this->firmaProfesional->store('profesionales/firmas', 'public');
+
+            if (filled($firmaAnterior)) {
+                Storage::disk('public')->delete($firmaAnterior);
+            }
+        }
+
         if ($this->tieneEstado()) {
             $datosPersistibles['estado'] = $datos['estadoRegistro'];
         }
@@ -134,6 +148,29 @@ class RegistroClinicoPanel extends Component
         $this->cerrarModal();
 
         flash()->success($configuracion['singular'].' guardado correctamente.', [], 'Gestion clinica');
+    }
+
+    public function eliminarFirma(): void
+    {
+        abort_unless($this->registroClinico === 'profesionales', 404);
+        $this->authorize($this->configuracion()['permiso_editar']);
+        abort_if($this->registroId === null, 404);
+
+        $modelo = $this->configuracion()['modelo'];
+        $registro = $modelo::query()->findOrFail($this->registroId);
+
+        if (filled($registro->firma_path)) {
+            Storage::disk('public')->delete($registro->firma_path);
+        }
+
+        $registro->forceFill([
+            'firma_path' => null,
+            'actualizado_por' => Auth::id(),
+        ])->save();
+
+        $this->firmaActualPath = null;
+        $this->firmaProfesional = null;
+        flash()->success('Firma eliminada correctamente.', [], 'Gestion clinica');
     }
 
     public function cambiarEstado(int $registroId): void
@@ -355,6 +392,10 @@ class RegistroClinicoPanel extends Component
             $reglas['estadoRegistro'] = ['required', Rule::enum(EstadoCatalogo::class)];
         }
 
+        if ($this->registroClinico === 'profesionales') {
+            $reglas['firmaProfesional'] = ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:2048'];
+        }
+
         return $reglas;
     }
 
@@ -468,6 +509,8 @@ class RegistroClinicoPanel extends Component
             ->findOrFail($registroId);
 
         $this->registroId = $registro->id;
+        $this->firmaActualPath = $this->registroClinico === 'profesionales' ? $registro->firma_path : null;
+        $this->firmaProfesional = null;
 
         foreach ($this->configuracion()['campos'] as $campo) {
             $this->form[$campo['nombre']] = $this->valorFormulario(data_get($registro, $campo['nombre']));
@@ -495,6 +538,8 @@ class RegistroClinicoPanel extends Component
         $this->estadoRegistro = EstadoCatalogo::Activo->value;
         $this->auditoria = [];
         $this->archivoImportacion = null;
+        $this->firmaProfesional = null;
+        $this->firmaActualPath = null;
         $this->form = [];
 
         foreach ($this->configuracion()['campos'] as $campo) {

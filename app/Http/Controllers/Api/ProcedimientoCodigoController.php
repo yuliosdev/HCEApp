@@ -23,15 +23,9 @@ class ProcedimientoCodigoController extends Controller
             'estado' => 'estado',
         ]);
 
-        $procedimiento = Procedimiento::query()
-            ->where('codigo', $datos['codigo'])
-            ->first();
-
-        if ($procedimiento === null) {
-            return response()->json([
-                'message' => 'No existe procedimiento con el codigo indicado.',
-            ], 404);
-        }
+        $procedimiento = Procedimiento::query()->firstOrNew([
+            'codigo' => $datos['codigo'],
+        ]);
 
         $procedimiento->forceFill([
             'denominacion' => $datos['denominacion'],
@@ -39,7 +33,9 @@ class ProcedimientoCodigoController extends Controller
         ])->save();
 
         return response()->json([
-            'message' => 'Procedimiento actualizado correctamente.',
+            'message' => $procedimiento->wasRecentlyCreated
+                ? 'Procedimiento creado correctamente.'
+                : 'Procedimiento actualizado correctamente.',
             'data' => [
                 'id' => $procedimiento->id,
                 'codigo' => $procedimiento->codigo,

@@ -28,15 +28,9 @@ class ProfesionalSaludCodigoServicioController extends Controller
             'estado' => 'estado',
         ]);
 
-        $profesional = ProfesionalSalud::query()
-            ->where('codigo_servicio', $datos['codigo_servicio'])
-            ->first();
-
-        if ($profesional === null) {
-            return response()->json([
-                'message' => 'No existe profesional de salud con el codigo_servicio indicado.',
-            ], 404);
-        }
+        $profesional = ProfesionalSalud::query()->firstOrNew([
+            'codigo_servicio' => $datos['codigo_servicio'],
+        ]);
 
         $profesional->forceFill([
             'nombres' => $datos['nombres'],
@@ -46,7 +40,9 @@ class ProfesionalSaludCodigoServicioController extends Controller
         ])->save();
 
         return response()->json([
-            'message' => 'Profesional de salud actualizado correctamente.',
+            'message' => $profesional->wasRecentlyCreated
+                ? 'Profesional de salud creado correctamente.'
+                : 'Profesional de salud actualizado correctamente.',
             'data' => [
                 'id' => $profesional->id,
                 'codigo_servicio' => $profesional->codigo_servicio,

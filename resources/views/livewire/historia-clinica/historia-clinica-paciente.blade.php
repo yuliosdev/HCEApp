@@ -106,6 +106,13 @@
             <span></span>
         </div>
 
+        @if ($errorAtencionesAmbulatorias)
+            <p class="patient-history-external-notice">
+                <iconify-icon icon="lucide:info" aria-hidden="true"></iconify-icon>
+                {{ $errorAtencionesAmbulatorias }}
+            </p>
+        @endif
+
         <div class="patient-history-table-wrap">
             <table class="patient-history-table">
                 <thead>
@@ -130,7 +137,64 @@
                         </tr>
                     @endif
 
-                    @foreach ($atenciones as $atencion)
+                    @foreach ($atenciones as $fila)
+                        @if (($fila['origen'] ?? null) === 'ambulatoria')
+                            @php($atencionAmbulatoria = $fila['modelo'])
+                            <tr wire:key="historia-ambulatoria-{{ $atencionAmbulatoria['id'] }}">
+                                <td>
+                                    <strong>{{ $atencionAmbulatoria['fecha'] }}</strong>
+                                </td>
+                                <td>
+                                    <span class="patient-history-type">{{ $atencionAmbulatoria['tipo'] ?: '--' }}</span>
+                                </td>
+                                <td>
+                                    <div class="patient-history-attention-number">
+                                        <strong class="patient-history-number">{{ $atencionAmbulatoria['id'] }}</strong>
+                                        <span>Adm: {{ $atencionAmbulatoria['numero_atencion'] ?: '--' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if ($atencionAmbulatoria['profesional'])
+                                        <div class="patient-history-professional">
+                                            <span>{{ collect(explode(' ', $atencionAmbulatoria['profesional']))->filter()->take(2)->map(fn ($parte) => mb_substr($parte, 0, 1))->implode('') }}</span>
+                                            <strong>{{ $atencionAmbulatoria['profesional'] }}</strong>
+                                        </div>
+                                    @else
+                                        <span class="patient-history-muted">--</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="{{ $atencionAmbulatoria['diagnostico'] ? '' : 'patient-history-muted is-italic' }}">
+                                        {{ $atencionAmbulatoria['diagnostico'] ?: 'En evaluacion...' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="patient-history-triage">
+                                        <span class="patient-history-muted">--</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="patient-history-status {{ $atencionAmbulatoria['estado'] === 'Abierta' ? 'is-open' : 'is-closed' }}">
+                                        <i></i>
+                                        {{ $atencionAmbulatoria['estado'] }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <nav class="patient-history-row-actions" aria-label="Acciones de atencion ambulatoria">
+                                        <a
+                                            href="{{ $atencionAmbulatoria['numero_atencion'] ? route('historia-clinica.atenciones-paciente.ambulatoria.pdf', [$pacienteActual, $atencionAmbulatoria['numero_atencion']]) : '#' }}"
+                                            target="_blank"
+                                            rel="noopener"
+                                            aria-label="Ver atencion ambulatoria"
+                                            title="Ver atencion ambulatoria"
+                                        >
+                                            <iconify-icon icon="lucide:eye" aria-hidden="true"></iconify-icon>
+                                        </a>
+                                    </nav>
+                                </td>
+                            </tr>
+                        @else
+                            @php($atencion = $fila['modelo'])
                         @php($diagnostico = $this->diagnosticoPrincipal($atencion))
                         @php($triaje = $this->datosTriaje($atencion))
                         @php($abierta = $this->estadoAbierto($atencion))
@@ -232,6 +296,7 @@
                                 </nav>
                             </td>
                         </tr>
+                        @endif
                     @endforeach
                 </tbody>
             </table>
@@ -311,4 +376,5 @@
             </section>
         </div>
     @endif
+
 </section>

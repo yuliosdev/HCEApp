@@ -432,6 +432,7 @@ return new class extends Migration
         Schema::create('profesionales_salud', function (Blueprint $table) {
             $table->id();
             $table->string('nombres');
+            $table->string('firma_path')->nullable();
             $table->foreignId('especialidad_id')->nullable()->constrained('especialidades')->nullOnDelete();
             $table->string('tipo_colegiatura', 100)->nullable();
             $table->string('cmp', 30)->nullable()->index();
@@ -697,6 +698,7 @@ return new class extends Migration
             $table->text('resultado')->nullable();
             $table->foreignId('profesional_salud_id')->nullable()->constrained('profesionales_salud')->nullOnDelete();
             $table->enum('estado', $this->estadosSolicitudExamen())->default('Solicitado');
+            $table->string('accession_number', 20)->nullable();
             $table->string('guia', 20)->nullable();
             $this->auditoriaBasica($table);
             $table->index(['hc_emergencia_id', 'fecha_hora_solicitud']);
@@ -722,6 +724,7 @@ return new class extends Migration
         Schema::create('procedimientos_realizados', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hc_emergencia_id')->constrained('hc_emergencia')->restrictOnDelete();
+            $table->foreignId('orden_id')->nullable()->unique()->constrained('ordenes')->nullOnDelete();
             $table->foreignId('procedimiento_id')->nullable()->constrained('procedimientos')->nullOnDelete();
             $table->string('denominacion')->nullable();
             $table->integer('sesiones')->nullable();

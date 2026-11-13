@@ -27,6 +27,10 @@ return [
         'token' => env('EXTERNAL_API_TOKEN', env('CSR_API_TOKEN')),
     ],
 
+    'linkpads' => [
+        'url' => env('LINKPADS'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

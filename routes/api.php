@@ -8,8 +8,10 @@ use App\Http\Controllers\Api\HcEmergenciaDiagnosticosIngresoController;
 use App\Http\Controllers\Api\HcEmergenciaPrescripcionesMedicamentosController;
 use App\Http\Controllers\Api\HcEmergenciaOrdenesController;
 use App\Http\Controllers\Api\HcEmergenciaPdfApiController;
+use App\Http\Controllers\Api\PacienteAtencionesController;
 use App\Http\Controllers\Api\MedicamentoProductoExternoController;
 use App\Http\Controllers\Api\OrdenEstadoController;
+use App\Http\Controllers\Api\OrdenAccessionNumberController;
 use App\Http\Controllers\Api\PrescripcionEstadoController;
 use App\Http\Controllers\Api\ProcedimientoCodigoController;
 use App\Http\Controllers\Api\ProfesionalSaludCodigoServicioController;
@@ -54,6 +56,9 @@ Route::get('/hc-emergencia/{numeroAtencion}/ordenes', HcEmergenciaOrdenesControl
     ->whereNumber('numeroAtencion')
     ->name('api.hc-emergencia.ordenes');
 
+Route::get('/pacientes/{idPacienteExterno}/atenciones', PacienteAtencionesController::class)
+    ->name('api.pacientes.atenciones');
+
 Route::patch('/solicitud-examenes/{id}/estado', SolicitudExamenEstadoController::class)
     ->whereNumber('id')
     ->name('api.solicitud-examenes.estado');
@@ -65,3 +70,7 @@ Route::patch('/prescripciones/{id}/estado', PrescripcionEstadoController::class)
 Route::patch('/ordenes/{id}/estado', OrdenEstadoController::class)
     ->whereNumber('id')
     ->name('api.ordenes.estado');
+
+Route::patch('/ordenes/{id}/accession-number', OrdenAccessionNumberController::class)
+    ->whereNumber('id')
+    ->name('api.ordenes.accession-number');

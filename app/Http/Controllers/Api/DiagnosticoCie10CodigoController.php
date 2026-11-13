@@ -26,15 +26,9 @@ class DiagnosticoCie10CodigoController extends Controller
             'estado' => 'estado',
         ]);
 
-        $diagnostico = DiagnosticoCie10::query()
-            ->where('codigo', $datos['codigo'])
-            ->first();
-
-        if ($diagnostico === null) {
-            return response()->json([
-                'message' => 'No existe diagnóstico CIE10 con el codigo indicado.',
-            ], 404);
-        }
+        $diagnostico = DiagnosticoCie10::query()->firstOrNew([
+            'codigo' => $datos['codigo'],
+        ]);
 
         $diagnostico->forceFill([
             'nombre' => $datos['nombre'],
@@ -43,7 +37,9 @@ class DiagnosticoCie10CodigoController extends Controller
         ])->save();
 
         return response()->json([
-            'message' => 'Diagnóstico CIE10 actualizado correctamente.',
+            'message' => $diagnostico->wasRecentlyCreated
+                ? 'Diagnóstico CIE10 creado correctamente.'
+                : 'Diagnóstico CIE10 actualizado correctamente.',
             'data' => [
                 'id' => $diagnostico->id,
                 'codigo' => $diagnostico->codigo,

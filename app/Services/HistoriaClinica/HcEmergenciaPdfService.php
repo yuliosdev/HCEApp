@@ -5,6 +5,7 @@ namespace App\Services\HistoriaClinica;
 use App\Models\HcEmergencia;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class HcEmergenciaPdfService
 {
@@ -56,11 +57,20 @@ class HcEmergenciaPdfService
             'actualizadoPor',
         ]);
 
+        $firmaImagen = null;
+        $firmaPath = $atencion->profesionalEgreso?->firma_path;
+
+        if (filled($firmaPath) && Storage::disk('public')->exists($firmaPath)) {
+            $mime = Storage::disk('public')->mimeType($firmaPath) ?: 'image/png';
+            $firmaImagen = 'data:'.$mime.';base64,'.base64_encode(Storage::disk('public')->get($firmaPath));
+        }
+
         return Pdf::loadView('historia-clinica.atenciones-paciente.emergencia-pdf', [
             'paciente' => $paciente,
             'atencion' => $atencion,
             'generadoPor' => $generadoPor,
             'generadoEn' => $generadoEn,
+            'firmaImagen' => $firmaImagen,
         ])->setPaper('a4');
     }
 

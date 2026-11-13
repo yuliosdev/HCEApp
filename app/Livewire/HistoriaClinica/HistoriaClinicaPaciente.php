@@ -11,10 +11,15 @@ use App\Models\Paciente;
 use App\Models\PacienteAlergia;
 use App\Models\ReaccionAdversaMedicamento;
 use App\Models\TriajeSignoVital;
+use App\Services\Interoperabilidad\AtencionesAmbulatoriasHomologador;
+use App\Services\Interoperabilidad\CsrAtencionesClient;
+use App\Services\Interoperabilidad\CsrAtencionesException;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -30,6 +35,8 @@ class HistoriaClinicaPaciente extends Component
     public int $porPagina = 5;
 
     public ?string $modalResumen = null;
+
+    public ?string $errorAtencionesAmbulatorias = null;
 
     public function mount(Paciente $paciente): void
     {
@@ -115,16 +122,7 @@ class HistoriaClinicaPaciente extends Component
             ])
             ->findOrFail($this->paciente->id);
 
-        $atenciones = HcEmergencia::query()
-            ->where('paciente_id', $paciente->id)
-            ->with([
-                'profesionalResponsable',
-                'prioridad',
-                'diagnosticosIngreso.diagnosticoCie10',
-            ])
-            ->orderByDesc('fecha_hora_atencion')
-            ->paginate($this->porPagina)
-            ->withPath(route('historia-clinica.atenciones-paciente.historia', $paciente));
+        $atenciones = $this->atencionesCombinadas($paciente);
 
         return view('livewire.historia-clinica.historia-clinica-paciente', [
             'pacienteActual' => $paciente,
@@ -135,6 +133,89 @@ class HistoriaClinicaPaciente extends Component
             'modal' => $this->datosModalResumen(),
             'esAdministrador' => $this->esAdministrador(),
         ]);
+    }
+
+    private function atencionesCombinadas(Paciente $paciente): LengthAwarePaginator
+    {
+        $emergencias = HcEmergencia::query()
+            ->where('paciente_id', $paciente->id)
+            ->with([
+                'profesionalResponsable',
+                'prioridad',
+                'diagnosticosIngreso.diagnosticoCie10',
+            ])
+            ->get()
+            ->map(fn (HcEmergencia $atencion): array => [
+                'origen' => 'emergencia',
+                'modelo' => $atencion,
+                'fecha_orden' => $atencion->fecha_hora_atencion?->timestamp ?? 0,
+            ]);
+
+        $ambulatorias = collect($this->atencionesAmbulatorias())
+            ->map(fn (array $atencion): array => [
+                'origen' => 'ambulatoria',
+                'modelo' => $atencion,
+                'fecha_orden' => $this->fechaAtencionAmbulatoria($atencion['fecha_iso'] ?? null),
+            ]);
+
+        $filas = $emergencias
+            ->concat($ambulatorias)
+            ->sortByDesc('fecha_orden')
+            ->values();
+
+        $pagina = LengthAwarePaginator::resolveCurrentPage('page');
+
+        return new LengthAwarePaginator(
+            $filas->forPage($pagina, $this->porPagina)->values(),
+            $filas->count(),
+            $this->porPagina,
+            $pagina,
+            [
+                'path' => route('historia-clinica.atenciones-paciente.historia', $paciente),
+                'pageName' => 'page',
+            ],
+        );
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function atencionesAmbulatorias(): array
+    {
+        $this->errorAtencionesAmbulatorias = null;
+
+        $idPacienteExterno = (int) ($this->paciente->id_paciente_externo ?? 0);
+
+        if ($idPacienteExterno < 1) {
+            return [];
+        }
+
+        try {
+            return Cache::remember(
+                'hce.atenciones-ambulatorias.'.$idPacienteExterno,
+                now()->addSeconds(30),
+                fn (): array => AtencionesAmbulatoriasHomologador::homologar(
+                    app(CsrAtencionesClient::class)->obtener($idPacienteExterno),
+                ),
+            );
+        } catch (CsrAtencionesException $exception) {
+            $this->errorAtencionesAmbulatorias = $exception->mensajeUsuario();
+
+            return [];
+        }
+    }
+
+    private function fechaAtencionAmbulatoria(?string $fecha): int
+    {
+        if ($fecha === null || trim($fecha) === '') {
+            return 0;
+        }
+
+        try {
+            return \Carbon\CarbonImmutable::parse($fecha)->timestamp;
+        } catch (\Throwable) {
+            return 0;
+        }
     }
 
     /**

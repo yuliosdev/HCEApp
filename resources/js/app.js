@@ -688,6 +688,43 @@ const prepararVisorLaboratorioPdf = () => {
     });
 };
 
+const prepararVisorOrdenWorklist = () => {
+    if (!window.Livewire || document.documentElement.dataset.worklistViewerReady === 'true') {
+        return;
+    }
+
+    document.documentElement.dataset.worklistViewerReady = 'true';
+
+    window.Livewire.on('abrir-orden-worklist', ({ url }) => {
+        if (!url) {
+            return;
+        }
+
+        const ventana = window.open(url, '_blank', 'noopener');
+
+        if (ventana) {
+            return;
+        }
+
+        const sweetAlert = obtenerSweetAlert();
+        const temaOscuro = document.documentElement.dataset.appliedTheme === 'dark';
+
+        if (sweetAlert && typeof sweetAlert.fire === 'function') {
+            sweetAlert.fire({
+                title: 'Visualización de examen',
+                text: 'El navegador bloqueó la pestaña del examen. Permite ventanas emergentes para HCEApp e inténtalo nuevamente.',
+                icon: 'warning',
+                confirmButtonText: 'Aceptar',
+                background: temaOscuro ? '#121214' : '#ffffff',
+                color: temaOscuro ? '#f8fafc' : '#1f2937',
+                confirmButtonColor: '#1599eb',
+            });
+        } else {
+            window.alert('El navegador bloqueó la pestaña del examen. Permite ventanas emergentes para HCEApp e inténtalo nuevamente.');
+        }
+    });
+};
+
 const obtenerPanelHistoriaClinicaConCambios = () => document.querySelector('[data-emergency-unsaved-changes="true"]');
 
 const marcarPanelHistoriaClinicaComoEditado = (elemento) => {
@@ -792,6 +829,7 @@ const inicializarAplicacion = () => {
     prepararConfirmacionesCatalogo();
     prepararAutocompletados();
     prepararVisorLaboratorioPdf();
+    prepararVisorOrdenWorklist();
     prepararProteccionSalidaHistoriaClinica();
     repararIconosAccionesCatalogo();
 };

@@ -228,6 +228,64 @@
             padding-top: 6px;
             text-align: right;
         }
+
+        .signature-page {
+            page-break-before: always;
+            page-break-inside: avoid;
+            min-height: 680px;
+            position: relative;
+        }
+
+        .signature-page .section-body {
+            padding: 24px 28px;
+        }
+
+        .signature-intro {
+            color: #415a77;
+            font-size: 10px;
+            margin-bottom: 42px;
+            text-align: center;
+        }
+
+        .signature-content {
+            margin: 0 auto;
+            text-align: center;
+            width: 330px;
+        }
+
+        .signature-image {
+            display: block;
+            height: 120px;
+            margin: 0 auto 10px;
+            object-fit: contain;
+            object-position: center;
+            width: 320px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #152238;
+            margin: 0 auto 8px;
+            width: 300px;
+        }
+
+        .signature-name {
+            color: #152238;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .signature-details {
+            color: #415a77;
+            font-size: 8px;
+            margin-top: 3px;
+        }
+
+        .signature-missing {
+            color: #64748b;
+            font-size: 9px;
+            font-style: italic;
+            margin: 44px 0 20px;
+        }
     </style>
 </head>
 <body>
@@ -703,6 +761,26 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </section>
+
+    <section class="section signature-page">
+        <h2 class="section-title">Firma del profesional responsable</h2>
+        <div class="section-body">
+            <p class="signature-intro">Responsable del egreso de la atención</p>
+            <div class="signature-content">
+                @if ($firmaImagen)
+                    <img class="signature-image" src="{{ $firmaImagen }}" alt="Firma del profesional responsable">
+                @else
+                    <p class="signature-missing">Firma no registrada</p>
+                @endif
+
+                <div class="signature-line"></div>
+                <div class="signature-name">{{ $profesional($atencion->profesionalEgreso) }}</div>
+                <div class="signature-details">
+                    Fecha de egreso: {{ $fecha($atencion->fecha_hora_egreso) }}
+                </div>
+            </div>
         </div>
     </section>
 

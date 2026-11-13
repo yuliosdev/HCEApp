@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GestionClinica\RegistroClinicoController;
 use App\Http\Controllers\GestionClinica\RegistrosClinicosArchivoController;
 use App\Http\Controllers\HistoriaClinica\AtencionesPacienteController;
+use App\Http\Controllers\HistoriaClinica\CsrAtencionAmbulatoriaPdfController;
 use App\Http\Controllers\HistoriaClinica\HcEmergenciaAltaPdfController;
 use App\Http\Controllers\HistoriaClinica\HcEmergenciaExamenesPdfController;
 use App\Http\Controllers\HistoriaClinica\HcEmergenciaLaboratorioPdfController;
@@ -127,6 +128,11 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/historia-clinica/atenciones-paciente/{paciente}/historia-clinica', HistoriaClinicaPacienteController::class)
         ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
         ->name('historia-clinica.atenciones-paciente.historia');
+
+    Route::get('/historia-clinica/atenciones-paciente/{paciente}/ambulatoria/{numero}/pdf', CsrAtencionAmbulatoriaPdfController::class)
+        ->whereNumber('numero')
+        ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)
+        ->name('historia-clinica.atenciones-paciente.ambulatoria.pdf');
 
     Route::get('/historia-clinica/atenciones-paciente/{paciente}/emergencia/nuevo', [HcEmergenciaPanelController::class, 'nuevo'])
         ->middleware('can:'.Permisos::HISTORIA_CLINICA_VER)

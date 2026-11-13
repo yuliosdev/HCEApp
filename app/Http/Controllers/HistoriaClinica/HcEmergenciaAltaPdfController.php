@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HcEmergencia;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class HcEmergenciaAltaPdfController extends Controller
 {
@@ -25,6 +26,7 @@ class HcEmergenciaAltaPdfController extends Controller
         $logoPath = public_path('images/login/LOGOC.jpg');
         $fallbackLogoPath = public_path('images/login/logo-default.png');
         $logoDataUri = $this->logoDataUri(is_file($logoPath) ? $logoPath : $fallbackLogoPath);
+        $firmaDataUri = $this->storedImageDataUri($atencion->profesionalEgreso?->firma_path);
 
         $filename = Str::slug('ficha alta paciente hce '.$atencion->id).'.pdf';
 
@@ -32,6 +34,7 @@ class HcEmergenciaAltaPdfController extends Controller
             'atencion' => $atencion,
             'paciente' => $atencion->paciente,
             'logoDataUri' => $logoDataUri,
+            'firmaDataUri' => $firmaDataUri,
             'generadoEn' => now(),
         ])
             ->setPaper('a4')
@@ -47,5 +50,16 @@ class HcEmergenciaAltaPdfController extends Controller
         $mime = mime_content_type($path) ?: 'image/jpeg';
 
         return 'data:'.$mime.';base64,'.base64_encode((string) file_get_contents($path));
+    }
+
+    private function storedImageDataUri(?string $path): ?string
+    {
+        if (blank($path) || ! Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        $mime = Storage::disk('public')->mimeType($path) ?: 'image/png';
+
+        return 'data:'.$mime.';base64,'.base64_encode(Storage::disk('public')->get($path));
     }
 }
