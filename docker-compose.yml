@@ -1,0 +1,81 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        user: sistemasti
+        uid: 1000
+    image: hceapp-app
+    container_name: hceapp-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - hceapp-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: nginx:alpine
+    container_name: hceapp-web
+    restart: unless-stopped
+    ports:
+      # Puerto 8080 en el host para no entrar en conflicto con el Apache local (puerto 80)
+      - "8080:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - hceapp-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: hceapp-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: hceapp
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: hceapp_user
+      MYSQL_PASSWORD: secretpassword
+    ports:
+      # Puerto 3307 en el host para no entrar en conflicto con el MySQL local (puerto 3306)
+      - "3307:3306"
+    volumes:
+      - hceapp-dbdata:/var/lib/mysql
+    networks:
+      - hceapp-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  vite:
+    image: hceapp-app
+    container_name: hceapp-vite
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    ports:
+      - "5173:5173"
+    command: npm run dev -- --host
+    networks:
+      - hceapp-network
+    depends_on:
+      - app
+
+volumes:
+  hceapp-dbdata:
+    driver: local
+
+networks:
+  hceapp-network:
+    driver: bridge
