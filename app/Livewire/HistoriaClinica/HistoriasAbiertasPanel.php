@@ -6,6 +6,7 @@ use App\Enums\ColorTriaje;
 use App\Enums\EstadoAtencion;
 use App\Enums\SiNo;
 use App\Enums\TipoDiagnostico;
+use App\Models\Auditoria;
 use App\Models\HcEmergencia;
 use App\Models\IngresoDiagnostico;
 use App\Models\Paciente;
@@ -38,6 +39,24 @@ class HistoriasAbiertasPanel extends Component
     public int $porPagina = 5;
 
     public bool $modalNuevaHistoriaAbierto = false;
+
+    public bool $modalAuditoriaAbierto = false;
+
+    public ?int $auditoriaEditandoId = null;
+
+    public ?int $auditoriaAtencionId = null;
+
+    public string $auditoriaBusqueda = '';
+
+    /** @var array<string, mixed> */
+    public array $auditoriaForm = [
+        'fecha_hora_inicio' => '',
+        'datos_incompletos' => [],
+        'observaciones' => '',
+        'usuario_id' => null,
+        'estado' => 'Pendiente',
+        'fecha_hora_fin' => '',
+    ];
 
     /** @var array<string, mixed> */
     public array $nuevaHistoriaForm = [
@@ -96,6 +115,106 @@ class HistoriasAbiertasPanel extends Component
     {
         $this->modalNuevaHistoriaAbierto = false;
         $this->resetValidation();
+    }
+
+    public function abrirAuditoria(int $atencionId): void
+    {
+        abort_unless(Auth::user()?->can(\App\Support\Seguridad\Permisos::OBSERVACIONES_HCE), 403);
+
+        $atencion = $this->buscarAtencion($atencionId);
+        $auditoria = $atencion->auditoriaActual;
+
+        $this->auditoriaAtencionId = $atencion->id;
+        $this->auditoriaEditandoId = $auditoria?->id;
+        $this->auditoriaForm = [
+            'fecha_hora_inicio' => $auditoria?->fecha_hora_inicio?->format('Y-m-d\TH:i') ?: now()->format('Y-m-d\TH:i'),
+            'datos_incompletos' => $auditoria?->datos_incompletos ?: [],
+            'observaciones' => $auditoria?->observaciones ?: '',
+            'usuario_id' => $auditoria?->usuario_id ?: Auth::id(),
+            'estado' => $auditoria?->estado ?: 'Pendiente',
+            'fecha_hora_fin' => $auditoria?->fecha_hora_fin?->format('Y-m-d\TH:i') ?: '',
+        ];
+        $this->auditoriaBusqueda = '';
+        $this->resetValidation();
+        $this->modalAuditoriaAbierto = true;
+    }
+
+    public function cerrarModalAuditoria(): void
+    {
+        $this->modalAuditoriaAbierto = false;
+        $this->auditoriaEditandoId = null;
+        $this->auditoriaAtencionId = null;
+        $this->auditoriaBusqueda = '';
+        $this->resetValidation();
+    }
+
+    public function quitarDatoIncompleto(string $item): void
+    {
+        $this->auditoriaForm['datos_incompletos'] = array_values(array_filter(
+            $this->auditoriaForm['datos_incompletos'] ?? [],
+            fn (string $seleccionado): bool => $seleccionado !== $item
+        ));
+    }
+
+    public function alternarDatoIncompleto(string $item): void
+    {
+        $seleccionados = $this->auditoriaForm['datos_incompletos'] ?? [];
+
+        if (in_array($item, $seleccionados, true)) {
+            $this->quitarDatoIncompleto($item);
+
+            return;
+        }
+
+        $this->auditoriaForm['datos_incompletos'] = [...$seleccionados, $item];
+    }
+
+    public function agregarFraseAuditoria(string $frase): void
+    {
+        $observaciones = trim((string) ($this->auditoriaForm['observaciones'] ?? ''));
+        $this->auditoriaForm['observaciones'] = trim($observaciones.' '.rtrim($frase, '.').'.');
+    }
+
+    public function guardarAuditoria(): void
+    {
+        abort_unless(Auth::user()?->can(\App\Support\Seguridad\Permisos::OBSERVACIONES_HCE), 403);
+
+        $estados = ['Pendiente', 'Observada', 'Completada'];
+        $usuariosPermitidos = $this->usuariosAuditoria()->pluck('id')->all();
+        $datos = $this->validate([
+            'auditoriaForm.fecha_hora_inicio' => ['required', 'date'],
+            'auditoriaForm.datos_incompletos' => ['nullable', 'array'],
+            'auditoriaForm.datos_incompletos.*' => ['string', Rule::in($this->itemsAuditoria())],
+            'auditoriaForm.observaciones' => ['nullable', 'string'],
+            'auditoriaForm.usuario_id' => ['required', 'integer', Rule::in($usuariosPermitidos)],
+            'auditoriaForm.estado' => ['required', Rule::in($estados)],
+            'auditoriaForm.fecha_hora_fin' => ['nullable', 'date', 'after_or_equal:auditoriaForm.fecha_hora_inicio'],
+        ], [], [
+            'auditoriaForm.fecha_hora_inicio' => 'fecha/hora de inicio de auditoria',
+            'auditoriaForm.datos_incompletos' => 'datos incompletos',
+            'auditoriaForm.observaciones' => 'observaciones',
+            'auditoriaForm.usuario_id' => 'usuario auditor',
+            'auditoriaForm.estado' => 'estado de auditoria',
+            'auditoriaForm.fecha_hora_fin' => 'fecha/hora de fin de auditoria',
+        ])['auditoriaForm'];
+
+        $atencion = HcEmergencia::query()->findOrFail($this->auditoriaAtencionId ?? 0);
+        $registro = $this->auditoriaEditandoId
+            ? Auditoria::query()->where('hc_emergencia_id', $atencion->id)->findOrFail($this->auditoriaEditandoId)
+            : new Auditoria(['hc_emergencia_id' => $atencion->id, 'registrado_por' => Auth::id()]);
+
+        $registro->forceFill([
+            'fecha_hora_inicio' => $datos['fecha_hora_inicio'],
+            'datos_incompletos' => $datos['datos_incompletos'] ?: [],
+            'observaciones' => $datos['observaciones'] ?: null,
+            'usuario_id' => $datos['usuario_id'],
+            'estado' => $datos['estado'],
+            'fecha_hora_fin' => $datos['fecha_hora_fin'] ?: null,
+            'actualizado_por' => Auth::id(),
+        ])->save();
+
+        $this->cerrarModalAuditoria();
+        flash()->success('Auditoria HCE guardada correctamente.', [], 'Auditoria HCE');
     }
 
     public function updatedProfesionalBusqueda(): void
@@ -232,6 +351,7 @@ class HistoriasAbiertasPanel extends Component
                 'profesionalResponsable',
                 'prioridad',
                 'diagnosticosIngreso.diagnosticoCie10',
+                'auditoriaActual.usuario',
             ])
             ->orderByDesc('fecha_hora_atencion')
             ->orderByDesc('id')
@@ -246,6 +366,9 @@ class HistoriasAbiertasPanel extends Component
             'profesionalesNuevaHistoria' => $this->profesionalesNuevaHistoria(),
             'pacientesNuevaHistoria' => $this->pacientesNuevaHistoria(),
             'tiposEmergencia' => $this->tiposEmergencia(),
+            'usuariosAuditoria' => $this->usuariosAuditoria(),
+            'itemsAuditoria' => $this->itemsAuditoriaVisibles(),
+            'estadosAuditoria' => ['Pendiente', 'Observada', 'Completada'],
         ]);
     }
 
@@ -345,6 +468,47 @@ class HistoriasAbiertasPanel extends Component
             EstadoAtencion::Abierta->value => 'Abiertas',
             EstadoAtencion::Cerrada->value => 'Cerradas',
         ];
+    }
+
+    private function usuariosAuditoria(): Collection
+    {
+        return \App\Models\User::query()
+            ->where('activo', true)
+            ->whereHas('roles', fn ($consulta) => $consulta->where('name', 'Historias Clínicas'))
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+    }
+
+    /** @return array<int, string> */
+    private function itemsAuditoria(): array
+    {
+        return [
+            'Datos de la atención',
+            'Triaje',
+            'Anamnesis',
+            'Exámenes Clínicos',
+            'Dx y Evoluciones',
+            'Órdenes y Laboratorio',
+            'Fármacos y Procedimientos',
+            'Notas enfermería',
+            'Interconsultas',
+            'Movimientos y Referencias',
+            'Egresos',
+        ];
+    }
+
+    private function itemsAuditoriaVisibles(): array
+    {
+        $busqueda = Str::lower(trim($this->auditoriaBusqueda));
+
+        if ($busqueda === '') {
+            return $this->itemsAuditoria();
+        }
+
+        return array_values(array_filter(
+            $this->itemsAuditoria(),
+            fn (string $item): bool => Str::contains(Str::lower($item), $busqueda)
+        ));
     }
 
     private function buscarAtencion(int $atencionId): HcEmergencia

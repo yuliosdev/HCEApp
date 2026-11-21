@@ -122,13 +122,16 @@
                         <th>DX Principal</th>
                         <th>Triaje</th>
                         <th>Estado</th>
+                        @can(\App\Support\Seguridad\Permisos::OBSERVACIONES_HCE)
+                            <th>Auditoría</th>
+                        @endcan
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if ($atenciones->isEmpty())
                         <tr>
-                            <td colspan="10" class="patient-history-empty">
+                            <td colspan="{{ auth()->user()?->can(\App\Support\Seguridad\Permisos::OBSERVACIONES_HCE) ? 11 : 10 }}" class="patient-history-empty">
                                 <iconify-icon icon="lucide:clipboard-x" aria-hidden="true"></iconify-icon>
                                 No se encontraron historias clinicas para los filtros seleccionados.
                             </td>
@@ -198,6 +201,21 @@
                                     {{ $abierta ? 'Abierta' : 'Cerrada' }}
                                 </span>
                             </td>
+                            @can(\App\Support\Seguridad\Permisos::OBSERVACIONES_HCE)
+                                @php($auditoria = $atencion->auditoriaActual)
+                                @php($estadoAuditoria = $auditoria?->estado ?: 'Pendiente')
+                                <td>
+                                    <button
+                                        type="button"
+                                        class="patient-history-audit-button is-{{ strtolower($estadoAuditoria) }}"
+                                        wire:click="abrirAuditoria({{ $atencion->id }})"
+                                        title="Auditar HCE ({{ $estadoAuditoria }})"
+                                    >
+                                        <iconify-icon icon="lucide:clipboard-check" aria-hidden="true"></iconify-icon>
+                                        Auditar HCE <span>({{ $estadoAuditoria }})</span>
+                                    </button>
+                                </td>
+                            @endcan
                             <td>
                                 <nav class="patient-history-row-actions" aria-label="Acciones de atencion {{ $atencion->numero_atencion ?: $atencion->id }}">
                                     @if ($this->puedeEditarAtencion($atencion))
@@ -333,6 +351,157 @@
                         </button>
                     </footer>
                 </form>
+            </section>
+        </div>
+    @endif
+
+    @if ($modalAuditoriaAbierto && $auditoriaAtencionId)
+        @php($atencionAuditoria = $atenciones->getCollection()->firstWhere('id', $auditoriaAtencionId) ?: \App\Models\HcEmergencia::with(['paciente', 'profesionalResponsable', 'profesionalEgreso'])->find($auditoriaAtencionId))
+        <div class="catalog-modal-backdrop open-history-audit-backdrop" role="presentation">
+            <section class="catalog-modal patient-history-modal open-history-audit-modal" role="dialog" aria-modal="true" aria-labelledby="audit-hce-title">
+                <header>
+                    <div>
+                        <p>Control de calidad clínica</p>
+                        <h2 id="audit-hce-title">
+                            <iconify-icon icon="lucide:clipboard-check" aria-hidden="true"></iconify-icon>
+                            Auditar HCE
+                        </h2>
+                    </div>
+                    <button type="button" class="emergency-close-icon-action" wire:click="cerrarModalAuditoria" title="Cerrar" aria-label="Cerrar">
+                        <iconify-icon icon="lucide:x" aria-hidden="true"></iconify-icon>
+                    </button>
+                </header>
+
+                @if ($atencionAuditoria)
+                    <form class="open-history-audit-form" wire:submit.prevent="guardarAuditoria">
+                        <div class="open-history-audit-scroll">
+                            <div class="open-history-audit-accordions">
+                            <details class="open-history-audit-section">
+                                <summary>
+                                    <span><strong>Datos de la historia</strong><small>{{ $atencionAuditoria->paciente?->nombre ?: ($atencionAuditoria->alias ?: 'Sin registro') }} · {{ $atencionAuditoria->tipo ?: 'Emergencia' }} · {{ $atencionAuditoria->estado_atencion?->value ?: $atencionAuditoria->estado_atencion }}</small></span>
+                                    <iconify-icon icon="lucide:chevron-down" aria-hidden="true"></iconify-icon>
+                                </summary>
+                                <div class="open-history-audit-history-grid">
+                                    @foreach ([
+                                        'Edad' => $atencionAuditoria->paciente?->fecha_nacimiento?->age ?? '--',
+                                        'Sexo' => $atencionAuditoria->paciente?->sexo ?: '--',
+                                        'Tipo' => $atencionAuditoria->tipo ?: 'Emergencia',
+                                        'N.º atención' => $atencionAuditoria->numero_atencion ?: '--',
+                                        'ID externo' => $atencionAuditoria->paciente?->id_paciente_externo ?: '--',
+                                        'Ingreso' => $atencionAuditoria->fecha_hora_atencion?->format('d/m/Y H:i') ?: '--',
+                                        'Profesional inicio' => $atencionAuditoria->profesionalResponsable?->nombres ?: '--',
+                                        'Egreso' => $atencionAuditoria->fecha_hora_egreso?->format('d/m/Y H:i') ?: '--',
+                                        'Profesional egreso' => $atencionAuditoria->profesionalEgreso?->nombres ?: '--',
+                                    ] as $label => $valor)
+                                        <div><span>{{ $label }}</span><strong>{{ $valor }}</strong></div>
+                                    @endforeach
+                                </div>
+                            </details>
+
+                            <details class="open-history-audit-section" open>
+                                <summary>
+                                    <span><strong>Hallazgos</strong><small>{{ count($auditoriaForm['datos_incompletos'] ?? []) }} sección(es) incompleta(s)</small></span>
+                                    <iconify-icon icon="lucide:chevron-down" aria-hidden="true"></iconify-icon>
+                                </summary>
+                                <div class="open-history-audit-section-body">
+                                    <fieldset>
+                                        <legend>Datos incompletos</legend>
+                                        <div class="open-history-audit-selection">
+                                            @forelse ($auditoriaForm['datos_incompletos'] ?? [] as $seleccionado)
+                                                <button type="button" wire:click="quitarDatoIncompleto('{{ $seleccionado }}')" class="open-history-audit-chip" title="Quitar {{ $seleccionado }}">
+                                                    {{ $seleccionado }} <iconify-icon icon="lucide:x" aria-hidden="true"></iconify-icon>
+                                                </button>
+                                            @empty
+                                                <span class="open-history-audit-selection-placeholder">Selecciona las secciones incompletas</span>
+                                            @endforelse
+                                            <input type="search" wire:model.live.debounce.250ms="auditoriaBusqueda" placeholder="Buscar sección..." aria-label="Buscar sección incompleta">
+                                        </div>
+                                        <div class="open-history-audit-list" role="listbox" aria-label="Secciones incompletas" aria-multiselectable="true">
+                                            @forelse ($itemsAuditoria as $itemAuditoria)
+                                                @php($itemSeleccionado = in_array($itemAuditoria, $auditoriaForm['datos_incompletos'] ?? [], true))
+                                                <button
+                                                    type="button"
+                                                    role="option"
+                                                    aria-selected="{{ $itemSeleccionado ? 'true' : 'false' }}"
+                                                    class="open-history-audit-list-item {{ $itemSeleccionado ? 'is-selected' : '' }}"
+                                                    wire:key="auditoria-item-{{ md5($itemAuditoria) }}"
+                                                    wire:click="alternarDatoIncompleto('{{ $itemAuditoria }}')"
+                                                >
+                                                    <span>{{ $itemSeleccionado ? '−' : '+' }} {{ $itemAuditoria }}</span>
+                                                    @if ($itemSeleccionado)
+                                                        <iconify-icon icon="lucide:check" aria-hidden="true"></iconify-icon>
+                                                    @endif
+                                                </button>
+                                            @empty
+                                                <p class="open-history-audit-no-results">No se encontraron secciones.</p>
+                                            @endforelse
+                                        </div>
+                                        @error('auditoriaForm.datos_incompletos.*') <small>{{ $message }}</small> @enderror
+                                    </fieldset>
+                                    <label class="is-full">
+                                        <span>Observaciones</span>
+                                        <div class="open-history-audit-suggestions" role="group" aria-label="Frases rápidas">
+                                            @foreach (['Falta firma del profesional', 'Registro ilegible', 'Sin hora de registro', 'Diagnóstico sin CIE-10'] as $frase)
+                                                <button type="button" wire:click="agregarFraseAuditoria('{{ $frase }}')">+ {{ $frase }}</button>
+                                            @endforeach
+                                        </div>
+                                        <textarea rows="4" wire:model="auditoriaForm.observaciones" placeholder="Ingrese las observaciones de la auditoría"></textarea>
+                                        @error('auditoriaForm.observaciones') <small>{{ $message }}</small> @enderror
+                                    </label>
+                                </div>
+                            </details>
+
+                            <details class="open-history-audit-section" open>
+                                <summary>
+                                    <span><strong>Cierre</strong><small>Estado: {{ $auditoriaForm['estado'] ?: 'Pendiente' }}</small></span>
+                                    <iconify-icon icon="lucide:chevron-down" aria-hidden="true"></iconify-icon>
+                                </summary>
+                                <div class="open-history-audit-section-body">
+                                    <div class="open-history-audit-grid">
+                                        <label>
+                                            <span>Fecha/Hora de Inicio Auditoría</span>
+                                            <input type="datetime-local" wire:model="auditoriaForm.fecha_hora_inicio">
+                                            @error('auditoriaForm.fecha_hora_inicio') <small>{{ $message }}</small> @enderror
+                                        </label>
+                                        <label>
+                                            <span>Usuario</span>
+                                            <select wire:model="auditoriaForm.usuario_id">
+                                                <option value="">Seleccione</option>
+                                                @foreach ($usuariosAuditoria as $usuarioAuditoria)
+                                                    <option value="{{ $usuarioAuditoria->id }}">{{ $usuarioAuditoria->name }} · {{ $usuarioAuditoria->email }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('auditoriaForm.usuario_id') <small>{{ $message }}</small> @enderror
+                                        </label>
+                                    </div>
+                                    <fieldset class="open-history-audit-states">
+                                        <legend>Estado <em>*</em></legend>
+                                        @foreach ($estadosAuditoria as $estadoAuditoria)
+                                            <label class="is-{{ Str::slug($estadoAuditoria) }}">
+                                                <input type="radio" wire:model="auditoriaForm.estado" value="{{ $estadoAuditoria }}">
+                                                <span><strong>{{ $estadoAuditoria }}</strong><small>{{ ['Pendiente' => 'Pendiente de revisión', 'Observada' => 'Requiere corrección', 'Completada' => 'Sin hallazgos pendientes'][$estadoAuditoria] }}</small></span>
+                                            </label>
+                                        @endforeach
+                                        @error('auditoriaForm.estado') <small>{{ $message }}</small> @enderror
+                                    </fieldset>
+                                    <label>
+                                        <span>Fecha/Hora de Fin Auditoría</span>
+                                        <input type="datetime-local" wire:model="auditoriaForm.fecha_hora_fin">
+                                        @error('auditoriaForm.fecha_hora_fin') <small>{{ $message }}</small> @enderror
+                                    </label>
+                                </div>
+                            </details>
+                            </div>
+                        </div>
+                        <footer>
+                            <button type="button" class="patient-history-secondary" wire:click="cerrarModalAuditoria">Cancelar</button>
+                            <button type="submit" class="catalog-primary-action">
+                                <iconify-icon icon="lucide:save" aria-hidden="true"></iconify-icon>
+                                Guardar auditoría
+                            </button>
+                        </footer>
+                    </form>
+                    @endif
             </section>
         </div>
     @endif

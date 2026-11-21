@@ -4114,6 +4114,561 @@
         transform: none;
     }
 
+    .patient-history-audit-button {
+        align-items: center;
+        appearance: none;
+        border: 1px solid transparent !important;
+        border-radius: 999px;
+        cursor: pointer;
+        display: inline-flex;
+        font-family: var(--hce-font-ui);
+        font-size: 0.72rem;
+        font-weight: 700;
+        gap: 5px;
+        justify-content: center;
+        line-height: 1.2;
+        min-height: 28px;
+        padding: 5px 11px;
+        transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+        white-space: nowrap;
+    }
+
+    .patient-history-audit-button:hover {
+        transform: translateY(-1px);
+    }
+
+    .patient-history-audit-button.is-pendiente {
+        background: #fee2e280 !important;
+        border-color: #ef4444 !important;
+        color: #dc2626 !important;
+    }
+
+    .patient-history-audit-button.is-observada {
+        background: #fef3c780 !important;
+        border-color: #f59e0b !important;
+        color: #b45309 !important;
+    }
+
+    .patient-history-audit-button.is-completada {
+        background: #dcfce79c !important;
+        border-color: #22c55e !important;
+        color: #15803d !important;
+    }
+
+    .open-history-audit-modal {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        max-height: calc(100dvh - 28px);
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .open-history-audit-modal > header {
+        flex: 0 0 auto;
+    }
+
+    .open-history-audit-form {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .open-history-audit-scroll {
+        flex: 0 1 auto;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .open-history-audit-modal:has(.open-history-audit-section[open]) .open-history-audit-scroll {
+        flex: 1 1 auto;
+        height: min(680px, calc(100dvh - 190px));
+        max-height: calc(100dvh - 190px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-color: var(--hce-color-muted) transparent;
+        scrollbar-width: thin;
+    }
+
+    .open-history-audit-scroll::-webkit-scrollbar {
+        width: 9px;
+    }
+
+    .open-history-audit-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .open-history-audit-scroll::-webkit-scrollbar-thumb {
+        background: color-mix(in srgb, var(--hce-color-muted) 72%, transparent);
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background-clip: padding-box;
+    }
+
+    .open-history-audit-accordions {
+        display: grid;
+        gap: 8px;
+        padding: 14px 18px 4px;
+    }
+
+    .open-history-audit-section {
+        background: var(--hce-app-panel-bg);
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 9px;
+        overflow: hidden;
+    }
+
+    .open-history-audit-section > summary {
+        align-items: center;
+        background: var(--hce-app-panel-bg);
+        color: var(--hce-app-heading);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        list-style: none;
+        min-height: 54px;
+        padding: 10px 14px;
+    }
+
+    .open-history-audit-section > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .open-history-audit-section > summary:focus-visible,
+    .open-history-audit-selection input:focus-visible,
+    .open-history-audit-suggestions button:focus-visible,
+    .open-history-audit-chip:focus-visible,
+    .open-history-audit-states label:has(input:focus-visible) {
+        outline: 3px solid color-mix(in srgb, var(--hce-color-highlight) 35%, transparent);
+        outline-offset: -2px;
+    }
+
+    .open-history-audit-section > summary > span {
+        display: grid;
+        gap: 2px;
+    }
+
+    .open-history-audit-section > summary strong {
+        font-size: 0.86rem;
+    }
+
+    .open-history-audit-section > summary small {
+        color: var(--hce-app-muted);
+        font-size: 0.72rem;
+    }
+
+    .open-history-audit-section > summary iconify-icon {
+        color: var(--hce-app-muted);
+        font-size: 16px;
+        transition: transform 0.18s ease;
+    }
+
+    .open-history-audit-section[open] > summary {
+        background: color-mix(in srgb, var(--hce-color-soft) 68%, var(--hce-app-panel-bg));
+    }
+
+    .open-history-audit-section[open] > summary iconify-icon {
+        transform: rotate(180deg);
+    }
+
+    .open-history-audit-section-body {
+        display: grid;
+        gap: 16px;
+        padding: 14px;
+    }
+
+    .open-history-audit-history-grid {
+        display: grid;
+        gap: 12px 20px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 14px;
+    }
+
+    .open-history-audit-history-grid div {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .open-history-audit-history-grid span {
+        color: var(--hce-app-muted);
+        font-size: 0.72rem;
+    }
+
+    .open-history-audit-history-grid strong {
+        color: var(--hce-app-heading);
+        font-size: 0.78rem;
+        overflow-wrap: anywhere;
+    }
+
+    .open-history-audit-form label,
+    .open-history-audit-form fieldset {
+        color: var(--hce-app-heading);
+        display: grid;
+        font-family: var(--hce-font-ui);
+        font-size: 0.8rem;
+        font-weight: 600;
+        gap: 7px;
+        min-width: 0;
+    }
+
+    .open-history-audit-form input[type='datetime-local'],
+    .open-history-audit-form select,
+    .open-history-audit-form textarea {
+        background: #ffffff;
+        border: 1px solid color-mix(in srgb, var(--hce-app-divider) 88%, var(--hce-color-muted) 12%);
+        border-radius: 8px;
+        color: #0f172a;
+        font-family: var(--hce-font-ui);
+        font-size: 0.88rem;
+        min-height: 40px;
+        outline: none;
+        padding: 9px 12px;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        width: 100%;
+    }
+
+    .open-history-audit-form select {
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+        background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+        background-repeat: no-repeat;
+        background-size: 5px 5px, 5px 5px;
+        padding-right: 36px;
+    }
+
+    .open-history-audit-form textarea {
+        min-height: 92px;
+        resize: vertical;
+    }
+
+    .open-history-audit-form input[type='datetime-local']:focus,
+    .open-history-audit-form select:focus,
+    .open-history-audit-form textarea:focus {
+        border-color: var(--hce-color-highlight);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
+    }
+
+    .open-history-audit-form small,
+    .open-history-audit-form fieldset > small {
+        color: #ef4444;
+        font-size: 0.74rem;
+        font-weight: 600;
+    }
+
+    .open-history-audit-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .open-history-audit-grid .is-full {
+        grid-column: 1 / -1;
+    }
+
+    .open-history-audit-grid label > span,
+    .open-history-audit-section-body legend,
+    .open-history-audit-states legend {
+        color: var(--hce-app-heading);
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .open-history-audit-list {
+        background: #ffffff;
+        border: 1px solid var(--hce-color-border);
+        border-radius: 8px;
+        display: grid;
+        gap: 0;
+        max-height: 132px;
+        overflow-y: auto;
+        padding: 3px;
+    }
+
+    .open-history-audit-list-item {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--hce-app-divider) 62%, transparent);
+        color: var(--hce-app-text);
+        cursor: pointer;
+        display: flex;
+        font: inherit;
+        gap: 7px;
+        justify-content: space-between;
+        min-height: 42px;
+        padding: 8px 10px;
+        text-align: left;
+        width: 100%;
+    }
+
+    .open-history-audit-list-item:last-child {
+        border-bottom: 0;
+    }
+
+    .open-history-audit-list-item:hover,
+    .open-history-audit-list-item:focus-visible {
+        background: color-mix(in srgb, var(--hce-color-highlight) 10%, transparent);
+        outline: none;
+    }
+
+    .open-history-audit-list-item.is-selected {
+        background: color-mix(in srgb, var(--hce-color-accent) 12%, transparent);
+        color: var(--hce-color-accent);
+        font-weight: 700;
+    }
+
+    .open-history-audit-list-item iconify-icon {
+        color: var(--hce-color-accent);
+        flex: 0 0 auto;
+        font-size: 16px;
+    }
+
+    .open-history-audit-list-item span {
+        font-size: 0.77rem;
+    }
+
+    .open-history-audit-selection {
+        align-items: center;
+        background: var(--hce-app-panel-bg);
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-height: 42px;
+        padding: 5px 7px;
+    }
+
+    .open-history-audit-selection input {
+        background: transparent;
+        border: 0;
+        color: var(--hce-app-text);
+        flex: 1 1 140px;
+        min-height: 28px;
+        min-width: 120px;
+        outline: none;
+        padding: 4px 6px;
+    }
+
+    .open-history-audit-chip {
+        align-items: center;
+        background: color-mix(in srgb, var(--hce-color-accent) 12%, transparent);
+        border: 0;
+        border-radius: 6px;
+        color: var(--hce-color-accent);
+        display: inline-flex;
+        font-size: 0.72rem;
+        gap: 5px;
+        min-height: 28px;
+        padding: 4px 8px;
+    }
+
+    .open-history-audit-chip iconify-icon {
+        font-size: 13px;
+    }
+
+    .open-history-audit-selection-placeholder,
+    .open-history-audit-no-results {
+        color: var(--hce-app-muted);
+        font-size: 0.74rem;
+        padding: 4px 6px;
+    }
+
+    .open-history-audit-no-results {
+        grid-column: 1 / -1;
+        margin: 0;
+    }
+
+    .open-history-audit-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .open-history-audit-suggestions button {
+        background: transparent;
+        border: 1px dashed var(--hce-app-divider);
+        border-radius: 999px;
+        color: var(--hce-app-text);
+        font-size: 0.72rem;
+        min-height: 29px;
+        padding: 4px 9px;
+    }
+
+    .open-history-audit-suggestions button:hover {
+        background: var(--hce-color-soft);
+        border-color: var(--hce-color-highlight);
+    }
+
+    .open-history-audit-states {
+        border: 0;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .open-history-audit-states legend em {
+        color: #ef4444;
+        font-style: normal;
+    }
+
+    .open-history-audit-states label {
+        align-items: center;
+        border: 1px solid var(--hce-app-divider);
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        gap: 9px;
+        min-height: 42px;
+        padding: 7px 10px;
+    }
+
+    .open-history-audit-states label:hover {
+        border-color: var(--hce-color-highlight);
+    }
+
+    .open-history-audit-states label:has(input:checked) {
+        background: color-mix(in srgb, var(--hce-color-soft) 72%, transparent);
+        border-color: var(--hce-color-highlight);
+    }
+
+    .open-history-audit-states label.is-pendiente:has(input:checked) { border-color: #ef4444; background: #fee2e280; }
+    .open-history-audit-states label.is-observada:has(input:checked) { border-color: #f59e0b; background: #fef3c780; }
+    .open-history-audit-states label.is-completada:has(input:checked) { border-color: #22c55e; background: #dcfce79c; }
+
+    .open-history-audit-states input {
+        accent-color: var(--hce-color-accent);
+        height: 18px;
+        width: 18px;
+    }
+
+    .open-history-audit-states label > span {
+        display: flex;
+        flex: 1;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .open-history-audit-states label > span strong { color: var(--hce-app-heading); }
+    .open-history-audit-states label > span small { color: var(--hce-app-muted); font-weight: 500; }
+
+    .open-history-audit-form footer {
+        align-items: center;
+        border-top: 1px solid var(--hce-app-divider);
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 8px;
+        padding: 14px 18px 16px;
+        flex: 0 0 auto;
+    }
+
+    .open-history-audit-form footer button { min-height: 40px; }
+
+    .open-history-audit-form select option {
+        background: #ffffff;
+        color: #0f172a;
+    }
+
+    .theme-dark .patient-history-audit-button.is-pendiente,
+    html[data-applied-theme='dark'] .patient-history-audit-button.is-pendiente {
+        background: #7f1d1d36 !important;
+        border-color: #ff5757 !important;
+        color: #ff8585 !important;
+    }
+
+    .theme-dark .patient-history-audit-button.is-observada,
+    html[data-applied-theme='dark'] .patient-history-audit-button.is-observada {
+        background: #92400e45 !important;
+        border-color: #f59e0b !important;
+        color: #fbbf24 !important;
+    }
+
+    .theme-dark .patient-history-audit-button.is-completada,
+    html[data-applied-theme='dark'] .patient-history-audit-button.is-completada {
+        background: #14532d45 !important;
+        border-color: #22c55e !important;
+        color: #86efac !important;
+    }
+
+    .theme-dark .open-history-audit-form input,
+    .theme-dark .open-history-audit-form select,
+    .theme-dark .open-history-audit-form textarea,
+    html[data-applied-theme='dark'] .open-history-audit-form input,
+    html[data-applied-theme='dark'] .open-history-audit-form select,
+    html[data-applied-theme='dark'] .open-history-audit-form textarea {
+        background: #183052;
+        border-color: #415a77;
+        color: #ffffff;
+    }
+
+    .theme-dark .open-history-audit-section,
+    .theme-dark .open-history-audit-section > summary,
+    .theme-dark .open-history-audit-selection,
+    html[data-applied-theme='dark'] .open-history-audit-section,
+    html[data-applied-theme='dark'] .open-history-audit-section > summary,
+    html[data-applied-theme='dark'] .open-history-audit-selection {
+        background: #101827;
+        border-color: #415a77;
+    }
+
+    .theme-dark .open-history-audit-section[open] > summary,
+    html[data-applied-theme='dark'] .open-history-audit-section[open] > summary {
+        background: #183052;
+    }
+
+    .theme-dark .open-history-audit-selection input,
+    html[data-applied-theme='dark'] .open-history-audit-selection input {
+        color: #ffffff;
+    }
+
+    .theme-dark .open-history-audit-states label.is-pendiente:has(input:checked),
+    html[data-applied-theme='dark'] .open-history-audit-states label.is-pendiente:has(input:checked) { background: #7f1d1d36; }
+    .theme-dark .open-history-audit-states label.is-observada:has(input:checked),
+    html[data-applied-theme='dark'] .open-history-audit-states label.is-observada:has(input:checked) { background: #92400e45; }
+    .theme-dark .open-history-audit-states label.is-completada:has(input:checked),
+    html[data-applied-theme='dark'] .open-history-audit-states label.is-completada:has(input:checked) { background: #14532d45; }
+
+    .theme-dark .open-history-audit-form input::placeholder,
+    .theme-dark .open-history-audit-form textarea::placeholder,
+    html[data-applied-theme='dark'] .open-history-audit-form input::placeholder,
+    html[data-applied-theme='dark'] .open-history-audit-form textarea::placeholder {
+        color: #8ea6c3;
+    }
+
+    .theme-dark .open-history-audit-form select option,
+    html[data-applied-theme='dark'] .open-history-audit-form select option {
+        background: #183052;
+        color: #ffffff;
+    }
+
+    @media (max-width: 720px) {
+        .open-history-audit-modal:has(.open-history-audit-section[open]) .open-history-audit-scroll {
+            height: min(680px, calc(100dvh - 170px));
+            max-height: calc(100dvh - 170px);
+        }
+
+        .open-history-audit-history-grid,
+        .open-history-audit-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .open-history-audit-states label > span { align-items: flex-start; flex-direction: column; gap: 1px; }
+    }
+
+    @media (min-width: 721px) and (max-width: 980px) {
+        .open-history-audit-modal:has(.open-history-audit-section[open]) .open-history-audit-scroll {
+            height: min(680px, calc(100dvh - 170px));
+            max-height: calc(100dvh - 170px);
+        }
+    }
+
     .patient-history-empty {
         color: var(--hce-app-muted) !important;
         padding: 34px 16px !important;

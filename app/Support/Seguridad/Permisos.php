@@ -40,6 +40,8 @@ final class Permisos
 
     public const HISTORIA_CLINICA_CERRAR = 'historia_clinica.cerrar';
 
+    public const OBSERVACIONES_HCE = 'observaciones_hce.ver';
+
     public const CATALOGOS_VER = 'catalogos.ver';
 
     public const CATALOGOS_GESTIONAR = 'catalogos.gestionar';
@@ -90,6 +92,7 @@ final class Permisos
                     ['nombre' => self::HISTORIA_CLINICA_VER, 'descripcion' => 'Ver historias clinicas'],
                     ['nombre' => self::HISTORIA_CLINICA_ABRIR, 'descripcion' => 'Abrir historia clinica de emergencia'],
                     ['nombre' => self::HISTORIA_CLINICA_CERRAR, 'descripcion' => 'Cerrar historia clinica de emergencia'],
+                    ['nombre' => self::OBSERVACIONES_HCE, 'descripcion' => 'Auditar historias clinicas y registrar observaciones'],
                 ],
             ],
             [
@@ -170,6 +173,12 @@ final class Permisos
                 self::DASHBOARD_VER,
                 self::REPORTES_VER,
                 self::AUDITORIA_VER,
+                self::OBSERVACIONES_HCE,
+            ],
+            'Historias Clínicas' => [
+                self::DASHBOARD_VER,
+                self::HISTORIA_CLINICA_VER,
+                self::OBSERVACIONES_HCE,
             ],
         ];
     }

@@ -145,6 +145,16 @@ class HcEmergencia extends Model
         return $this->hasMany(DocumentoAdjunto::class);
     }
 
+    public function auditorias(): HasMany
+    {
+        return $this->hasMany(Auditoria::class);
+    }
+
+    public function auditoriaActual(): HasOne
+    {
+        return $this->hasOne(Auditoria::class)->latestOfMany();
+    }
+
     public function profesionalEgreso(): BelongsTo
     {
         return $this->belongsTo(ProfesionalSalud::class, 'profesional_egreso_id');

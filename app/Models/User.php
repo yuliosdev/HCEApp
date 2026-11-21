@@ -8,6 +8,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -37,6 +38,11 @@ class User extends Authenticatable
     public function profesionalSalud(): BelongsTo
     {
         return $this->belongsTo(ProfesionalSalud::class, 'profesional_salud_id');
+    }
+
+    public function auditorias(): HasMany
+    {
+        return $this->hasMany(Auditoria::class, 'usuario_id');
     }
 
     public function sendPasswordResetNotification($token): void

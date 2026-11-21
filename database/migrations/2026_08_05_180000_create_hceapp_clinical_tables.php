@@ -30,6 +30,7 @@ return new class extends Migration
         }
 
         $tablas = [
+            'auditoria',
             'documentos_adjuntos',
             'alta_medicamentos',
             'egreso_diagnosticos',
@@ -833,5 +834,28 @@ return new class extends Migration
             $table->string('ruta_archivo');
             $this->auditoriaBasica($table);
         });
+
+        Schema::create('auditoria', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('hc_emergencia_id')->constrained('hc_emergencia')->cascadeOnDelete();
+            $table->dateTime('fecha_hora_inicio')->nullable();
+            $table->json('datos_incompletos')->nullable();
+            $table->text('observaciones')->nullable();
+            $table->foreignId('usuario_id')->constrained('users')->restrictOnDelete();
+            $table->enum('estado', $this->estadosAuditoriaHce())->default('Pendiente');
+            $table->dateTime('fecha_hora_fin')->nullable();
+            $this->auditoriaBasica($table, true);
+            $table->index(['hc_emergencia_id', 'estado']);
+        });
+    }
+
+    /**
+     * Estados de auditoria de una historia clinica.
+     *
+     * @return array<int, string>
+     */
+    private function estadosAuditoriaHce(): array
+    {
+        return ['Pendiente', 'Observada', 'Completada'];
     }
 };
