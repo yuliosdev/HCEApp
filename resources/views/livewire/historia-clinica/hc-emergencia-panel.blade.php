@@ -211,16 +211,6 @@
                                     @error('form.fecha_hora_atencion') <small>{{ $message }}</small> @enderror
                                 </label>
                                 <label>
-                                    <span>Topico</span>
-                                    <select wire:model="form.topico" wire:change="limpiarErrorDeCampo('topico')" @disabled($soloLecturaAtencion)>
-                                        <option value="">Seleccione</option>
-                                        @foreach ($topicos as $topico)
-                                            <option value="{{ $topico->value }}">{{ $topico->value }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('form.topico') <small>{{ $message }}</small> @enderror
-                                </label>
-                                <label>
                                     <span>Ambiente</span>
                                     <select wire:model="form.ambiente_id" wire:change="limpiarErrorDeCampo('ambiente_id')" @disabled($soloLecturaAtencion)>
                                         <option value="">Seleccione</option>
@@ -231,7 +221,7 @@
                                     @error('form.ambiente_id') <small>{{ $message }}</small> @enderror
                                 </label>
                                 <label>
-                                    <span>Tipo</span>
+                                    <span>Tipo de Emergencia</span>
                                     <select wire:model="form.tipo" wire:change="limpiarErrorDeCampo('tipo')" @disabled($soloLecturaAtencion)>
                                         @foreach ($tiposAtencion as $tipoAtencion)
                                             <option value="{{ $tipoAtencion }}">{{ $tipoAtencion }}</option>
