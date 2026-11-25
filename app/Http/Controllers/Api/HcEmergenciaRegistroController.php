@@ -10,6 +10,7 @@ use App\Models\ProfesionalSalud;
 use App\Support\GestionClinica\RegistrosClinicos;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -46,43 +47,58 @@ class HcEmergenciaRegistroController extends Controller
 
         $datos = $this->validarDatosClinicos($request);
 
-        $resultado = DB::transaction(function () use ($atencion, $datos): array {
-            $paciente = Paciente::query()->updateOrCreate(
-                ['id_paciente_externo' => $datos['paciente']['id_paciente_externo']],
-                [
-                    'nombre' => $datos['paciente']['nombres'],
-                    'direccion' => $datos['paciente']['direccion'] ?? null,
-                    'telefono' => $datos['paciente']['telefono'] ?? null,
-                    'sexo' => $datos['paciente']['sexo'],
-                    'fecha_nacimiento' => $datos['paciente']['fecha_nacimiento'],
-                    'tipo_documento' => $datos['paciente']['tipo_documento'],
-                    'numero_documento' => $datos['paciente']['numero_documento'],
-                ]
-            );
+        try {
+            $resultado = DB::transaction(function () use ($atencion, $datos): array {
+                $paciente = Paciente::query()->updateOrCreate(
+                    ['id_paciente_externo' => $datos['paciente']['id_paciente_externo']],
+                    [
+                        'nombre' => $datos['paciente']['nombres'],
+                        'direccion' => $datos['paciente']['direccion'] ?? null,
+                        'telefono' => $datos['paciente']['telefono'] ?? null,
+                        'sexo' => $datos['paciente']['sexo'],
+                        'fecha_nacimiento' => $datos['paciente']['fecha_nacimiento'],
+                        'tipo_documento' => $datos['paciente']['tipo_documento'],
+                        'numero_documento' => $datos['paciente']['numero_documento'],
+                    ]
+                );
 
-            $profesional = ProfesionalSalud::query()->updateOrCreate(
-                ['codigo_servicio' => $datos['profesional']['codigo_servicio']],
-                [
-                    'nombres' => $datos['profesional']['nombres'],
-                    'tipo_colegiatura' => $datos['profesional']['tipo_colegiatura'],
-                    'cmp' => $datos['profesional']['cmp'],
-                ]
-            );
+                $profesional = ProfesionalSalud::query()->updateOrCreate(
+                    ['codigo_servicio' => $datos['profesional']['codigo_servicio']],
+                    [
+                        'nombres' => $datos['profesional']['nombres'],
+                        'tipo_colegiatura' => $datos['profesional']['tipo_colegiatura'],
+                        'cmp' => $datos['profesional']['cmp'],
+                    ]
+                );
 
-            $atencion->forceFill([
-                'numero_atencion' => $datos['numero_atencion'],
-                'paciente_id' => $paciente->id,
-                'profesional_salud_id' => $profesional->id,
-                'sin_identificacion' => 'No',
-            ])->save();
+                $atencion->forceFill([
+                    'numero_atencion' => $datos['numero_atencion'],
+                    'paciente_id' => $paciente->id,
+                    'profesional_salud_id' => $profesional->id,
+                    'sin_identificacion' => 'No',
+                ])->save();
 
-            return [
-                'hce_id' => $atencion->id,
-                'numero_atencion' => $atencion->numero_atencion,
-                'paciente_id' => $paciente->id,
-                'profesional_salud_id' => $profesional->id,
-            ];
-        });
+                return [
+                    'hce_id' => $atencion->id,
+                    'numero_atencion' => $atencion->numero_atencion,
+                    'paciente_id' => $paciente->id,
+                    'profesional_salud_id' => $profesional->id,
+                ];
+            });
+        } catch (QueryException $exception) {
+            if ($exception->getCode() !== '23000' && ($exception->errorInfo[1] ?? null) !== 1062) {
+                throw $exception;
+            }
+
+            return response()->json([
+                'message' => 'Los datos del paciente no superan la validación.',
+                'errors' => [
+                    'paciente.numero_documento' => [
+                        'El tipo y número de documento ya están registrados para otro paciente externo.',
+                    ],
+                ],
+            ], 422);
+        }
 
         return response()->json([
             'message' => 'Se actualizaron datos en la atención',
@@ -96,6 +112,10 @@ class HcEmergenciaRegistroController extends Controller
     private function validarDatosClinicos(Request $request): array
     {
         try {
+            $pacienteExistente = Paciente::query()
+                ->where('id_paciente_externo', $request->input('paciente.id_paciente_externo'))
+                ->first(['id']);
+
             return $request->validate([
                 'numero_atencion' => ['required', 'integer', 'min:1'],
                 'paciente' => ['required', 'array'],
@@ -105,7 +125,17 @@ class HcEmergenciaRegistroController extends Controller
                 'paciente.sexo' => ['required', 'string', 'max:30'],
                 'paciente.fecha_nacimiento' => ['required', 'date'],
                 'paciente.tipo_documento' => ['required', 'string', 'max:30'],
-                'paciente.numero_documento' => ['required', 'string', 'max:30'],
+                'paciente.numero_documento' => [
+                    'required',
+                    'string',
+                    'max:30',
+                    Rule::unique('pacientes', 'numero_documento')
+                        ->where(fn ($consulta) => $consulta->where(
+                            'tipo_documento',
+                            $request->input('paciente.tipo_documento')
+                        ))
+                        ->ignore($pacienteExistente?->id),
+                ],
                 'paciente.id_paciente_externo' => ['required', 'integer'],
                 'profesional' => ['required', 'array'],
                 'profesional.nombres' => ['required', 'string', 'max:255'],
@@ -126,6 +156,10 @@ class HcEmergenciaRegistroController extends Controller
                 'profesional.tipo_colegiatura' => 'tipo de colegiatura del profesional',
                 'profesional.cmp' => 'cmp del profesional',
                 'profesional.codigo_servicio' => 'codigo de servicio del profesional',
+            ], [
+                'paciente.fecha_nacimiento.required' => 'La fecha de nacimiento del paciente es obligatoria.',
+                'paciente.fecha_nacimiento.date' => 'La fecha de nacimiento del paciente no tiene un formato válido.',
+                'paciente.numero_documento.unique' => 'El tipo y número de documento ya están registrados para otro paciente externo.',
             ]);
         } catch (ValidationException $exception) {
             throw $exception;
