@@ -4610,9 +4610,11 @@
 
     .theme-dark .open-history-audit-section,
     .theme-dark .open-history-audit-section > summary,
+    .theme-dark .open-history-audit-list,
     .theme-dark .open-history-audit-selection,
     html[data-applied-theme='dark'] .open-history-audit-section,
     html[data-applied-theme='dark'] .open-history-audit-section > summary,
+    html[data-applied-theme='dark'] .open-history-audit-list,
     html[data-applied-theme='dark'] .open-history-audit-selection {
         background: #101827;
         border-color: #415a77;

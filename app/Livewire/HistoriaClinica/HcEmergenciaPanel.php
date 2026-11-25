@@ -2650,9 +2650,12 @@ class HcEmergenciaPanel extends Component
 
         $this->notaEnfermeriaEditandoId = null;
         $this->notaEnfermeriaSoloLectura = false;
+        $profesionalPredeterminado = $this->profesionalPredeterminadoParaNuevoRegistro(
+            $this->form['profesional_salud_id'] ?: null
+        );
         $this->notaEnfermeriaForm = [
             'fecha_hora' => now()->format('Y-m-d\TH:i'),
-            'profesional_salud_id' => $this->form['profesional_salud_id'] ?: '',
+            'profesional_salud_id' => $profesionalPredeterminado ?: '',
             'nota' => '',
             'firma' => '',
         ];
@@ -2996,7 +2999,10 @@ class HcEmergenciaPanel extends Component
             'profesional_salud_id' => $profesionalId,
         ];
 
-        $this->profesionalTriajeBusqueda = $this->etiquetaProfesionalId($profesionalId);
+        $this->form['profesional_triaje_id'] = $this->esProfesionalDeSalud()
+            ? $profesionalId
+            : null;
+        $this->profesionalTriajeBusqueda = $this->etiquetaProfesionalId($this->form['profesional_triaje_id']);
         $this->shockTraumaResponsableBusqueda = '';
         $this->profesionalEgresoBusqueda = $this->etiquetaProfesionalEvolucionId($profesionalId);
         $this->referenciaForm = $this->referenciaVacia();
@@ -3079,9 +3085,13 @@ class HcEmergenciaPanel extends Component
             'profesional_salud_id' => $atencion->profesional_salud_id,
         ];
 
+        if ($this->esProfesionalDeSalud() && blank($this->form['profesional_triaje_id'])) {
+            $this->form['profesional_triaje_id'] = Auth::user()?->profesional_salud_id;
+        }
+
         $this->formOriginal = $this->form;
 
-        $this->profesionalTriajeBusqueda = $this->etiquetaProfesional($atencion->profesionalTriaje);
+        $this->profesionalTriajeBusqueda = $this->etiquetaProfesionalId($this->form['profesional_triaje_id']);
         $this->shockTraumaResponsableBusqueda = $atencion->shock_trauma_responsable ?: '';
         $this->profesionalEgresoBusqueda = $this->etiquetaProfesionalEvolucionId($atencion->profesional_egreso_id);
         $this->cargarReferenciaDeAtencion($atencion);
@@ -3089,6 +3099,15 @@ class HcEmergenciaPanel extends Component
         $this->hayCambiosSinGuardar = false;
         $this->panelSalidaSinGuardarAbierto = false;
         $this->detectandoCambios = true;
+    }
+
+    private function profesionalPredeterminadoParaNuevoRegistro(?int $valorActual = null): ?int
+    {
+        if ($this->esProfesionalDeSalud()) {
+            return Auth::user()?->profesional_salud_id;
+        }
+
+        return $valorActual;
     }
 
     private function validarUsuarioMedico(): void
