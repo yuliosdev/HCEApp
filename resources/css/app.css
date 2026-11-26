@@ -8804,6 +8804,52 @@ a.dashboard-primary-action,
         transition: color 160ms ease;
     }
 
+    .emergency-vital-inline-editable {
+        border-radius: 5px;
+        cursor: text;
+        display: inline-block;
+        min-height: 24px;
+        padding: 3px 5px;
+        transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .emergency-vital-inline-editable:hover {
+        background: color-mix(in srgb, var(--hce-color-highlight) 10%, transparent);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--hce-color-highlight) 28%, transparent) inset;
+    }
+
+    .emergency-vital-inline-control {
+        background: color-mix(in srgb, var(--hce-app-panel-bg), #ffffff 8%);
+        border: 1px solid var(--hce-color-highlight);
+        border-radius: 7px;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hce-color-highlight) 14%, transparent);
+        color: var(--hce-app-text);
+        font: inherit;
+        min-height: 32px;
+        padding: 4px 8px;
+        width: 100%;
+    }
+
+    .theme-dark .emergency-vital-inline-control,
+    html[data-applied-theme='dark'] .emergency-vital-inline-control {
+        background: #183052;
+        border-color: #415a77;
+        color: #ffffff;
+    }
+
+    .theme-dark .emergency-vital-inline-control option,
+    html[data-applied-theme='dark'] .emergency-vital-inline-control option {
+        background: #183052;
+        color: #ffffff;
+    }
+
+    .emergency-vitals-table td > small {
+        color: #dc2626;
+        display: block;
+        font-size: 0.7rem;
+        margin-top: 4px;
+    }
+
     .emergency-vitals-table tbody tr:hover td:not(.emergency-empty-cell) {
         background: color-mix(in srgb, var(--hce-color-soft) 58%, #ffffff 42%);
         border-color: color-mix(in srgb, var(--hce-color-highlight) 28%, var(--hce-app-divider));

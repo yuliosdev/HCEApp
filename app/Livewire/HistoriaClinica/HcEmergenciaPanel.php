@@ -188,6 +188,16 @@ class HcEmergenciaPanel extends Component
 
     public ?int $signoVitalEditandoId = null;
 
+    public ?int $signoVitalInlineEditandoId = null;
+
+    public ?string $signoVitalInlineCampo = null;
+
+    /** @var array<string, mixed> */
+    public array $signoVitalInlineForm = [
+        'signo_vital_id' => '',
+        'valor' => '',
+    ];
+
     public ?string $antecedenteSeccionActiva = null;
 
     public ?int $antecedenteRegistroEditandoId = null;
@@ -1566,23 +1576,67 @@ class HcEmergenciaPanel extends Component
             'signo_vital_id' => '',
             'valor' => '',
         ];
+        $this->limpiarEdicionSignoVitalEnLinea();
         $this->formularioSignoVitalAbierto = true;
         $this->resetValidation(['signoVitalForm.signo_vital_id', 'signoVitalForm.valor']);
     }
 
     public function editarSignoVital(int $signoVitalTriajeId): void
     {
+        $this->iniciarEdicionSignoVitalEnLinea($signoVitalTriajeId, 'valor');
+    }
+
+    public function iniciarEdicionSignoVitalEnLinea(int $signoVitalTriajeId, string $campo): void
+    {
         abort_if(! $this->puedeEditarSeccion('triaje'), 403);
+        abort_unless(in_array($campo, ['funcion', 'valor'], true), 422);
 
         $registro = $this->consultaSignoVitalTriaje($signoVitalTriajeId);
 
-        $this->signoVitalEditandoId = $registro->id;
-        $this->signoVitalForm = [
+        $this->signoVitalInlineEditandoId = $registro->id;
+        $this->signoVitalInlineCampo = $campo;
+        $this->signoVitalInlineForm = [
             'signo_vital_id' => $registro->signo_vital_id,
             'valor' => $registro->valor,
         ];
-        $this->formularioSignoVitalAbierto = true;
-        $this->resetValidation(['signoVitalForm.signo_vital_id', 'signoVitalForm.valor']);
+        $this->resetValidation(['signoVitalInlineForm.signo_vital_id', 'signoVitalInlineForm.valor']);
+    }
+
+    public function guardarSignoVitalEnLinea(): void
+    {
+        abort_if(! $this->puedeEditarSeccion('triaje'), 403);
+
+        if ($this->signoVitalInlineEditandoId === null) {
+            return;
+        }
+
+        $datos = $this->validate([
+            'signoVitalInlineForm.signo_vital_id' => ['required', 'integer', Rule::exists('signos_vitales', 'id')->whereNull('deleted_at')],
+            'signoVitalInlineForm.valor' => ['required', 'string', 'max:100'],
+        ], [], [
+            'signoVitalInlineForm.signo_vital_id' => 'funcion vital',
+            'signoVitalInlineForm.valor' => 'valor',
+        ])['signoVitalInlineForm'];
+
+        $registro = $this->consultaSignoVitalTriaje($this->signoVitalInlineEditandoId);
+        $registro->forceFill([
+            'signo_vital_id' => $datos['signo_vital_id'],
+            'valor' => $datos['valor'],
+            'actualizado_por' => Auth::id(),
+        ])->save();
+
+        $this->limpiarEdicionSignoVitalEnLinea();
+        $this->atencion = $this->atencion->fresh(['paciente', 'profesionalResponsable.especialidad', 'profesionalTriaje', 'prioridad']);
+
+        flash()->success('Signo vital actualizado correctamente.', [], 'Triaje');
+    }
+
+    private function limpiarEdicionSignoVitalEnLinea(): void
+    {
+        $this->signoVitalInlineEditandoId = null;
+        $this->signoVitalInlineCampo = null;
+        $this->signoVitalInlineForm = ['signo_vital_id' => '', 'valor' => ''];
+        $this->resetValidation(['signoVitalInlineForm.signo_vital_id', 'signoVitalInlineForm.valor']);
     }
 
     public function guardarSignoVital(): void
@@ -1616,6 +1670,7 @@ class HcEmergenciaPanel extends Component
             'actualizado_por' => Auth::id(),
         ])->save();
 
+        $this->limpiarEdicionSignoVitalEnLinea();
         $this->formularioSignoVitalAbierto = false;
         $this->signoVitalEditandoId = null;
         $this->signoVitalForm = ['signo_vital_id' => '', 'valor' => ''];
@@ -1679,6 +1734,7 @@ class HcEmergenciaPanel extends Component
 
         $this->formularioSignoVitalAbierto = false;
         $this->signoVitalEditandoId = null;
+        $this->limpiarEdicionSignoVitalEnLinea();
         $this->signoVitalForm = ['signo_vital_id' => '', 'valor' => ''];
         $this->atencion = $this->atencion->fresh(['paciente', 'profesionalResponsable.especialidad', 'profesionalTriaje', 'prioridad']);
 
@@ -1693,6 +1749,7 @@ class HcEmergenciaPanel extends Component
 
         $this->formularioSignoVitalAbierto = false;
         $this->signoVitalEditandoId = null;
+        $this->limpiarEdicionSignoVitalEnLinea();
 
         flash()->success('Signo vital eliminado correctamente.', [], 'Triaje');
     }

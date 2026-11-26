@@ -451,9 +451,47 @@
                                     </thead>
                                     <tbody>
                                         @forelse ($signosVitalesTriaje as $signoTriaje)
+                                            @php($signoVitalEnEdicion = $signoVitalInlineEditandoId === (int) $signoTriaje['id'])
                                             <tr wire:key="triaje-signo-{{ $signoTriaje['id'] }}">
-                                                <td>{{ $signoTriaje['funcion'] }}</td>
-                                                <td><strong>{{ $signoTriaje['valor'] }}</strong></td>
+                                                <td>
+                                                    @if ($signoVitalEnEdicion && $signoVitalInlineCampo === 'funcion')
+                                                        <select
+                                                            class="emergency-vital-inline-control"
+                                                            wire:model="signoVitalInlineForm.signo_vital_id"
+                                                            wire:blur="guardarSignoVitalEnLinea"
+                                                            wire:key="signo-vital-inline-funcion-{{ $signoTriaje['id'] }}"
+                                                            aria-label="Funcion vital"
+                                                        >
+                                                            @foreach ($catalogoSignosVitales as $signoVital)
+                                                                <option value="{{ $signoVital->id }}">{{ $signoVital->descripcion }}{{ $signoVital->unidad ? ' ('.$signoVital->unidad.')' : '' }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        @error('signoVitalInlineForm.signo_vital_id') <small>{{ $message }}</small> @enderror
+                                                    @else
+                                                        <span
+                                                            class="emergency-vital-inline-editable"
+                                                            @if (! $soloLecturaTriaje) wire:dblclick="iniciarEdicionSignoVitalEnLinea({{ $signoTriaje['id'] }}, 'funcion')" title="Doble clic para editar función vital" @endif
+                                                        >{{ $signoTriaje['funcion'] }}</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if ($signoVitalEnEdicion && $signoVitalInlineCampo === 'valor')
+                                                        <input
+                                                            type="text"
+                                                            class="emergency-vital-inline-control"
+                                                            wire:model="signoVitalInlineForm.valor"
+                                                            wire:blur="guardarSignoVitalEnLinea"
+                                                            wire:key="signo-vital-inline-valor-{{ $signoTriaje['id'] }}"
+                                                            aria-label="Valor del signo vital"
+                                                        >
+                                                        @error('signoVitalInlineForm.valor') <small>{{ $message }}</small> @enderror
+                                                    @else
+                                                        <strong
+                                                            class="emergency-vital-inline-editable"
+                                                            @if (! $soloLecturaTriaje) wire:dblclick="iniciarEdicionSignoVitalEnLinea({{ $signoTriaje['id'] }}, 'valor')" title="Doble clic para editar valor" @endif
+                                                        >{{ $signoTriaje['valor'] }}</strong>
+                                                    @endif
+                                                </td>
                                                 <td>{{ $signoTriaje['unidad'] }}</td>
                                                 <td>
                                                     <span class="emergency-vital-state {{ $signoTriaje['estado']['clase'] }}" title="{{ $signoTriaje['estado']['texto'] }}">
