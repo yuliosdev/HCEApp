@@ -127,6 +127,12 @@
 
             <div class="emergency-doctor-row">
                 <div class="emergency-record-actions">
+                    @if ($puedeAbrirHistoria)
+                        <button type="button" class="emergency-close-action emergency-reopen-action" wire:click="abrirHistoriaClinica">
+                            <iconify-icon icon="lucide:folder-open" aria-hidden="true"></iconify-icon>
+                            Abrir HC
+                        </button>
+                    @endif
                     @if ($permisosEdicion['atencion'] || $permisosEdicion['triaje'] || $permisosEdicion['enfermeria'] || $permisosEdicion['documentacion'] || $permisosEdicion['procedimientos'])
                         @if (! $soloLecturaGeneral)
                             <button type="button" class="emergency-close-action" wire:click="cerrarAtencion">
@@ -3369,6 +3375,31 @@
                             No
                         </button>
                         <button type="button" class="catalog-primary-action" wire:click="confirmarCierreAtencion">
+                            Si
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    @endif
+
+    @if ($panelConfirmacionAperturaAbierto)
+        <div class="emergency-feedback-backdrop" role="dialog" aria-modal="true" aria-labelledby="emergency-open-confirmation-title">
+            <section class="emergency-feedback-modal is-warning">
+                <div class="emergency-feedback-icon">
+                    <iconify-icon icon="lucide:folder-open" aria-hidden="true"></iconify-icon>
+                </div>
+
+                <div class="emergency-feedback-content">
+                    <p>Apertura de historia clínica</p>
+                    <h2 id="emergency-open-confirmation-title">¿Desea abrir nuevamente la historia clínica?</h2>
+                    <span>La atención cambiará de estado Cerrada a Abierta y podrá editarse nuevamente según los permisos del usuario.</span>
+
+                    <div class="emergency-feedback-actions">
+                        <button type="button" class="emergency-close-action" wire:click="cancelarAperturaHistoriaClinica">
+                            No
+                        </button>
+                        <button type="button" class="catalog-primary-action" wire:click="confirmarAperturaHistoriaClinica">
                             Si
                         </button>
                     </div>

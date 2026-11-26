@@ -8057,6 +8057,12 @@ a.dashboard-primary-action,
         transform: translateY(-1px);
     }
 
+    .emergency-reopen-action {
+        align-items: center;
+        display: inline-flex;
+        gap: 7px;
+    }
+
     .emergency-save-action {
         min-height: 34px;
     }

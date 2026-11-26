@@ -393,6 +393,8 @@ class HcEmergenciaPanel extends Component
 
     public bool $panelAtencionCerradaAbierto = false;
 
+    public bool $panelConfirmacionAperturaAbierto = false;
+
     public bool $hayCambiosSinGuardar = false;
 
     public bool $panelSalidaSinGuardarAbierto = false;
@@ -504,6 +506,7 @@ class HcEmergenciaPanel extends Component
         }
 
         $this->restaurarCamposNoPermitidos();
+        $this->aplicarValoresPredeterminadosExamenClinico();
         $this->normalizarFormularioAntesDeValidar();
         $this->recalcularGlasgow();
 
@@ -802,10 +805,50 @@ class HcEmergenciaPanel extends Component
         return [
             'atencion' => $this->puedeEditarSeccion('atencion'),
             'triaje' => $this->puedeEditarSeccion('triaje'),
+            'examenes' => $this->puedeEditarSeccion('examenes'),
             'enfermeria' => $this->puedeEditarSeccion('enfermeria'),
             'documentacion' => $this->puedeEditarSeccion('documentacion'),
             'procedimientos' => $this->puedeEditarSeccion('procedimientos'),
         ];
+    }
+
+    private function esSupervisor(): bool
+    {
+        return $this->tipoUsuarioActual() === 'supervisor';
+    }
+
+    private function puedeAbrirHistoria(): bool
+    {
+        return $this->esSupervisor()
+            && $this->atencion !== null
+            && $this->form['estado_atencion'] === EstadoAtencion::Cerrada->value;
+    }
+
+    private function aplicarValoresPredeterminadosExamenClinico(): void
+    {
+        if (! $this->puedeEditarSeccion('examenes')) {
+            return;
+        }
+
+        foreach ([
+            'estado_general',
+            'hidratacion',
+            'nutricion',
+            'estado_conciencia',
+            'piel_anexos',
+            'cabeza_cuello',
+            'torax_respiratorio',
+            'cardiovascular',
+            'abdomen',
+            'neurologico',
+            'musculoesqueletico_extremidades',
+            'genitourinario_ginecoobstetrico',
+            'otros',
+        ] as $campo) {
+            if (blank(trim((string) ($this->form[$campo] ?? '')))) {
+                $this->form[$campo] = 'Sin Alteraciones';
+            }
+        }
     }
 
     private function restaurarCamposNoPermitidos(): void
@@ -856,6 +899,37 @@ class HcEmergenciaPanel extends Component
         abort_if($this->edicionBloqueada(), 403);
 
         $this->panelConfirmacionCierreAbierto = true;
+    }
+
+    public function abrirHistoriaClinica(): void
+    {
+        abort_unless($this->puedeAbrirHistoria(), 403);
+
+        $this->panelConfirmacionAperturaAbierto = true;
+    }
+
+    public function cancelarAperturaHistoriaClinica(): void
+    {
+        $this->panelConfirmacionAperturaAbierto = false;
+    }
+
+    public function confirmarAperturaHistoriaClinica(): void
+    {
+        abort_unless($this->puedeAbrirHistoria(), 403);
+
+        $this->panelConfirmacionAperturaAbierto = false;
+        $this->form['estado_atencion'] = EstadoAtencion::Abierta->value;
+
+        $atencion = $this->persistirHistoria(
+            mostrarConfirmacionGuardado: false,
+            mensajeFlash: null,
+            tituloFlash: null,
+            permitirEstadoCerrado: true,
+        );
+
+        if ($atencion !== null) {
+            flash()->success('La historia clínica fue abierta correctamente.', [], 'Historia clinica');
+        }
     }
 
     public function cancelarCierreAtencion(): void
@@ -976,6 +1050,7 @@ class HcEmergenciaPanel extends Component
             'permisosEdicion' => $this->permisosEdicion(),
             'esAtencionAbierta' => $this->form['estado_atencion'] === EstadoAtencion::Abierta->value,
             'puedeCambiarProfesionalTratante' => $this->puedeCambiarProfesionalTratante(),
+            'puedeAbrirHistoria' => $this->puedeAbrirHistoria(),
         ]);
     }
 
@@ -3002,6 +3077,7 @@ class HcEmergenciaPanel extends Component
         $this->form['profesional_triaje_id'] = $this->esProfesionalDeSalud()
             ? $profesionalId
             : null;
+        $this->aplicarValoresPredeterminadosExamenClinico();
         $this->profesionalTriajeBusqueda = $this->etiquetaProfesionalId($this->form['profesional_triaje_id']);
         $this->shockTraumaResponsableBusqueda = '';
         $this->profesionalEgresoBusqueda = $this->etiquetaProfesionalEvolucionId($profesionalId);
@@ -3088,6 +3164,8 @@ class HcEmergenciaPanel extends Component
         if ($this->esProfesionalDeSalud() && blank($this->form['profesional_triaje_id'])) {
             $this->form['profesional_triaje_id'] = Auth::user()?->profesional_salud_id;
         }
+
+        $this->aplicarValoresPredeterminadosExamenClinico();
 
         $this->formOriginal = $this->form;
 
